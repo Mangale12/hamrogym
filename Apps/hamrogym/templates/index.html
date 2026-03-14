@@ -1,0 +1,40 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Dashboard | GymERP{% endblock %}
+
+{% block content %}
+<h1>GymERP Users</h1>
+<table id="users-table" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Active</th>
+      <th>Staff</th>
+      <th>Date Joined</th>
+    </tr>
+  </thead>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(function () {
+    $("#users-table").DataTable({
+      processing: true,
+      serverSide: true,
+      ajax: "{% url 'users_datatable' %}",
+      columns: [
+        { data: "id" },
+        { data: "username" },
+        { data: "email" },
+        { data: "is_active" },
+        { data: "is_staff" },
+        { data: "date_joined" }
+      ],
+      order: [[0, "desc"]]
+    });
+  });
+</script>
+{% endblock %}

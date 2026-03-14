@@ -1,0 +1,5 @@
+from .department_data_table import DepartmentDataTableView
+from .designation_data_table import DesignationDataTableView
+from .employee_data_table import EmployeeDataTableView
+from .shift_data_table import ShiftDataTableView
+from .leave_type_data_table import leave_typeDataTableView

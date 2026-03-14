@@ -1,0 +1,47 @@
+{% extends "core/entity_index.html" %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function () {
+    const modalId = '{{ modal_id }}';
+    const $modal = $('#' + modalId);
+
+    function parseTimeToMinutes(value) {
+      if (!value || typeof value !== 'string') return null;
+      const parts = value.split(':');
+      if (parts.length < 2) return null;
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+      return (hours * 60) + minutes;
+    }
+
+    function computeBreakDuration() {
+      const $start = $modal.find('[name="break_start_time"]');
+      const $end = $modal.find('[name="break_end_time"]');
+      const $duration = $modal.find('[name="break_duration"]');
+      if (!$start.length || !$end.length || !$duration.length) return;
+
+      const startMin = parseTimeToMinutes($start.val());
+      const endMin = parseTimeToMinutes($end.val());
+      if (startMin == null || endMin == null) {
+        $duration.val('');
+        return;
+      }
+
+      let diff = endMin - startMin;
+      if (diff < 0) diff += 24 * 60; // handle break crossing midnight
+      $duration.val(diff);
+    }
+
+    $modal.on('shown.bs.modal', function () {
+      setTimeout(computeBreakDuration, 0);
+    });
+
+    $modal.on('input change', '[name="break_start_time"], [name="break_end_time"]', function () {
+      computeBreakDuration();
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+<div class="dynamic-section" data-section="{{ section_name }}">
+  <h5 class="mb-2">{{ section.title }}</h5>
+
+  <table class="table table-bordered align-middle">
+    <thead>
+      <tr>
+        {% for field in section.fields %}
+          <th>{{ field.label }}</th>
+        {% endfor %}
+        <th>Action</th>
+      </tr>
+    </thead>
+
+    <tbody class="dynamic-rows">
+      {% include "components/dynamic_section/table_row.html" with section=section index=0 %}
+    </tbody>
+  </table>
+
+  {% if section.allow_add != False %}
+    <button
+      type="button"
+      class="btn btn-sm btn-primary add-row"
+      data-section="{{ section_name }}">
+      Add {{ section.title }}
+    </button>
+  {% endif %}
+</div>

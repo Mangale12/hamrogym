@@ -1,0 +1,40 @@
+<div class="topbar">
+    <div class="topbar-left">
+        <button class="sidebar-toggle me-3">
+            <i data-feather="menu"></i>
+        </button>
+        <h1>Dashboard</h1>
+    </div>
+    <div class="topbar-right">
+        <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i data-feather="bell"></i>
+                <span class="badge bg-danger rounded-pill">5</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                <li><h6 class="dropdown-header">Notifications</h6></li>
+                <li><a class="dropdown-item" href="#">New booking received</a></li>
+                <li><a class="dropdown-item" href="#">Room 205 check-out today</a></li>
+                <li><a class="dropdown-item" href="#">Low inventory alert</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">View all notifications</a></li>
+            </ul>
+        </div>
+        <div class="dropdown ms-3">
+            <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="user-info">
+                    <div class="user-avatar">JD</div>
+                    <div class="d-none d-md-block">
+                        <span>John Doe</span>
+                    </div>
+                </div>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="#"><i data-feather="user"></i> Profile</a></li>
+                <li><a class="dropdown-item" href="#"><i data-feather="settings"></i> Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#"><i data-feather="log-out"></i> Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,74 @@
+
+<tr class="dynamic-row">
+    <input type="hidden" name="{{ section_name }}[{{ index }}][id]">
+  
+    {% for field in section.fields %}
+      <td>
+        {% if field.type == "select" %}
+          <select
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-select {{ field.class }}"
+            {% if field.required %}required{% endif %}
+            data-url="{{ field.url|default:'' }}">
+            <option value="">Select {{ field.label }}</option>
+          </select>
+  
+        {% elif field.type == "number" %}
+          <input
+            type="number"
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-control {{ field.class }}"
+            {% if field.readonly %}readonly{% endif %}
+            {% if field.min %}min="{{ field.min }}"{% endif %}>
+  
+        {% elif field.type == "static_select" %}
+          <select
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-select {{ field.class }}">
+            {% for val, label in field.options %}
+              <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+  
+        {% elif field.type == "multi_select" %}
+          <select
+            name="{{ section_name }}[{{ index }}][{{ field.name }}][]"
+            class="form-select {{ field.class }}"
+            multiple
+            data-url="{{ field.url }}">
+          </select>
+        {% elif field.type == "date" %}
+          <input
+            type="date"
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-control {{ field.class }}"
+            {% if field.readonly %}readonly{% endif %}>
+        {% elif field.type == "file" %}
+          <input
+            type="file"
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-control {{ field.class }}"
+            {% if field.accept %}accept="{{ field.accept }}"{% endif %}>
+        {% elif field.type == "textarea" %}
+          <textarea
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-control {{ field.class }}"
+            rows="2"
+            {% if field.readonly %}readonly{% endif %}></textarea>
+        {% else %}
+          <input
+            type="text"
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-control {{ field.class }}"
+            {% if field.readonly %}readonly{% endif %}>
+        {% endif %}
+      </td>
+    {% endfor %}
+  
+    <td>
+      <button type="button" class="btn btn-sm btn-outline-danger remove-row">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  </tr>
+  

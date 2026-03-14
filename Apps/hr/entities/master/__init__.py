@@ -1,0 +1,10 @@
+from . import department  # noqa: F401
+from . import designation  # noqa: F401
+from . import employee  # noqa: F401
+from . import shift  # noqa: F401
+from . import leave_type  # noqa: F401
+from . import employeement_type  # noqa: F401
+from . import job_category  # noqa: F401
+from . import job_position  # noqa: F401
+from . import job_posting  # noqa: F401
+from . import applicant  # noqa: F401

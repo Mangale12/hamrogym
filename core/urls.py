@@ -1,0 +1,47 @@
+from django.urls import path
+
+from core.registry import get_entities
+from core.views.entities import build_entity_views
+
+urlpatterns = []
+
+for entity in get_entities():
+    views = build_entity_views(entity)
+    url_base = entity.url_base
+    name = entity.name
+
+    urlpatterns.extend(
+        [
+            path(f"{url_base}/", views["list_view"].as_view(), name=f"{name}_list"),
+            path(
+                f"{url_base}/create/",
+                views["create_view"].as_view(),
+                name=f"{name}_create",
+            ),
+            path(
+                f"{url_base}/<int:pk>/update/",
+                views["update_view"].as_view(),
+                name=f"{name}_update",
+            ),
+            path(
+                f"{url_base}/<int:pk>/detail/",
+                views["detail_view"].as_view(),
+                name=f"{name}_detail",
+            ),
+            path(
+                f"{url_base}/<int:pk>/delete/",
+                views["delete_view"].as_view(),
+                name=f"{name}_delete",
+            ),
+            path(
+                f"{url_base}/datatable/",
+                views["datatable_view"].as_view(),
+                name=f"{name}_datatable",
+            ),
+            path(
+                f"{url_base}/select/",
+                views["select_view"].as_view(),
+                name=f"{name}_select",
+            ),
+        ]
+    )

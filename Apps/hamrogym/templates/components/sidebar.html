@@ -1,0 +1,20 @@
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3><i data-feather="activity"></i> HamroGym</h3>
+  </div>
+  <nav class="sidebar-menu">
+    <ul class="nav flex-column">
+      {% for item in sidebar_items %}
+        <li class="nav-item">
+          <a class="nav-link {% if item.is_active %}active{% endif %} {% if item.disabled %}disabled{% endif %}" href="{{ item.url }}">
+            <i data-feather="{{ item.icon|default:'circle' }}"></i>
+            {{ item.label }}
+            {% if item.badge %}
+              <span class="badge bg-danger">{{ item.badge }}</span>
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+</aside>

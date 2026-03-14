@@ -1,0 +1,28 @@
+<!-- components/buttons/datatable_action_buttons.html -->
+<div class="btn-group" role="group">
+    {% if edit_url %}
+        <a href="{% url edit_url item_id %}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-edit"></i>
+        </a>
+    {% endif %}
+    {% if delete_url %}
+        <form method="post" action="{% url delete_url item_id %}" data-confirm="true" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-trash"></i>
+            </button>
+        </form>
+    {% endif %}
+
+    {% if view_url %}
+        <a href="{% url view_url item_id %}" class="btn btn-sm btn-outline-info">
+            <i class="fas fa-eye"></i>
+        </a>
+    {% endif %}
+
+    {% if extra_url %}
+       {% for url in extra_url %}
+          {% url %}
+       {% endfor %}
+    {% endif %}
+</div>

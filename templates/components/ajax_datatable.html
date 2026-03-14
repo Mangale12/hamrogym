@@ -1,0 +1,9 @@
+<div id="{{ table_id }}"></div>
+
+<script>
+window.initAjaxTable({
+    container: "{{ table_id }}",
+    ajax: "{{ ajax_url }}",
+    columns: {{ columns|safe }}
+});
+</script>

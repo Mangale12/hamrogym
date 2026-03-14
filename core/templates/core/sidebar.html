@@ -1,0 +1,43 @@
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3><i data-feather="activity"></i> HamroGym</h3>
+  </div>
+  <nav class="sidebar-menu">
+    <ul class="nav flex-column">
+      {% for item in sidebar_items %}
+        {% with has_children=item.children|length %}
+          <li class="nav-item">
+            {% if has_children %}
+              <a class="nav-link {% if item.is_active %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#sidebar-group-{{ forloop.counter }}" aria-expanded="{% if item.is_active %}true{% else %}false{% endif %}" aria-controls="sidebar-group-{{ forloop.counter }}">
+                <i data-feather="{{ item.icon|default:'circle' }}"></i>
+                {{ item.label }}
+                <i class="float-end" data-feather="chevron-down"></i>
+              </a>
+              <ul class="collapse nav flex-column ms-3 {% if item.is_active %}show{% endif %}" id="sidebar-group-{{ forloop.counter }}">
+                {% for child in item.children %}
+                  <li class="nav-item">
+                    <a class="nav-link {% if child.is_active %}active{% endif %} {% if child.disabled %}disabled{% endif %}" href="{{ child.url }}">
+                      <i data-feather="{{ child.icon|default:'circle' }}"></i>
+                      {{ child.label }}
+                      {% if child.badge %}
+                        <span class="badge bg-danger">{{ child.badge }}</span>
+                      {% endif %}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <a class="nav-link {% if item.is_active %}active{% endif %} {% if item.disabled %}disabled{% endif %}" href="{{ item.url }}">
+                <i data-feather="{{ item.icon|default:'circle' }}"></i>
+                {{ item.label }}
+                {% if item.badge %}
+                  <span class="badge bg-danger">{{ item.badge }}</span>
+                {% endif %}
+              </a>
+            {% endif %}
+          </li>
+        {% endwith %}
+      {% endfor %}
+    </ul>
+  </nav>
+</aside>

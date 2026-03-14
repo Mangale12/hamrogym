@@ -1,0 +1,288 @@
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h3><i data-feather="home"></i> Hotel ERP</h3>
+    </div>
+    
+    <div class="sidebar-menu">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-page="dashboard">
+                    <i data-feather="pie-chart"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#frontReceptionSubmenu" aria-expanded="false" aria-controls="frontReceptionSubmenu">
+                    <i data-feather="grid"></i> Front/Reception
+                    <i class="float-end" data-feather="chevron-down"></i>
+                </a>
+                <ul class="collapse nav flex-column ms-3" id="frontReceptionSubmenu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'guest_list' %}">
+                            <i data-feather="list"></i> Guest
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_list' %}">
+                            <i data-feather="list"></i> Booking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'checkin_list' %}">
+                            <i data-feather="list"></i> Checkin
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'check_out_list' %}">
+                            <i data-feather="list"></i> Checkout
+                        </a>
+                    </li>
+                   
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#roomSubmenu" aria-expanded="false" aria-controls="roomSubmenu">
+                    <i data-feather="grid"></i> Room Management
+                    <i class="float-end" data-feather="chevron-down"></i>
+                </a>
+                <ul class="collapse nav flex-column ms-3" id="roomSubmenu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'room_type_list' %}">
+                            <i data-feather="list"></i> Room Types
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'room_category_list' %}">
+                            <i data-feather="list"></i> Room Categories
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'room_view_type_list' %}">
+                            <i data-feather="list"></i> Room View Types
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'room_amnity_list' %}">
+                            <i data-feather="list"></i> Room Amnities
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'room_status_list' %}">
+                            <i data-feather="list"></i> Room Status
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="nav-link" href="{% url 'bed_type_list' %}">
+                            <i data-feather="list"></i> Bed Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'floor_list' %}">
+                            <i data-feather="list"></i> Floor
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'block_list' %}">
+                            <i data-feather="list"></i> Block
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="nav-link" href="{% url 'room_list' %}">
+                            <i data-feather="list"></i> Room
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'room_rate_list' %}">
+                            <i data-feather="list"></i> Room Rate
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'room_allotment_list' %}">
+                            <i data-feather="list"></i> Room Allotment
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#restaurantSubmenu" aria-expanded="false" aria-controls="restaurantSubmenu">
+                    <i data-feather="grid"></i> Restaurant/Menu
+                    <i class="float-end" data-feather="chevron-down"></i>
+                </a>
+                <ul class="collapse nav flex-column ms-3" id="restaurantSubmenu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'menu_category_list' %}">
+                            <i data-feather="list"></i> Menu Category
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'menu_sub_category_list' %}">
+                            <i data-feather="list"></i> Menu Sub Category
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'menu_item_list' %}">
+                            <i data-feather="list"></i> Menu Item
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'modifier_list' %}">
+                            <i data-feather="list"></i> Modifier
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'zone_list' %}">
+                            <i data-feather="list"></i> Zone
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'table_setup_list' %}">
+                            <i data-feather="list"></i> Table Setup
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'order_list' %}">
+                            <i data-feather="list"></i> Order
+                        </a>
+                    </li>
+                
+                </ul>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#masterSetupSubmenu" aria-expanded="false" aria-controls="masterSetupSubmenu">
+                    <i data-feather="grid"></i> Master Setup
+                    <i class="float-end" data-feather="chevron-down"></i>
+                </a>
+                <ul class="collapse nav flex-column ms-3" id="masterSetupSubmenu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'department_list' %}">
+                            <i data-feather="list"></i> Department
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'designation_list' %}">
+                            <i data-feather="list"></i> Designation
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'shift_type_list' %}">
+                            <i data-feather="list"></i> Shift Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'employee_type_list' %}">
+                            <i data-feather="list"></i> Employee Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'account_type_list' %}">
+                            <i data-feather="list"></i> Account Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'tax_type_list' %}">
+                            <i data-feather="list"></i> Tax Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'discount_type_list' %}">
+                            <i data-feather="list"></i> Discount Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'payment_mode_list' %}">
+                            <i data-feather="list"></i> Payment Mode
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'currency_list' %}">
+                            <i data-feather="list"></i> Currency
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'service_category_list' %}">
+                            <i data-feather="list"></i> Service Category
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'miscellaneous_service_list' %}">
+                            <i data-feather="list"></i> Miscellaneous Service
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'event_type_list' %}">
+                            <i data-feather="list"></i> Event Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'parking_type_list' %}">
+                            <i data-feather="list"></i> Parking Type
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'notification_category_list' %}">
+                            <i data-feather="list"></i> Notification Category
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'notification_template_list' %}">
+                            <i data-feather="list"></i> Notification Template
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'booking_source_list' %}">
+                            <i data-feather="list"></i> Booking Source
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'printer_list' %}">
+                            <i data-feather="list"></i> Printer
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="guests">
+                    <i data-feather="users"></i> Guests
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="staff">
+                    <i data-feather="user-check"></i> Staff
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="inventory">
+                    <i data-feather="package"></i> Inventory
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="billing">
+                    <i data-feather="dollar-sign"></i> Billing
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="reports">
+                    <i data-feather="bar-chart-2"></i> Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="settings">
+                    <i data-feather="settings"></i> Settings
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- <div class="sidebar-footer" style="position: absolute; bottom: 20px; left: 0; right: 0; padding: 20px;">
+        <div class="user-info">
+            <div class="user-avatar">JD</div>
+            <div>
+                <h6 style="margin: 0; font-weight: 600;">John Doe</h6>
+                <small style="opacity: 0.8;">Administrator</small>
+            </div>
+        </div>
+    </div> -->
+</div>

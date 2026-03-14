@@ -1,0 +1,64 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}{{ entity_label }} | HamroGym{% endblock %}
+{% block page_title %}{{ entity_label }}{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+
+{% include "components/modals/modal.html" with modal_id=modal_id form_id=form_id title=modal_title_add fields=fields %}
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between">
+    <h5>{{ entity_label }}</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{ modal_id }}">
+      <i data-feather="plus"></i> Add {{ entity_label }}
+    </button>
+  </div>
+  <div class="card-body">
+    {% include "components/tables/datatable.html" with table_id=table_id ajax_url=datatable_url columns=datatable_columns table_var=table_id %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if reset_defaults %}
+{{ reset_defaults|json_script:"reset-defaults" }}
+{% endif %}
+<script>
+$(document).ready(function() {
+  const table = window['{{ table_id }}'] || $('#{{ table_id }}').DataTable();
+
+  const resetDefaults = (() => {
+    const el = document.getElementById('reset-defaults');
+    return el ? JSON.parse(el.textContent) : {};
+  })();
+
+  initCrudModal({
+    modalId: '{{ modal_id }}',
+    formId: '{{ form_id }}',
+    table: table,
+    createUrl: '{{ create_url }}',
+    updateUrlTemplate: '{{ update_url_template }}',
+    detailUrlTemplate: '{{ detail_url_template }}',
+    deleteUrlTemplate: '{{ delete_url_template }}',
+    idFieldName: 'id',
+    entityName: '{{ entity_label }}',
+    afterReset: function() {
+      const $modal = $('#{{ modal_id }}');
+      Object.entries(resetDefaults).forEach(([name, value]) => {
+        const $field = $modal.find(`[name="${name}"]`);
+        if (!$field.length) return;
+        if ($field.is(':checkbox')) {
+          $field.prop('checked', !!value);
+        } else {
+          $field.val(value == null ? '' : value);
+        }
+      });
+      $modal.find('.modal-title').text('{{ modal_title_add }}');
+    }
+  });
+});
+</script>
+{% endblock %}

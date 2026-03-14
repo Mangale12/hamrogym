@@ -1,0 +1,47 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Fiscal Year | HamroGym{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+
+{% include "components/modals/modal.html" with modal_id="fiscalYearModal" form_id="fiscalYearForm" title="Add Fiscal Year" fields=fields %}
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between">
+    <h5>Fiscal Year</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fiscalYearModal">
+      <i data-feather="plus"></i> Add Fiscal Year
+    </button>
+  </div>
+  <div class="card-body">
+    {% include "components/tables/datatable.html" with table_id="fiscalYearTable" ajax_url=datatable_url columns=datatable_columns table_var="fiscalYearTable" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  const table = window.fiscalYearTable || $('#fiscalYearTable').DataTable();
+
+  initCrudModal({
+    modalId: 'fiscalYearModal',
+    formId: 'fiscalYearForm',
+    table: table,
+    createUrl: '{% url "fiscal_year_create" %}',
+    updateUrlTemplate: "{% url 'fiscal_year_update' 0 %}".replace('/0/', '/{id}/'),
+    detailUrlTemplate: "{% url 'fiscal_year_detail' 0 %}".replace('/0/', '/{id}/'),
+    deleteUrlTemplate: "{% url 'fiscal_year_delete' 0 %}".replace('/0/', '/{id}/'),
+    idFieldName: 'id',
+    entityName: 'Fiscal Year',
+    afterReset: function() {
+      $('#fiscalYearModal .modal-title').text('Add Fiscal Year');
+      $('#fiscalYearModal [name="is_active"]').prop('checked', true);
+      $('#fiscalYearModal [name="is_closed"]').prop('checked', false);
+    }
+  });
+});
+</script>
+{% endblock %}

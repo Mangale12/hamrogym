@@ -1,0 +1,45 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Currency | HamroGym{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+
+{% include "components/modals/modal.html" with modal_id="currencyModal" form_id="currencyForm" title="Add Currency" fields=fields %}
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between">
+    <h5>Currency</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#currencyModal">
+      <i data-feather="plus"></i> Add Currency
+    </button>
+  </div>
+  <div class="card-body">
+    {% include "components/tables/datatable.html" with table_id="currencyTable" ajax_url=datatable_url columns=datatable_columns table_var="currencyTable" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  const table = window.currencyTable || $('#currencyTable').DataTable();
+
+  initCrudModal({
+    modalId: 'currencyModal',
+    formId: 'currencyForm',
+    table: table,
+    createUrl: '{% url "currency_create" %}',
+    updateUrlTemplate: "{% url 'currency_update' 0 %}".replace('/0/', '/{id}/'),
+    detailUrlTemplate: "{% url 'currency_detail' 0 %}".replace('/0/', '/{id}/'),
+    deleteUrlTemplate: "{% url 'currency_delete' 0 %}".replace('/0/', '/{id}/'),
+    idFieldName: 'id',
+    entityName: 'Currency',
+    afterReset: function() {
+      $('#currencyModal .modal-title').text('Add Currency');
+    }
+  });
+});
+</script>
+{% endblock %}

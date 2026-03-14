@@ -1,0 +1,32 @@
+{% if not no_wrapper %}
+<div class="mb-3 {{ wrapper_class|default:'' }}">
+{% endif %}
+  <div class="form-check {% if switch %}form-switch{% endif %}">
+    <input
+      class="form-check-input {{ class|default:'' }}"
+      type="checkbox"
+      name="{{ name }}"
+      {% if id %}id="{{ id }}"{% endif %}
+      value="{{ value|default:'1' }}"
+      {% if checked %}checked{% endif %}
+      {% if required %}required{% endif %}
+      {% if attributes %}
+        {% for key, value in attributes.items %}
+          {{ key }}="{{ value }}"
+        {% endfor %}
+      {% endif %}
+    >
+    <label class="form-check-label" {% if id %}for="{{ id }}"{% endif %}>
+      {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
+    </label>
+  </div>
+
+  {% if help %}
+    <small class="text-muted">{{ help }}</small>
+  {% endif %}
+  {% if errors %}
+    <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
+  {% endif %}
+{% if not no_wrapper %}
+</div>
+{% endif %}

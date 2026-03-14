@@ -1,0 +1,69 @@
+<div class="nested-item-row bg-light border rounded p-3 mb-3" data-section="{{ section.name }}">
+    <input type="hidden" name="{{ section.name }}[{{ index|default:'__INDEX__' }}][id]" 
+           value="{{ item.id|default:'' }}">
+    
+    <div class="row g-3">
+      <!-- Menu Item Select (with AJAX population) -->
+      <div class="col-2">
+        <label class="form-label">Menu Item <span class="text-danger">*</span></label>
+        <select class="form-select nested-menu-item-select" 
+                name="{{ section.name }}[{{ index|default:'__INDEX__' }}][menu_item]"
+                required
+                data-url="{% url 'menu_item_select' %}"
+                data-container="#{{ section.name }}-container">
+          <option value="">Select Item</option>
+          {% if item.menu_item %}
+            <option value="{{ item.menu_item.id }}" selected>{{ item.menu_item.name }}</option>
+          {% endif %}
+        </select>
+      </div>
+      
+      <div class="col-md-2">
+        <label class="form-label">Qty <span class="text-danger">*</span></label>
+        <input type="number" class="form-control quantity-input" 
+               name="{{ section.name }}[{{ index|default:'__INDEX__' }}][quantity]"
+               value="{{ item.quantity|default:1 }}" min="1" required>
+      </div>
+      
+      <div class="col-md-2">
+        <label class="form-label">Unit Price</label>
+        <input type="number" class="form-control unit-price-input" step="0.01" readonly
+               name="{{ section.name }}[{{ index|default:'__INDEX__' }}][unit_price]"
+               value="{{ item.unit_price|default:'' }}">
+      </div>
+      
+      <div class="col-md-2">
+        <label class="form-label">Total</label>
+        <input type="number" class="form-control total-price-input" step="0.01" readonly
+               name="{{ section.name }}[{{ index|default:'__INDEX__' }}][total_price]"
+               value="{{ item.total_price|default:'' }}">
+      </div>
+      
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-nested-item w-100">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+      
+      <!-- Modifiers Container (populated on menu item select) -->
+      <div class="col-12 modifier-section">
+        <label class="form-label">Modifiers</label>
+        <div class="modifier-container bg-white p-2 border rounded"
+             id="modifiers-{{ section.name }}-{{ index|default:'__INDEX__' }}">
+          {% if is_template %}
+            <small class="text-muted">Select menu item first</small>
+          {% else %}
+            <!-- Pre-rendered modifiers for edit mode -->
+            {% for mod in item.modifiers.all %}
+              <div class="form-check form-check-inline">
+                <input class="form-check-input modifier-checkbox" type="checkbox" 
+                       name="{{ section.name }}[{{ index }}][modifiers][]" 
+                       value="{{ mod.id }}" checked>
+                <label class="form-check-label">{{ mod.name }}</label>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>

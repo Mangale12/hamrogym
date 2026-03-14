@@ -1,0 +1,41 @@
+<ul class="nav nav-tabs" id="{{ tab_id }}" role="tablist">
+  {% for tab in tabs %}
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link {% if forloop.first %}active{% endif %}"
+        id="{{ tab_id }}-{{ tab.key }}-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#{{ tab_id }}-{{ tab.key }}"
+        type="button"
+        role="tab"
+        aria-controls="{{ tab_id }}-{{ tab.key }}"
+        aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+        {{ tab.label }}
+      </button>
+    </li>
+  {% endfor %}
+</ul>
+
+<div class="tab-content pt-3" id="{{ tab_id }}Content">
+  {% for tab in tabs %}
+    <div
+      class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+      id="{{ tab_id }}-{{ tab.key }}"
+      role="tabpanel"
+      aria-labelledby="{{ tab_id }}-{{ tab.key }}-tab">
+      <div class="row">
+        {% include "components/forms/fields_grid.html" with fields=tab.fields modal_id=modal_id %}
+      </div>
+      {% if tab.sections %}
+        {% for section in tab.sections %}
+          {% include "components/dynamic_section/table.html" with section=section.section section_name=section.name %}
+        {% endfor %}
+      {% endif %}
+      <div class="d-flex justify-content-end mt-3">
+        <button type="button" class="btn btn-sm btn-primary tab-save-btn" data-tab="{{ tab.key }}">
+          Save {{ tab.label }}
+        </button>
+      </div>
+    </div>
+  {% endfor %}
+</div>

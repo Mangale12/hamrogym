@@ -1,0 +1,62 @@
+{% if not no_wrapper %}
+<div class="mb-3 {{ wrapper_class|default:'' }}">
+{% endif %}
+  <label class="form-label">
+    {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
+  </label>
+
+  {% if prefix or suffix %}
+    <div class="input-group">
+      {% if prefix %}
+        <span class="input-group-text">{{ prefix }}</span>
+      {% endif %}
+      <input
+        type="{{ type|default:'text' }}"
+        name="{{ name }}"
+        value="{{ value|default:'' }}"
+        {% if id %}id="{{ id }}"{% endif %}
+        class="form-control {{ class|default:'' }}"
+        placeholder="{{ placeholder|default:'' }}"
+        {% if required %}required{% endif %}
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if step %}step="{{ step }}"{% endif %}
+        {% if attributes %}
+          {% for key, value in attributes.items %}
+            {{ key }}="{{ value }}"
+          {% endfor %}
+        {% endif %}
+      >
+      {% if suffix %}
+        <span class="input-group-text">{{ suffix }}</span>
+      {% endif %}
+    </div>
+  {% else %}
+    <input
+      type="{{ type|default:'text' }}"
+      name="{{ name }}"
+      value="{{ value|default:'' }}"
+      {% if id %}id="{{ id }}"{% endif %}
+      class="form-control {{ class|default:'' }}"
+      placeholder="{{ placeholder|default:'' }}"
+      {% if required %}required{% endif %}
+      {% if min %}min="{{ min }}"{% endif %}
+      {% if max %}max="{{ max }}"{% endif %}
+      {% if step %}step="{{ step }}"{% endif %}
+      {% if attributes %}
+        {% for key, value in attributes.items %}
+          {{ key }}="{{ value }}"
+        {% endfor %}
+      {% endif %}
+    >
+  {% endif %}
+
+  {% if help %}
+    <small class="text-muted">{{ help }}</small>
+  {% endif %}
+  {% if errors %}
+    <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
+  {% endif %}
+{% if not no_wrapper %}
+</div>
+{% endif %}
