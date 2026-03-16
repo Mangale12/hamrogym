@@ -4,3 +4,4 @@ from . import state  # noqa: F401
 from . import currency  # noqa: F401
 from . import organization  # noqa: F401
 from . import branch  # noqa: F401
+from . import approval_entity  # noqa: F401

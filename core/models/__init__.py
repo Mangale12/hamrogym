@@ -5,3 +5,4 @@ from .state import State
 from .curency import Currency
 from .organization import Organization
 from .branch import Branch
+from .approval_entity import ApprovalEntity
