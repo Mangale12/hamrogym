@@ -1,11 +1,11 @@
 from django import forms
 
-from ..models import leave_type
+from ..models import LeaveType
 
 
-class leave_typeForm(forms.ModelForm):
+class LeaveTypeForm(forms.ModelForm):
     class Meta:
-        model = leave_type
+        model = LeaveType
         fields = [
             "name",
             "is_active",

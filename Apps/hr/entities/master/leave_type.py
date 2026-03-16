@@ -2,10 +2,10 @@ from core.config import EntityConfig
 from core.registry import register_entity
 from ...datatables.leave_type_data_table import (
     LEAVE_TYPE_COLUMNS,
-    leave_typeDataTableView,
+    LeaveTypeDataTableView,
 )
-from ...forms.leave_type_form import leave_typeForm
-from ...models import leave_type
+from ...forms.leave_type_form import LeaveTypeForm
+from ...models import LeaveType
 
 
 register_entity(
@@ -13,9 +13,9 @@ register_entity(
         name="leave_type",
         url_path="leave-types",
         verbose_name="Leave Type",
-        model=leave_type,
-        form_class=leave_typeForm,
-        datatable_view=leave_typeDataTableView,
+        model=LeaveType,
+        form_class=LeaveTypeForm,
+        datatable_view=LeaveTypeDataTableView,
         fields=[
             # TODO: define fields
             {"name": "name", "label": "Name", "type": "text", "required": True, "col": 6},

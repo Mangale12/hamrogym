@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from ..models import employeement_type
+from ..models import EmploymentType
 
 
 EMPLOYEEMENT_TYPE_COLUMNS = [
@@ -11,8 +11,8 @@ EMPLOYEEMENT_TYPE_COLUMNS = [
 ]
 
 
-class employeement_typeDataTableView(BaseDataTableView):
-    model = employeement_type
+class EmploymentTypeDataTableView(BaseDataTableView):
+    model = EmploymentType
     columns = EMPLOYEEMENT_TYPE_COLUMNS
     searchable_columns = [
         "name",

@@ -83,23 +83,24 @@ class Command(BaseCommand):
                     raise CommandError(f"File already exists: {path}")
 
         rel_prefix = "..." if group else ".."
-        datatable_class = f"{model_name}DataTableView"
-        form_class = f"{model_name}Form"
+        model_class_name = self._normalize_model_name(model_name)
+        datatable_class = f"{model_class_name}DataTableView"
+        form_class = f"{model_class_name}Form"
 
         model_output = None
         if create_model:
             model_output = self._ensure_model(
                 base_path=base_path,
-                model_name=model_name,
+                model_name=model_class_name,
                 entity_name=entity_name,
                 force=force,
             )
 
-        entity_content = f"""from core.config import EntityConfig\nfrom core.registry import register_entity\nfrom {rel_prefix}datatables.{entity_name}_data_table import {datatable_class}, {entity_name.upper()}_COLUMNS\nfrom {rel_prefix}forms.{entity_name}_form import {form_class}\nfrom {rel_prefix}models import {model_name}\n\n\nregister_entity(\n    EntityConfig(\n        name=\"{entity_name}\",\n        url_path=\"{url_path}\",\n        verbose_name=\"{verbose_name}\",\n        model={model_name},\n        form_class={form_class},\n        datatable_view={datatable_class},\n        fields=[\n            # TODO: define fields\n            # {{\"name\": \"name\", \"label\": \"Name\", \"type\": \"text\", \"required\": True, \"col\": 6}},\n        ],\n        datatable_columns=[\n            {{\"name\": key, \"title\": key.replace(\"_\", \" \").title()}}\n            for key, _accessor in {entity_name.upper()}_COLUMNS\n            if key != \"id\"\n        ],\n        reset_defaults={{}},\n    )\n)\n"""
+        entity_content = f"""from core.config import EntityConfig\nfrom core.registry import register_entity\nfrom {rel_prefix}datatables.{entity_name}_data_table import {datatable_class}, {entity_name.upper()}_COLUMNS\nfrom {rel_prefix}forms.{entity_name}_form import {form_class}\nfrom {rel_prefix}models import {model_class_name}\n\n\nregister_entity(\n    EntityConfig(\n        name=\"{entity_name}\",\n        url_path=\"{url_path}\",\n        verbose_name=\"{verbose_name}\",\n        model={model_class_name},\n        form_class={form_class},\n        datatable_view={datatable_class},\n        fields=[\n            # TODO: define fields\n            # {{\"name\": \"name\", \"label\": \"Name\", \"type\": \"text\", \"required\": True, \"col\": 6}},\n        ],\n        datatable_columns=[\n            {{\"name\": key, \"title\": key.replace(\"_\", \" \").title()}}\n            for key, _accessor in {entity_name.upper()}_COLUMNS\n            if key != \"id\"\n        ],\n        reset_defaults={{}},\n    )\n)\n"""
 
-        datatable_content = f"""from core.datatables.views import BaseDataTableView\nfrom ..models import {model_name}\n\n\n{entity_name.upper()}_COLUMNS = [\n    (\"id\", \"id\"),\n    # TODO: add columns\n]\n\n\nclass {datatable_class}(BaseDataTableView):\n    model = {model_name}\n    columns = {entity_name.upper()}_COLUMNS\n    searchable_columns = [\n        # TODO: add searchable fields\n    ]\n    orderable_columns = [\n        # TODO: add orderable fields\n    ]\n"""
+        datatable_content = f"""from core.datatables.views import BaseDataTableView\nfrom ..models import {model_class_name}\n\n\n{entity_name.upper()}_COLUMNS = [\n    (\"id\", \"id\"),\n    # TODO: add columns\n]\n\n\nclass {datatable_class}(BaseDataTableView):\n    model = {model_class_name}\n    columns = {entity_name.upper()}_COLUMNS\n    searchable_columns = [\n        # TODO: add searchable fields\n    ]\n    orderable_columns = [\n        # TODO: add orderable fields\n    ]\n"""
 
-        form_content = f"""from django import forms\n\nfrom ..models import {model_name}\n\n\nclass {form_class}(forms.ModelForm):\n    class Meta:\n        model = {model_name}\n        fields = [\n            # TODO: add fields\n        ]\n"""
+        form_content = f"""from django import forms\n\nfrom ..models import {model_class_name}\n\n\nclass {form_class}(forms.ModelForm):\n    class Meta:\n        model = {model_class_name}\n        fields = [\n            # TODO: add fields\n        ]\n"""
 
         entity_file.write_text(entity_content)
         datatable_file.write_text(datatable_content)
@@ -161,10 +162,25 @@ class Command(BaseCommand):
         models_py.write_text(model_content)
         return str(models_py)
 
-    def _model_template(self, model_name: str) -> str:
+    # def _model_template(self, model_name: str) -> str:
+    #     return (
+    #         "from django.db import models\n\n\n"
+    #         f"class {model_name}(models.Model):\n"
+    #         "    name = models.CharField(max_length=100, unique=True)\n"
+    #         "    is_active = models.BooleanField(default=True)\n"
+    #         "    remarks = models.TextField(blank=True)\n"
+    #         "    created_at = models.DateTimeField(auto_now_add=True)\n"
+    #         "    updated_at = models.DateTimeField(auto_now=True)\n\n"
+    #         "    class Meta:\n"
+    #         "        ordering = [\"name\"]\n\n"
+    #         "    def __str__(self) -> str:\n"
+    #         "        return self.name\n"
+    #     )
+
+    def _model_template(self, class_name: str) -> str:
         return (
             "from django.db import models\n\n\n"
-            f"class {model_name}(models.Model):\n"
+            f"class {class_name}(models.Model):\n"
             "    name = models.CharField(max_length=100, unique=True)\n"
             "    is_active = models.BooleanField(default=True)\n"
             "    remarks = models.TextField(blank=True)\n"
@@ -175,3 +191,8 @@ class Command(BaseCommand):
             "    def __str__(self) -> str:\n"
             "        return self.name\n"
         )
+
+    def _normalize_model_name(self, model_name: str) -> str:
+        if "_" in model_name or model_name.islower():
+            return "".join(word.capitalize() for word in model_name.split("_") if word)
+        return model_name

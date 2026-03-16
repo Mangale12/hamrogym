@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class JobCategory(models.Model):
+class ApprovalWorkflowLevel(models.Model):
     name = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
     remarks = models.TextField(blank=True)

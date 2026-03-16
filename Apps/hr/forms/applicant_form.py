@@ -1,11 +1,11 @@
 from django import forms
 
-from ..models import applicant
+from ..models import Applicant
 
 
-class applicantForm(forms.ModelForm):
+class ApplicantForm(forms.ModelForm):
     class Meta:
-        model = applicant
+        model = Applicant
         fields = [
             "name",
             "email",

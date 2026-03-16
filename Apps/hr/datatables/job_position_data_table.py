@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from ..models import job_position
+from ..models import JobPosition
 
 
 JOB_POSITION_COLUMNS = [
@@ -17,8 +17,8 @@ JOB_POSITION_COLUMNS = [
 ]
 
 
-class job_positionDataTableView(BaseDataTableView):
-    model = job_position
+class JobPositionDataTableView(BaseDataTableView):
+    model = JobPosition
     columns = JOB_POSITION_COLUMNS
     searchable_columns = [
         "name",

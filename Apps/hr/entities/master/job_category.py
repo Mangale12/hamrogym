@@ -2,10 +2,10 @@ from core.config import EntityConfig
 from core.registry import register_entity
 from ...datatables.job_category_data_table import (
     JOB_CATEGORY_COLUMNS,
-    job_categoryDataTableView,
+    JobCategoryDataTableView,
 )
-from ...forms.job_category_form import job_categoryForm
-from ...models import job_category
+from ...forms.job_category_form import JobCategoryForm
+from ...models import JobCategory
 
 
 register_entity(
@@ -13,9 +13,9 @@ register_entity(
         name="job_category",
         url_path="job-categories",
         verbose_name="Job Categories",
-        model=job_category,
-        form_class=job_categoryForm,
-        datatable_view=job_categoryDataTableView,
+        model=JobCategory,
+        form_class=JobCategoryForm,
+        datatable_view=JobCategoryDataTableView,
         fields=[
             # TODO: define fields
             {"name": "name", "label": "Name", "type": "text", "required": True, "col": 6},

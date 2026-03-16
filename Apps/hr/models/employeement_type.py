@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class employeement_type(models.Model):
+class EmploymentType(models.Model):
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=10, unique=True)
     is_active = models.BooleanField(default=True)

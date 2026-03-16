@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from ..models import leave_type
+from ..models import LeaveType
 
 
 LEAVE_TYPE_COLUMNS = [
@@ -10,8 +10,8 @@ LEAVE_TYPE_COLUMNS = [
 ]
 
 
-class leave_typeDataTableView(BaseDataTableView):
-    model = leave_type
+class LeaveTypeDataTableView(BaseDataTableView):
+    model = LeaveType
     columns = LEAVE_TYPE_COLUMNS
     searchable_columns = [
         "name",

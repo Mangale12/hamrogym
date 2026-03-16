@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from ..models import applicant
+from ..models import Applicant
 
 
 APPLICANT_COLUMNS = [
@@ -19,8 +19,8 @@ APPLICANT_COLUMNS = [
 ]
 
 
-class applicantDataTableView(BaseDataTableView):
-    model = applicant
+class ApplicantDataTableView(BaseDataTableView):
+    model = Applicant
     columns = APPLICANT_COLUMNS
     searchable_columns = [
         "name",

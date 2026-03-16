@@ -1,11 +1,11 @@
 from django import forms
 
-from ..models import employeement_type
+from ..models import EmploymentType
 
 
-class employeement_typeForm(forms.ModelForm):
+class EmploymentTypeForm(forms.ModelForm):
     class Meta:
-        model = employeement_type
+        model = EmploymentType
         fields = [
             "name",
             "code",

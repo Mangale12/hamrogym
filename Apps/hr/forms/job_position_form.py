@@ -1,11 +1,11 @@
 from django import forms
 
-from ..models import job_position
+from ..models import JobPosition
 
 
-class job_positionForm(forms.ModelForm):
+class JobPositionForm(forms.ModelForm):
     class Meta:
-        model = job_position
+        model = JobPosition
         fields = [
             "name",
             "department",

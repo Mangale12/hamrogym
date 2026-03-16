@@ -1,11 +1,11 @@
 from django import forms
 
-from ..models import job_category
+from ..models import JobCategory
 
 
-class job_categoryForm(forms.ModelForm):
+class JobCategoryForm(forms.ModelForm):
     class Meta:
-        model = job_category
+        model = JobCategory
         fields = [
             "name",
             "is_active",

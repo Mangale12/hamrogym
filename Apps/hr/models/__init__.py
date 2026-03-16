@@ -14,9 +14,12 @@ from .employee_payroll import EmployeePayroll
 from .employee_profile import EmployeeProfile
 from .employee_work import EmployeeWork
 from .shift import Shift
-from .leave_type import leave_type
-from .job_category import job_category
-from .job_position import job_position
-from .employeement_type import employeement_type
+from .leave_type import LeaveType
+from .job_category import JobCategory
+from .job_position import JobPosition
+from .employeement_type import EmploymentType
 from .job_posting import JobPosting
-from .applicant import applicant
+from .applicant import Applicant
+from .job_requiditon import JobRequisition
+from .approval_workflow_level import ApprovalWorkflowLevel
+from .hiring_plan import HiringPlan

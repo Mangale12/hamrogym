@@ -7,9 +7,9 @@ from core.choices import (
 )
 from core.config import EntityConfig
 from core.registry import register_entity
-from ...datatables.applicant_data_table import applicantDataTableView, APPLICANT_COLUMNS
-from ...forms.applicant_form import applicantForm
-from ...models import applicant
+from ...datatables.applicant_data_table import ApplicantDataTableView, APPLICANT_COLUMNS
+from ...forms.applicant_form import ApplicantForm
+from ...models import Applicant
 
 
 register_entity(
@@ -17,9 +17,9 @@ register_entity(
         name="applicant",
         url_path="applicants",
         verbose_name="Applicant",
-        model=applicant,
-        form_class=applicantForm,
-        datatable_view=applicantDataTableView,
+        model=Applicant,
+        form_class=ApplicantForm,
+        datatable_view=ApplicantDataTableView,
         fields=[
             {"name": "name", "label": "Name", "type": "text", "required": True, "col": 6},
             {"name": "email", "label": "Email", "type": "email", "required": False, "col": 6},

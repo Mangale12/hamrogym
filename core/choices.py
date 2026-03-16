@@ -76,3 +76,23 @@ WORK_LOCATION_CHOICES = [
     ("office", "Office"),
     ("branch", "Branch"),
 ]
+
+JOB_REQUISITION_STATUS_CHOICES = [
+    ("draft", "Draft"),
+    ("pending", "Pending"),
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+    ("cancelled", "Cancelled"),
+]
+
+APPROVAL_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+]
+
+RECRUITMENT_REASON_CHOICES = [
+    ("replacement", "Replacement"),
+    ("new_position", "New Position"),
+    ("expansion", "Expansion"),
+]

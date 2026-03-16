@@ -27,7 +27,7 @@ def applicant_cover_letter_path(instance, filename):
     return _applicant_file_path(instance, filename, "cover_letter")
 
 
-class applicant(models.Model):
+class Applicant(models.Model):
     name = models.CharField(max_length=255, help_text="Full name of the applicant")
     email = models.EmailField(null=True, help_text="Email address of the applicant")
     phone = models.CharField(max_length=20, blank=True, null=True, help_text="Phone number of the applicant")

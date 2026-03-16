@@ -2,10 +2,10 @@ from core.config import EntityConfig
 from core.registry import register_entity
 from ...datatables.employeement_type_data_table import (
     EMPLOYEEMENT_TYPE_COLUMNS,
-    employeement_typeDataTableView,
+    EmploymentTypeDataTableView,
 )
-from ...forms.employeement_type_form import employeement_typeForm
-from ...models import employeement_type
+from ...forms.employeement_type_form import EmploymentTypeForm
+from ...models import EmploymentType
 
 
 register_entity(
@@ -13,9 +13,9 @@ register_entity(
         name="employeement_type",
         url_path="employeement-types",
         verbose_name="Employeement Type",
-        model=employeement_type,
-        form_class=employeement_typeForm,
-        datatable_view=employeement_typeDataTableView,
+        model=EmploymentType,
+        form_class=EmploymentTypeForm,
+        datatable_view=EmploymentTypeDataTableView,
         fields=[
             # TODO: define fields
             {"name": "name", "label": "Name", "type": "text", "required": True, "col": 6},
