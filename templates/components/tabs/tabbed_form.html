@@ -6,6 +6,7 @@
         id="{{ tab_id }}-{{ tab.key }}-tab"
         data-bs-toggle="tab"
         data-bs-target="#{{ tab_id }}-{{ tab.key }}"
+        {% if tab.requires_id %}data-requires-id="true" disabled{% endif %}
         type="button"
         role="tab"
         aria-controls="{{ tab_id }}-{{ tab.key }}"

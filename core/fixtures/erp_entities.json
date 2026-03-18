@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Recruitment Plan",
+        "code": "recruitment_plan",
+        "module": "hr",
+        "app_label": "hr",
+        "model_name": "RecruitmentPlan",
+        "remarks": "Handles recruitment plans"
+    },
+    {
+        "name": "Job Posting",
+        "code": "job_posting",
+        "module": "hr",
+        "app_label": "hr",
+        "model_name": "JobPosting",
+        "remarks": "Handles job postings"
+    },
+    {
+        "name": "Applicant Select",
+        "code": "applicant_select",
+        "module": "hr",
+        "app_label": "hr",
+        "model_name": "ApplicantSelect",
+        "remarks": "Handles applicant selection"
+    }
+]

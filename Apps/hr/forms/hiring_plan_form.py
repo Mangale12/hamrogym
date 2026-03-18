@@ -7,5 +7,10 @@ class HiringPlanForm(forms.ModelForm):
     class Meta:
         model = HiringPlan
         fields = [
-            # TODO: add fields
+            "name",
+            "code",
+            "description",
+            "status",
+            "is_active",
+            "remarks",
         ]

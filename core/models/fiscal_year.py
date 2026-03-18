@@ -1,4 +1,5 @@
-from django.db import models
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
 
 
 class FiscalYear(models.Model):
@@ -6,6 +7,7 @@ class FiscalYear(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     is_active = models.BooleanField(default=True)
+    is_current = models.BooleanField(default=False)
     is_closed = models.BooleanField(default=False)
     remarks = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,3 +18,15 @@ class FiscalYear(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        super().clean()
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValidationError({"end_date": "End date must be after start date."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if self.is_current:
+                type(self).objects.exclude(pk=self.pk).filter(is_current=True).update(is_current=False)

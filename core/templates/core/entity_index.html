@@ -7,14 +7,18 @@
 {% block content %}
 <div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
 
+{% if show_create %}
 {% include "components/modals/modal.html" with modal_id=modal_id form_id=form_id title=modal_title_add fields=fields %}
+{% endif %}
 
 <div class="card">
   <div class="card-header d-flex justify-content-between">
     <h5>{{ entity_label }}</h5>
+    {% if show_create %}
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{ modal_id }}">
       <i data-feather="plus"></i> Add {{ entity_label }}
     </button>
+    {% endif %}
   </div>
   <div class="card-body">
     {% include "components/tables/datatable.html" with table_id=table_id ajax_url=datatable_url columns=datatable_columns table_var=table_id %}

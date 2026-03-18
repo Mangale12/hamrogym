@@ -35,4 +35,22 @@ SIDEBAR_ITEMS = [
         "url_name": "branch_list",
         "match": "/core/branches",
     },
+    {
+        "label": "ERP Entities",
+        "icon": "briefcase",
+        "url_name": "erp_entity_list",
+        "match": "/core/erp-entities",
+    },
+    {
+        "label": "Approval Entities",
+        "icon": "check-circle",
+        "url_name": "approval_entities_list",
+        "match": "/core/approval-entities",
+    },
+    {
+        "label": "Approval Workflows",
+        "icon": "check-circle",
+        "url_name": "approval_workflow_list",
+        "match": "/core/approval-workflows",
+    }
 ]

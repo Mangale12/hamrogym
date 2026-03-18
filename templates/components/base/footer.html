@@ -195,8 +195,28 @@
                 // But usually not needed for create forms
             });
 
-            // Optional: If editing, you may need to set the initial value
-            // That should be handled by your edit-fill logic separately
+            // If editing, hydrate the selected value so Select2 shows it.
+            const currentValue = $select.val();
+            if (currentValue) {
+                const values = Array.isArray(currentValue) ? currentValue : [currentValue];
+                const missing = values.filter(
+                    (val) => $select.find(`option[value="${val}"]`).length === 0
+                );
+                if (missing.length) {
+                    $.get(url, { ids: missing.join(',') })
+                        .done(function (res) {
+                            const results = res && res.results ? res.results : [];
+                            results.forEach((item) => {
+                                const option = new Option(item.text, item.id, true, true);
+                                $select.append(option);
+                            });
+                            $select.trigger('change');
+                        })
+                        .fail(function () {
+                            // silently ignore hydration failures
+                        });
+                }
+            }
         });
     });
     </script>

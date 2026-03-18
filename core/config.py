@@ -28,6 +28,9 @@ class EntityConfig:
     select_label_func: Optional[Callable[[models.Model], str]] = None
     select_page_size: int = 20
     select_order_by: Optional[str] = None
+    action_buttons: List[Dict[str, Any]] = field(default_factory=list)
+    show_actions: bool = True
+    show_create: bool = True
 
     @property
     def url_base(self) -> str:

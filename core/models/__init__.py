@@ -5,4 +5,22 @@ from .state import State
 from .curency import Currency
 from .organization import Organization
 from .branch import Branch
-from .approval_entity import ApprovalEntity
+from .erp_entity import ErpEntity
+from .approval_entities import ApprovalEntity
+from .approval_workflow import (
+    ApprovalAction,
+    ApprovalAttachment,
+    ApprovalAuditLog,
+    ApprovalDelegation,
+    ApprovalEscalation,
+    ApprovalNotification,
+    ApprovalStepApprover,
+    ApprovalTransaction,
+    ApprovalTransactionStep,
+    ApprovalWorkflow,
+    ApprovalWorkflowCondition,
+    ApprovalWorkflowRule,
+    WorkflowStep,
+    WorkflowStepApprover,
+    WorkflowStepCondition,
+)

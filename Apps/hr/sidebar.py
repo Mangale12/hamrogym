@@ -63,6 +63,12 @@ SIDEBAR_ITEMS = [
                 "url_name": "applicant_list",
                 "match": "/core/applicants",
             },
+            {
+                "label": "Hiring Plans",
+                "icon": "users",
+                "url_name": "hiring_plan_list",
+                "match": "/core/hiring-plans",
+            },
         ],
     },
 ]

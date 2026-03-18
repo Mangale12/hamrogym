@@ -7,5 +7,9 @@ class ApprovalEntityForm(forms.ModelForm):
     class Meta:
         model = ApprovalEntity
         fields = [
-            # TODO: add fields
+            "erp_entity",
+            "name",
+            "code",
+            "is_active",
+            "remarks",
         ]

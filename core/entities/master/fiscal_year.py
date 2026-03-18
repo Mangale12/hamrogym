@@ -45,6 +45,14 @@ register_entity(
                 "default": True,
             },
             {
+                "name": "is_current",
+                "label": "Current",
+                "type": "checkbox",
+                "required": False,
+                "col": 6,
+                "default": False,
+            },
+            {
                 "name": "is_closed",
                 "label": "Closed",
                 "type": "checkbox",
@@ -71,11 +79,16 @@ register_entity(
                 "render": "function(data){return data ? 'Yes' : 'No';}",
             },
             {
+                "name": "is_current",
+                "title": "Current",
+                "render": "function(data){return data ? 'Yes' : 'No';}",
+            },
+            {
                 "name": "is_closed",
                 "title": "Closed",
                 "render": "function(data){return data ? 'Yes' : 'No';}",
             },
         ],
-        reset_defaults={"is_active": True, "is_closed": False},
+        reset_defaults={"is_active": True, "is_current": False, "is_closed": False},
     )
 )

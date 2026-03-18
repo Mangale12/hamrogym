@@ -33,6 +33,49 @@
     }
   }
 
+  function conditionLabel(rowData) {
+    const field = (rowData.field || '').trim();
+    const operator = (rowData.operator || '').trim();
+    const value = (rowData.value || '').trim();
+    return [field, operator, value].filter(Boolean).join(' ') || 'Condition';
+  }
+
+  function getConditionOptions($form) {
+    const rows = [];
+    $form.find('.dynamic-section[data-section="conditions"] tbody.dynamic-rows tr.dynamic-row').each(function () {
+      const $row = $(this);
+      const id = ($row.find('[name$="[id]"]').val() || '').trim();
+      const field = ($row.find('[name$="[field]"]').val() || '').trim();
+      const operator = ($row.find('[name$="[operator]"]').val() || '').trim();
+      const value = ($row.find('[name$="[value]"]').val() || '').trim();
+      if (!id) return;
+      rows.push({
+        id: id,
+        text: conditionLabel({ field: field, operator: operator, value: value }),
+      });
+    });
+    return rows;
+  }
+
+  function syncRuleConditionOptions($form) {
+    const options = getConditionOptions($form);
+    $form.find('.dynamic-section[data-section="rules"] select[name$="[condition_id]"]').each(function () {
+      const $select = $(this);
+      const currentValue = $select.val();
+      $select.find('option').not(':first').remove();
+      options.forEach((option) => {
+        const $option = $('<option></option>')
+          .attr('value', option.id)
+          .text(option.text);
+        if (String(currentValue) === String(option.id)) {
+          $option.prop('selected', true);
+        }
+        $select.append($option);
+      });
+      $select.trigger('change');
+    });
+  }
+
   function initSection($section) {
     const $tbody = $section.find('tbody.dynamic-rows');
     if (!$tbody.length) return;
@@ -91,12 +134,14 @@
         renderSection($section, rows);
       }
     });
+    syncRuleConditionOptions($form);
   };
 
   window.resetDynamicSections = function ($form) {
     $form.find('.dynamic-section').each(function () {
       renderSection($(this), []);
     });
+    syncRuleConditionOptions($form);
   };
 
   $(document).on('click', '.dynamic-section .add-row', function () {
@@ -104,16 +149,25 @@
     const $section = $(`.dynamic-section[data-section="${sectionName}"]`);
     if ($section.length) {
       addRow($section);
+      syncRuleConditionOptions($section.closest('form'));
     }
   });
 
   $(document).on('click', '.dynamic-section .remove-row', function () {
     removeRow($(this).closest('tr.dynamic-row'));
+    syncRuleConditionOptions($(this).closest('form'));
+  });
+
+  $(document).on('input change', '.dynamic-section[data-section="conditions"] input, .dynamic-section[data-section="conditions"] select, .dynamic-section[data-section="conditions"] textarea', function () {
+    syncRuleConditionOptions($(this).closest('form'));
   });
 
   $(function () {
     $('.dynamic-section').each(function () {
       initSection($(this));
+    });
+    $('form').each(function () {
+      syncRuleConditionOptions($(this));
     });
   });
 })();

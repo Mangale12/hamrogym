@@ -83,6 +83,75 @@
     });
   }
 
+  function reloadFormData($form, detailUrlTemplate, idFieldName) {
+    const id = $form.find(`[name="${idFieldName}"]`).val();
+    if (!id || !detailUrlTemplate) {
+      return $.Deferred().resolve().promise();
+    }
+
+    return $.get(detailUrlTemplate.replace('{id}', id))
+      .done(function (res) {
+        if (res && res.data) {
+          fillForm($form, res.data);
+          hydrateSelect2($form);
+          if (res.data[idFieldName]) {
+            $form.find(`[name="${idFieldName}"]`).val(res.data[idFieldName]);
+          }
+          if (res.data.__dynamic_sections__ && window.renderDynamicSections) {
+            window.renderDynamicSections($form, res.data.__dynamic_sections__);
+          }
+          syncTabsWithRecordState($form.closest('.modal'), $form, idFieldName);
+        }
+      });
+  }
+
+  function syncTabsWithRecordState($modal, $form, idFieldName) {
+    const hasId = !!($form.find(`[name="${idFieldName}"]`).val() || '').trim();
+    $modal.find('[data-requires-id="true"]').each(function () {
+      $(this).prop('disabled', !hasId);
+    });
+  }
+
+  function showTab($modal, $form, tabKey) {
+    if (!tabKey) return;
+    const formId = $form.attr('id');
+    const $tab = $modal.find(`#${formId}-${tabKey}-tab`);
+    if (!$tab.length || $tab.prop('disabled')) return;
+    if ($tab.length && window.bootstrap) {
+      const tabInstance = new bootstrap.Tab($tab[0]);
+      tabInstance.show();
+    } else {
+      $tab.trigger('click');
+    }
+  }
+
+  function loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, targetTabKey) {
+    if (title) $modal.find('.modal-title').text(title);
+
+    $.get(detailUrl)
+      .done(function (res) {
+        if (res && res.data) {
+          fillForm($form, res.data);
+          hydrateSelect2($form);
+          clearFieldErrors($form);
+          if (res.data[idFieldName]) {
+            $form.find(`[name="${idFieldName}"]`).val(res.data[idFieldName]);
+          }
+          if (res.data.__dynamic_sections__ && window.renderDynamicSections) {
+            window.renderDynamicSections($form, res.data.__dynamic_sections__);
+          }
+          if (config.afterLoad) {
+            config.afterLoad($modal, $form, res.data);
+          }
+          syncTabsWithRecordState($modal, $form, idFieldName);
+          showTab($modal, $form, targetTabKey);
+        }
+      })
+      .fail(function () {
+        showAlert('danger', 'Failed to load record.');
+      });
+  }
+
   window.initCrudModal = function (config) {
     const $modal = $('#' + config.modalId);
     const $form = $('#' + config.formId);
@@ -115,6 +184,7 @@
         window.resetDynamicSections($form);
       }
       clearFieldErrors($form);
+      syncTabsWithRecordState($modal, $form, idFieldName);
     }
 
     $modal.on('hidden.bs.modal', function () {
@@ -128,25 +198,18 @@
       if (recordId) {
         $form.find(`[name="${idFieldName}"]`).val(recordId);
       }
-      if (title) $modal.find('.modal-title').text(title);
+      loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, '');
+    });
 
-      $.get(detailUrl)
-        .done(function (res) {
-          if (res && res.data) {
-            fillForm($form, res.data);
-            hydrateSelect2($form);
-            clearFieldErrors($form);
-            if (res.data[idFieldName]) {
-              $form.find(`[name="${idFieldName}"]`).val(res.data[idFieldName]);
-            }
-            if (res.data.__dynamic_sections__ && window.renderDynamicSections) {
-              window.renderDynamicSections($form, res.data.__dynamic_sections__);
-            }
-          }
-        })
-        .fail(function () {
-          showAlert('danger', 'Failed to load record.');
-        });
+    $(document).on('click', '.open-tab-btn', function () {
+      const detailUrl = $(this).data('detail-url');
+      const title = $(this).data('title');
+      const recordId = $(this).data('id');
+      const tabKey = $(this).data('tabKey') || '';
+      if (recordId) {
+        $form.find(`[name="${idFieldName}"]`).val(recordId);
+      }
+      loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, tabKey);
     });
 
     $(document).on('click', '.delete-btn', function () {
@@ -227,33 +290,37 @@
           if (res && res.id) {
             $form.find(`[name="${idFieldName}"]`).val(res.id);
           }
-          if (!activeTab) {
-            hideModal();
-          }
-          if (config.table) {
-            if (!isUpdate && config.clearSearchOnCreate !== false) {
-              config.table.search('').page('first').draw('page');
-            } else {
-              config.table.ajax.reload(null, false);
-            }
-          }
-          showAlert('success', `${config.entityName} saved successfully.`);
 
-          if (activeTab) {
-            const $activeBtn = $modal.find(`.tab-save-btn[data-tab="${activeTab}"]`);
-            const $pane = $activeBtn.closest('.tab-pane');
-            const $nextPane = $pane.nextAll('.tab-pane').first();
-            if ($nextPane.length) {
-              const nextId = $nextPane.attr('id');
-              const $nextTab = $modal.find(`[data-bs-target="#${nextId}"]`);
-              if ($nextTab.length && window.bootstrap) {
-                const tabInstance = new bootstrap.Tab($nextTab[0]);
-                tabInstance.show();
-              } else {
-                $nextTab.trigger('click');
+          reloadFormData($form, config.detailUrlTemplate, idFieldName)
+            .always(function () {
+              if (!activeTab) {
+                hideModal();
               }
-            }
-          }
+              if (config.table) {
+                if (!isUpdate && config.clearSearchOnCreate !== false) {
+                  config.table.search('').page('first').draw('page');
+                } else {
+                  config.table.ajax.reload(null, false);
+                }
+              }
+              showAlert('success', `${config.entityName} saved successfully.`);
+
+              if (activeTab) {
+                const $activeBtn = $modal.find(`.tab-save-btn[data-tab="${activeTab}"]`);
+                const $pane = $activeBtn.closest('.tab-pane');
+                const $nextPane = $pane.nextAll('.tab-pane').first();
+                if ($nextPane.length) {
+                  const nextId = $nextPane.attr('id');
+                  const $nextTab = $modal.find(`[data-bs-target="#${nextId}"]`);
+                  if ($nextTab.length && window.bootstrap) {
+                    const tabInstance = new bootstrap.Tab($nextTab[0]);
+                    tabInstance.show();
+                  } else {
+                    $nextTab.trigger('click');
+                  }
+                }
+              }
+            });
         })
         .fail(function (xhr) {
           let message = `Failed to save ${config.entityName}.`;
@@ -271,5 +338,7 @@
           showAlert('danger', message);
         });
     });
+
+    syncTabsWithRecordState($modal, $form, idFieldName);
   };
 })();

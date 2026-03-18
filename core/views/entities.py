@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+import json
 from typing import Dict, List, Type
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,6 +13,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from core.config import EntityConfig
+from core.helpers.context import get_current_fiscal_year_id
 
 
 def _serialize_form_instance(form) -> Dict[str, object]:
@@ -35,6 +37,7 @@ def _actions_render(entity: EntityConfig) -> str:
     detail_url = reverse(f"{entity.name}_detail", args=[0]).replace("/0/", "/{id}/")
     update_url = reverse(f"{entity.name}_update", args=[0]).replace("/0/", "/{id}/")
     delete_url = reverse(f"{entity.name}_delete", args=[0]).replace("/0/", "/{id}/")
+    extra_actions = json.dumps(entity.action_buttons or [])
 
     return (
         "function(id){return renderActionButtons(id, {"
@@ -42,7 +45,8 @@ def _actions_render(entity: EntityConfig) -> str:
         f"delete: '{delete_url}', "
         f"detail: '{detail_url}', "
         f"modal_id: '#{entity.name}Modal', "
-        f"title: 'Edit {entity.verbose_name}'"
+        f"title: 'Edit {entity.verbose_name}', "
+        f"extra_actions: {extra_actions}"
         "});}"
     )
 
@@ -66,6 +70,16 @@ def _resolve_field_urls(fields: List[Dict[str, object]]) -> List[Dict[str, objec
             field["url"] = reverse(url_name)
         resolved.append(field)
     return resolved
+
+
+def _assign_context_defaults(request, obj, form) -> None:
+    if hasattr(obj, "fiscal_year_id") and not getattr(obj, "fiscal_year_id", None):
+        fiscal_year_id = get_current_fiscal_year_id(request)
+        if fiscal_year_id:
+            obj.fiscal_year_id = fiscal_year_id
+        else:
+            error_field = "fiscal_year" if "fiscal_year" in form.fields else None
+            form.add_error(error_field, "Active fiscal year not found in session.")
 
 
 def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
@@ -117,18 +131,21 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "modal_title_add": f"Add {entity.verbose_name}",
                     "modal_title_edit": f"Edit {entity.verbose_name}",
                     "reset_defaults": entity.reset_defaults,
+                    "show_create": entity.show_create,
                 }
             )
 
-            context["datatable_columns"] = entity.datatable_columns + [
-                {
-                    "name": "id",
-                    "title": "Actions",
-                    "orderable": False,
-                    "searchable": False,
-                    "render": _actions_render(entity),
-                }
-            ]
+            context["datatable_columns"] = list(entity.datatable_columns)
+            if entity.show_actions:
+                context["datatable_columns"].append(
+                    {
+                        "name": "id",
+                        "title": "Actions",
+                        "orderable": False,
+                        "searchable": False,
+                        "render": _actions_render(entity),
+                    }
+                )
             return context
 
     class EntityDetailView(LoginRequiredMixin, View):
@@ -146,6 +163,9 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             form = entity.form_class(request.POST, request.FILES)
             if form.is_valid():
                 obj = form.save(commit=False)
+                _assign_context_defaults(request, obj, form)
+                if form.errors:
+                    return JsonResponse({"success": False, "errors": form.errors}, status=400)
                 if hasattr(obj, "created_by_id"):
                     obj.created_by = request.user
                 if hasattr(obj, "updated_by_id"):
@@ -166,6 +186,9 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             form = entity.form_class(request.POST, request.FILES, instance=obj)
             if form.is_valid():
                 obj = form.save(commit=False)
+                _assign_context_defaults(request, obj, form)
+                if form.errors:
+                    return JsonResponse({"success": False, "errors": form.errors}, status=400)
                 if hasattr(obj, "updated_by_id"):
                     obj.updated_by = request.user
                 obj.save()
