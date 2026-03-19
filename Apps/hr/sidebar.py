@@ -69,6 +69,12 @@ SIDEBAR_ITEMS = [
                 "url_name": "hiring_plan_list",
                 "match": "/core/hiring-plans",
             },
+            {
+                "label": "Job Batches",
+                "icon": "layers",
+                "url_name": "job_batch_list",
+                "match": "/core/job-batches",
+            }
         ],
     },
 ]

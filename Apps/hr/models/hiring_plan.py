@@ -36,3 +36,22 @@ class HiringPlan(FiscalYearModelMixin, models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class HiringPlanItem(models.Model):
+    hiring_plan = models.ForeignKey(HiringPlan, on_delete=models.CASCADE, related_name="items")
+    branch = models.ForeignKey("core.Branch", on_delete=models.CASCADE, related_name="hiring_plan_items")
+    department = models.ForeignKey("Department", on_delete=models.CASCADE, related_name="hiring_plan_items")
+    designation = models.ForeignKey("Designation", on_delete=models.CASCADE, related_name="hiring_plan_items")
+    employeement_type = models.ForeignKey("EmploymentType", on_delete=models.CASCADE, related_name="hiring_plan_items")
+    planned_head_count = models.PositiveIntegerField(default=1)
+    planned_month = models.PositiveIntegerField(default=1)
+    remarks = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("hiring_plan", "branch", "department", "designation", "employeement_type")
+
+    def __str__(self) -> str:
+        return f"{self.hiring_plan.name} - {self.branch.name} - {self.department.name} - {self.designation.name} - {self.employeement_type.name}"

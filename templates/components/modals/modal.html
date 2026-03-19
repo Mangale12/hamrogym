@@ -19,7 +19,7 @@
               <div class="row">
                 {% include "components/forms/fields_grid.html" with fields=fields modal_id=modal_id %}
               </div>
-              {% for section_name, section in dynamic_sections.items %}
+              {% for section_name, section in dynamic_section_entries %}
                 {% if section.layout == "table" %}
                   {% include "components/dynamic_section/table.html" with section=section section_name=section_name %}
                 {% endif %}

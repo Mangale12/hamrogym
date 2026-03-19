@@ -37,17 +37,31 @@ def _actions_render(entity: EntityConfig) -> str:
     detail_url = reverse(f"{entity.name}_detail", args=[0]).replace("/0/", "/{id}/")
     update_url = reverse(f"{entity.name}_update", args=[0]).replace("/0/", "/{id}/")
     delete_url = reverse(f"{entity.name}_delete", args=[0]).replace("/0/", "/{id}/")
-    extra_actions = json.dumps(entity.action_buttons or [])
+    resolved_actions = []
+    for raw_action in entity.action_buttons or []:
+        action = dict(raw_action)
+        action_name = action.get("action_name")
+        if action_name and action_name in (entity.row_actions or {}):
+            action["action_url"] = reverse(f"{entity.name}_{action_name}", args=[0]).replace(
+                "/0/", "/{id}/"
+            )
+        resolved_actions.append(action)
+    extra_actions = json.dumps(resolved_actions)
 
     return (
-        "function(id){return renderActionButtons(id, {"
+        "function(data,type,row){return renderActionButtons((row && row.id) || data, {"
+        f"view: {'true' if entity.show_view else 'false'}, "
         f"edit: '{update_url}', "
         f"delete: '{delete_url}', "
         f"detail: '{detail_url}', "
         f"modal_id: '#{entity.name}Modal', "
         f"title: 'Edit {entity.verbose_name}', "
+        f"view_title: 'View {entity.verbose_name}', "
+        f"action_state_field: {json.dumps(entity.action_state_field)}, "
+        f"hide_edit_on_values: {json.dumps(entity.hide_edit_on_values)}, "
+        f"hide_delete_on_values: {json.dumps(entity.hide_delete_on_values)}, "
         f"extra_actions: {extra_actions}"
-        "});}"
+        "}, row || {});}"
     )
 
 
@@ -72,6 +86,15 @@ def _resolve_field_urls(fields: List[Dict[str, object]]) -> List[Dict[str, objec
     return resolved
 
 
+def _resolve_dynamic_sections(sections: Dict[str, object]) -> Dict[str, object]:
+    resolved_sections = {}
+    for section_name, raw_section in (sections or {}).items():
+        section = dict(raw_section)
+        section["fields"] = _resolve_field_urls(section.get("fields", []))
+        resolved_sections[section_name] = section
+    return resolved_sections
+
+
 def _assign_context_defaults(request, obj, form) -> None:
     if hasattr(obj, "fiscal_year_id") and not getattr(obj, "fiscal_year_id", None):
         fiscal_year_id = get_current_fiscal_year_id(request)
@@ -89,6 +112,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
         def get_context_data(self, **kwargs):
             context = super().get_context_data(**kwargs)
             fields = _resolve_field_urls(entity.fields)
+            dynamic_sections = _resolve_dynamic_sections(entity.dynamic_sections or {})
             tabs = None
             if entity.tabs:
                 resolved_tabs = []
@@ -96,11 +120,11 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     tab_data = dict(tab)
                     tab_data["fields"] = _resolve_field_urls(tab_data.get("fields", []))
                     section_names = tab_data.get("sections") or tab_data.get("section_names") or []
-                    if section_names and entity.dynamic_sections:
+                    if section_names and dynamic_sections:
                         tab_data["sections"] = [
-                            {"name": name, "section": entity.dynamic_sections.get(name)}
+                            {"name": name, "section": dynamic_sections.get(name)}
                             for name in section_names
-                            if entity.dynamic_sections.get(name)
+                            if dynamic_sections.get(name)
                         ]
                     else:
                         tab_data["sections"] = []
@@ -116,7 +140,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "table_var": None,
                     "fields": fields,
                     "tabs": tabs,
-                    "dynamic_sections": entity.dynamic_sections or {},
+                    "dynamic_sections": dynamic_sections,
+                    "dynamic_section_entries": list(dynamic_sections.items()),
                     "datatable_url": reverse(f"{entity.name}_datatable"),
                     "create_url": reverse(f"{entity.name}_create"),
                     "update_url_template": reverse(f"{entity.name}_update", args=[0]).replace(
@@ -130,6 +155,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     ),
                     "modal_title_add": f"Add {entity.verbose_name}",
                     "modal_title_edit": f"Edit {entity.verbose_name}",
+                    "modal_title_view": f"View {entity.verbose_name}",
                     "reset_defaults": entity.reset_defaults,
                     "show_create": entity.show_create,
                 }
@@ -207,6 +233,28 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             obj.delete()
             return JsonResponse({"success": True})
 
+    action_views = {}
+    for action_name, handler in (entity.row_actions or {}).items():
+        def _build_action_view(_handler, _action_name):
+            class EntityActionView(LoginRequiredMixin, View):
+                def post(self, request, pk):
+                    obj = get_object_or_404(entity.model, pk=pk)
+                    result = _handler(request, obj)
+                    if isinstance(result, dict):
+                        payload = {"success": True}
+                        payload.update(result)
+                        return JsonResponse(payload)
+                    return JsonResponse(
+                        {
+                            "success": True,
+                            "message": result or f"{entity.verbose_name} {_action_name} successful.",
+                        }
+                    )
+
+            return EntityActionView
+
+        action_views[action_name] = _build_action_view(handler, action_name)
+
     class EntitySelectView(LoginRequiredMixin, View):
         def get(self, request):
             term = (request.GET.get("term") or request.GET.get("q") or "").strip()
@@ -255,4 +303,5 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
         "delete_view": EntityDeleteView,
         "datatable_view": data_table_view,
         "select_view": EntitySelectView,
+        "action_views": action_views,
     }

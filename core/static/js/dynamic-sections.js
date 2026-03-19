@@ -7,6 +7,7 @@
     $row.find('input, select, textarea').each(function () {
       const $field = $(this);
       const type = ($field.attr('type') || '').toLowerCase();
+      $field.removeAttr('data-selected-value');
       if (type === 'checkbox') {
         $field.prop('checked', false);
       } else if (type === 'file') {
@@ -25,7 +26,9 @@
     if (type === 'checkbox') {
       $field.prop('checked', !!value);
     } else if (tag === 'select') {
-      $field.val(value == null ? '' : value).trigger('change');
+      const normalizedValue = value == null ? '' : String(value);
+      $field.attr('data-selected-value', normalizedValue);
+      $field.val(normalizedValue).trigger('change');
     } else if (type === 'file') {
       // Cannot set file input value for security reasons.
     } else {
@@ -97,6 +100,9 @@
     const $row = $(html);
     clearRow($row);
     $tbody.append($row);
+    if (window.initializeModalSelect2) {
+      window.initializeModalSelect2($row);
+    }
   }
 
   function removeRow($row) {
@@ -123,6 +129,9 @@
         setFieldValue($row, key, value);
       });
       $tbody.append($row);
+      if (window.initializeModalSelect2) {
+        window.initializeModalSelect2($row);
+      }
     });
   }
 

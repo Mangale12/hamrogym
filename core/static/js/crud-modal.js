@@ -100,6 +100,7 @@
           if (res.data.__dynamic_sections__ && window.renderDynamicSections) {
             window.renderDynamicSections($form, res.data.__dynamic_sections__);
           }
+          syncFieldVisibility($form, idFieldName);
           syncTabsWithRecordState($form.closest('.modal'), $form, idFieldName);
         }
       });
@@ -109,6 +110,16 @@
     const hasId = !!($form.find(`[name="${idFieldName}"]`).val() || '').trim();
     $modal.find('[data-requires-id="true"]').each(function () {
       $(this).prop('disabled', !hasId);
+    });
+  }
+
+  function syncFieldVisibility($form, idFieldName) {
+    const hasId = !!($form.find(`[name="${idFieldName}"]`).val() || '').trim();
+    $form.find('[data-update-only="true"]').each(function () {
+      $(this).toggle(hasId);
+    });
+    $form.find('[data-create-only="true"]').each(function () {
+      $(this).toggle(!hasId);
     });
   }
 
@@ -125,7 +136,40 @@
     }
   }
 
-  function loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, targetTabKey) {
+  function setViewMode($modal, $form, isViewMode) {
+    $modal.data('view-mode', !!isViewMode);
+
+    $form.find('input, textarea, select, button').each(function () {
+      const $field = $(this);
+      if (
+        $field.hasClass('btn-close') ||
+        $field.attr('data-bs-dismiss') === 'modal' ||
+        $field.hasClass('view-btn') ||
+        $field.hasClass('edit-btn') ||
+        $field.hasClass('delete-btn')
+      ) {
+        return;
+      }
+
+      if ($field.attr('type') === 'hidden') {
+        return;
+      }
+
+      if ($field.is('button')) {
+        if ($field.hasClass('save-all-btn') || $field.hasClass('tab-save-btn') || $field.hasClass('add-row') || $field.hasClass('remove-row')) {
+          $field.toggle(!isViewMode);
+        }
+        return;
+      }
+
+      $field.prop('disabled', !!isViewMode);
+      if ($field.hasClass('select2-hidden-accessible')) {
+        $field.trigger('change.select2');
+      }
+    });
+  }
+
+  function loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, targetTabKey, isViewMode) {
     if (title) $modal.find('.modal-title').text(title);
 
     $.get(detailUrl)
@@ -143,6 +187,8 @@
           if (config.afterLoad) {
             config.afterLoad($modal, $form, res.data);
           }
+          setViewMode($modal, $form, !!isViewMode);
+          syncFieldVisibility($form, idFieldName);
           syncTabsWithRecordState($modal, $form, idFieldName);
           showTab($modal, $form, targetTabKey);
         }
@@ -179,11 +225,13 @@
       $form[0].reset();
       $form.find(`[name="${idFieldName}"]`).val('');
       $form.find('[name="_active_tab"]').val('');
+      setViewMode($modal, $form, false);
       if (config.afterReset) config.afterReset();
       if (window.resetDynamicSections) {
         window.resetDynamicSections($form);
       }
       clearFieldErrors($form);
+      syncFieldVisibility($form, idFieldName);
       syncTabsWithRecordState($modal, $form, idFieldName);
     }
 
@@ -195,10 +243,21 @@
       const detailUrl = $(this).data('detail-url');
       const title = $(this).data('title');
       const recordId = $(this).data('id');
+      setViewMode($modal, $form, false);
       if (recordId) {
         $form.find(`[name="${idFieldName}"]`).val(recordId);
       }
-      loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, '');
+      loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, '', false);
+    });
+
+    $(document).on('click', '.view-btn', function () {
+      const detailUrl = $(this).data('detail-url');
+      const title = $(this).data('title');
+      const recordId = $(this).data('id');
+      if (recordId) {
+        $form.find(`[name="${idFieldName}"]`).val(recordId);
+      }
+      loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, '', true);
     });
 
     $(document).on('click', '.open-tab-btn', function () {
@@ -206,10 +265,11 @@
       const title = $(this).data('title');
       const recordId = $(this).data('id');
       const tabKey = $(this).data('tabKey') || '';
+      setViewMode($modal, $form, false);
       if (recordId) {
         $form.find(`[name="${idFieldName}"]`).val(recordId);
       }
-      loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, tabKey);
+      loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, tabKey, false);
     });
 
     $(document).on('click', '.delete-btn', function () {
@@ -256,6 +316,61 @@
       }
     });
 
+    $(document).on('click', '.entity-post-action-btn', function () {
+      const actionUrl = $(this).data('action-url');
+      const title = $(this).data('title') || 'Confirm';
+      const confirmText = $(this).data('confirmText') || 'Are you sure?';
+      const successMessage = $(this).data('successMessage') || `${config.entityName} updated successfully.`;
+
+      if (!actionUrl) return;
+
+      const runAction = function () {
+        $.ajax({
+          url: actionUrl,
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        })
+          .done(function (res) {
+            const message = (res && res.message) || successMessage;
+            if (config.table) {
+              config.table.ajax.reload(null, false);
+            }
+            if (window.Swal) {
+              Swal.fire('Success', message, 'success');
+            } else {
+              showAlert('success', message);
+            }
+          })
+          .fail(function (xhr) {
+            let message = `Failed to process ${config.entityName}.`;
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              message = xhr.responseJSON.message;
+            }
+            if (window.Swal) {
+              Swal.fire('Failed', message, 'error');
+            } else {
+              showAlert('danger', message);
+            }
+          });
+      };
+
+      if (window.Swal) {
+        Swal.fire({
+          title: title,
+          text: confirmText,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes',
+          cancelButtonText: 'Cancel',
+        }).then((result) => {
+          if (result.isConfirmed) runAction();
+        });
+      } else {
+        if (!confirm(confirmText)) return;
+        runAction();
+      }
+    });
+
     $(document).on('click', '.tab-save-btn', function () {
       const tabKey = $(this).data('tab') || '';
       $form.find('[name="_active_tab"]').val(tabKey);
@@ -267,6 +382,10 @@
     });
 
     $form.on('submit', function (e) {
+      if ($modal.data('view-mode')) {
+        e.preventDefault();
+        return;
+      }
       e.preventDefault();
       clearFieldErrors($form);
       const id = $form.find(`[name="${idFieldName}"]`).val();

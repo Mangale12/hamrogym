@@ -104,83 +104,40 @@
         window.refreshFeatherIcons = replaceFeatherIcons;
     })();
 
-    $(document).on('click', '.edit-btn', function() {
-        const url = $(this).data('url');          // e.g. "/room-view-types/5/"
-        const modalSelector = $(this).data('bs-target'); // e.g. "#roomViewTypeModal"
-        const id = $(this).data('id');
-        const title = $(this).data('title');
-        $.ajax({
-            url: url.replace('{id}', id),
-            method: 'GET',
-            success: function(data) {
-                const $modal = $(modalSelector);
+    window.initializeModalSelect2 = function ($scope) {
+        const $container = $scope && $scope.length ? $scope : $(document);
 
-                // Set modal title to "Edit ..."
-                $modal.find('.modal-title').text(title);
-
-                // 🔑 Auto-fill form fields by name
-                for (const [key, value] of Object.entries(data.data)) {
-                    const $field = $modal.find(`[name="${key}"]`);
-                    if ($field.length) {
-                        if ($field.is(':checkbox')) {
-                            $field.prop('checked', !!value);
-                        } else {
-                            $field.val(value || '');
-                        }
-                    }
-                }
-
-                // Show modal
-                $modal.modal('show');
-
-                // Fix Feather icons inside modal (optional)
-                $modal.on('shown.bs.modal', function() {
-                    feather.replace();
-                });
-            },
-            error: function() {
-                alert('Failed to load record.');
-            }
-        });
-    });
-
-
-    // Initialize Select2 for modals when they open
-    $(document).on('shown.bs.modal', '.modal', function () {
-        const $modal = $(this);
-        const modalId = $modal.attr('id');
-
-        // Find all select fields inside this modal that have a data-url
-        $modal.find('select[data-url]').each(function () {
+        $container.find('select[data-url]').each(function () {
             const $select = $(this);
             const url = $select.data('url');
-            console.log(url);
-            const fieldName = $select.data('field-name');
+            const fieldName = $select.data('field-name') || '';
+            const $modal = $select.closest('.modal');
 
-            // Destroy if already initialized (prevent duplicates)
-            if ($select.data('select2')) {
-                $select.select2('destroy');
+            if (!url) {
+                return;
             }
 
-            // Initialize Select2 with AJAX
+            if ($select.data('select2')) {
+                return;
+            }
+
             $select.select2({
                 theme: 'bootstrap-5',
                 width: '100%',
-                placeholder: `Select ${fieldName}`,
+                placeholder: fieldName ? `Select ${fieldName}` : 'Select option',
                 allowClear: !($select.prop('required')),
+                dropdownParent: $modal.length ? $modal : undefined,
                 ajax: {
                     url: url,
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
                         return {
-                            q: params.term, // search term
+                            q: params.term,
                             page: params.page || 1
                         };
                     },
                     processResults: function (data, params) {
-                        // Normalize response
-                        // Expected format: { results: [{ id: 1, text: "Name" }, ...] }
                         return {
                             results: data.results || data,
                             pagination: {
@@ -190,34 +147,43 @@
                     },
                     cache: true
                 },
-                minimumInputLength: 0,
-                // Optional: Load initial options when opened (if needed)
-                // But usually not needed for create forms
+                minimumInputLength: 0
             });
 
-            // If editing, hydrate the selected value so Select2 shows it.
-            const currentValue = $select.val();
-            if (currentValue) {
-                const values = Array.isArray(currentValue) ? currentValue : [currentValue];
-                const missing = values.filter(
-                    (val) => $select.find(`option[value="${val}"]`).length === 0
-                );
-                if (missing.length) {
-                    $.get(url, { ids: missing.join(',') })
-                        .done(function (res) {
-                            const results = res && res.results ? res.results : [];
-                            results.forEach((item) => {
-                                const option = new Option(item.text, item.id, true, true);
-                                $select.append(option);
-                            });
-                            $select.trigger('change');
-                        })
-                        .fail(function () {
-                            // silently ignore hydration failures
-                        });
-                }
+            const pendingValue = $select.attr('data-selected-value');
+            const currentValue = pendingValue || $select.val();
+            if (!currentValue) {
+                return;
             }
+
+            const values = Array.isArray(currentValue) ? currentValue : [currentValue];
+            const missing = values.filter(
+                (val) => $select.find(`option[value="${val}"]`).length === 0
+            );
+
+            if (!missing.length) {
+                $select.val(currentValue).trigger('change');
+                $select.removeAttr('data-selected-value');
+                $select.trigger('change');
+                return;
+            }
+
+            $.get(url, { ids: missing.join(',') })
+                .done(function (res) {
+                    const results = res && res.results ? res.results : [];
+                    results.forEach((item) => {
+                        const option = new Option(item.text, item.id, true, true);
+                        $select.append(option);
+                    });
+                    $select.val(currentValue);
+                    $select.removeAttr('data-selected-value');
+                    $select.trigger('change');
+                });
         });
+    };
+
+    $(document).on('shown.bs.modal', '.modal', function () {
+        window.initializeModalSelect2($(this));
     });
     </script>
 

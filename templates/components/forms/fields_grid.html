@@ -1,5 +1,9 @@
 {% for field in fields %}
-  <div class="col-md-{{ field.col|default:6 }} mb-3">
+  <div
+    class="col-md-{{ field.col|default:6 }} mb-3"
+    data-field-name="{{ field.name }}"
+    {% if field.update_only %}data-update-only="true"{% endif %}
+    {% if field.create_only %}data-create-only="true"{% endif %}>
     {% if field.type == "textarea" %}
       {% include "components/forms/textarea.html" with label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id style=field.style|default:"min-height: 150px;" attributes=field.attributes no_wrapper=True %}
 
@@ -17,5 +21,5 @@
     {% else %}
       {% include "components/forms/input.html" with type=field.type label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step prefix=field.prefix suffix=field.suffix attributes=field.attributes no_wrapper=True %}
     {% endif %}
-  </div>
+</div>
 {% endfor %}

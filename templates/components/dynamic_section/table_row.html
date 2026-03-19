@@ -9,6 +9,7 @@
             name="{{ section_name }}[{{ index }}][{{ field.name }}]"
             class="form-select {{ field.class }}"
             {% if field.required %}required{% endif %}
+            data-field-name="{{ field.label }}"
             data-url="{{ field.url|default:'' }}">
             <option value="">Select {{ field.label }}</option>
           </select>

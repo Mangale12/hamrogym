@@ -96,3 +96,10 @@ RECRUITMENT_REASON_CHOICES = [
     ("new_position", "New Position"),
     ("expansion", "Expansion"),
 ]
+
+
+PRIORITY_CHOICES = [
+    ("low", "Low"),
+    ("medium", "Medium"),
+    ("high", "High"),
+]

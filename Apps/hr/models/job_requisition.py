@@ -1,0 +1,34 @@
+from django.db import models
+from django.conf import settings
+from core.choices import APPROVAL_STATUS_CHOICES, PRIORITY_CHOICES
+class JobRequisition(models.Model):
+    batch = models.ForeignKey("JobBatches", on_delete=models.CASCADE, related_name="job_requisitions")
+    requisition_code = models.CharField(max_length=100, unique=True)
+    branch = models.ForeignKey("core.Branch", on_delete=models.CASCADE, null=True, blank=True, related_name="job_requisitions")
+    department = models.ForeignKey("Department", on_delete=models.CASCADE, null=True, blank=True, related_name="job_requisitions")
+    designation = models.ForeignKey("Designation", on_delete=models.CASCADE, null=True, blank=True, related_name="job_requisitions")
+    employment_type = models.ForeignKey("EmploymentType", on_delete=models.CASCADE, null=True, blank=True, related_name="job_requisitions")
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name="job_requisitions")
+    vacancies = models.PositiveIntegerField(default=1)
+    job_title = models.CharField(max_length=250)
+    job_description = models.TextField(blank=True, null=True)
+    job_responsibilities = models.TextField(blank=True, null=True)
+    required_skills = models.TextField(blank=True, null=True)
+    required_experience = models.TextField(blank=True, null=True)
+    education_requirement = models.TextField(blank=True, null=True)
+    salary_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    salary_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    job_location = models.CharField(max_length=255, blank=True, null=True)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default="medium")
+    expected_joining_date = models.DateField(null=True, blank=True)
+    recruitment_reason = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default="draft")
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["job_title"]
+
+    def __str__(self) -> str:
+        return self.job_title

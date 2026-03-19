@@ -45,3 +45,12 @@ for entity in get_entities():
             ),
         ]
     )
+
+    for action_name, action_view in views.get("action_views", {}).items():
+        urlpatterns.append(
+            path(
+                f"{url_base}/<int:pk>/{action_name}/",
+                action_view.as_view(),
+                name=f"{name}_{action_name}",
+            )
+        )

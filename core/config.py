@@ -23,6 +23,10 @@ class EntityConfig:
     dynamic_sections_loader: Optional[Callable[[models.Model], Dict[str, Any]]] = None
     dynamic_sections_saver: Optional[Callable[[models.Model, Any], None]] = None
     post_save: Optional[Callable[[models.Model, Any], None]] = None
+    row_actions: Dict[str, Callable[[Any, models.Model], Any]] = field(default_factory=dict)
+    action_state_field: Optional[str] = None
+    hide_edit_on_values: List[Any] = field(default_factory=list)
+    hide_delete_on_values: List[Any] = field(default_factory=list)
     select_search_fields: Optional[List[str]] = None
     select_label_field: Optional[str] = None
     select_label_func: Optional[Callable[[models.Model], str]] = None
@@ -31,6 +35,7 @@ class EntityConfig:
     action_buttons: List[Dict[str, Any]] = field(default_factory=list)
     show_actions: bool = True
     show_create: bool = True
+    show_view: bool = True
 
     @property
     def url_base(self) -> str:

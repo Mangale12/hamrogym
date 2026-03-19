@@ -20,6 +20,8 @@ from .job_position import JobPosition
 from .employeement_type import EmploymentType
 from .job_posting import JobPosting
 from .applicant import Applicant
-from .job_requiditon import JobRequisition
+from .job_requisition import JobRequisition
 from .approval_workflow_level import ApprovalWorkflowLevel
-from .hiring_plan import HiringPlan
+from .hiring_plan import HiringPlan, HiringPlanItem
+from .job_batch_ import JobBatches
+from .job_requisition import JobRequisition
