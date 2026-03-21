@@ -5,7 +5,8 @@ from ..models import JobPosting
 
 JOB_POSTING_COLUMNS = [
     ("id", "id"),
-    ("job_position", "job_position.name"),
+    ("title", "title"),
+    ("job_position", "job_position"),
     ("posting_date", lambda obj, request: encode_date_for_display(obj.posting_date, request)),
     ("closing_date", lambda obj, request: encode_date_for_display(obj.closing_date, request)),
     ("is_active", "is_active"),
@@ -13,10 +14,11 @@ JOB_POSTING_COLUMNS = [
 ]
 
 
-class job_postingDataTableView(BaseDataTableView):
+class JobPostingDataTableView(BaseDataTableView):
     model = JobPosting
     columns = JOB_POSTING_COLUMNS
     searchable_columns = [
+       "title",
        "job_position__name",
        "posting_date",
        "closing_date",
@@ -24,6 +26,7 @@ class job_postingDataTableView(BaseDataTableView):
        "remarks",
     ]
     orderable_columns = [
+        "title",
         "job_position__name",
         "posting_date",
         "closing_date",

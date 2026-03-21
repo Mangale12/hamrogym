@@ -1,7 +1,8 @@
 from django.db import models
 from django.conf import settings
 from core.choices import APPROVAL_STATUS_CHOICES, PRIORITY_CHOICES
-class JobRequisition(models.Model):
+from core.mixins.fiscal_year import FiscalYearModelMixin
+class JobRequisition(FiscalYearModelMixin, models.Model):
     batch = models.ForeignKey("JobBatches", on_delete=models.CASCADE, related_name="job_requisitions")
     requisition_code = models.CharField(max_length=100, unique=True)
     branch = models.ForeignKey("core.Branch", on_delete=models.CASCADE, null=True, blank=True, related_name="job_requisitions")
@@ -35,7 +36,7 @@ class JobRequisition(models.Model):
 
 
 
-class JobRequisitionApproval(models.Model):
+class JobRequisitionApproval(FiscalYearModelMixin, models.Model):
     job_requisition = models.ManyToManyField(JobRequisition, related_name="approval")
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="approved_requisitions")
     approve_level = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default="level_1")
@@ -48,3 +49,36 @@ class JobRequisitionApproval(models.Model):
 
     def __str__(self) -> str:
         return f"Approval for {self.job_requisition.job_title} by {self.approved_by}"
+    
+
+
+
+class JobRequisitionPosition(FiscalYearModelMixin, models.Model):
+    job_requisition = models.ForeignKey(JobRequisition, on_delete=models.CASCADE, related_name="job_positions")
+    position_title = models.CharField(max_length=250, null=True, blank=True)
+    designation = models.ForeignKey("Designation", on_delete=models.CASCADE, null=True, blank=True, related_name="job_positions")
+    position_description = models.TextField(blank=True, null=True)
+    responsibilities = models.TextField(blank=True, null=True)
+    requirements = models.TextField(blank=True, null=True)
+    salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["position_title"]
+
+    def __str__(self) -> str:
+        return self.position_title
+    
+
+
+class JobPositionSkill(models.Model):
+    job_position = models.ForeignKey(JobRequisitionPosition, on_delete=models.CASCADE, related_name="skills")
+    skill = models.ForeignKey("JobSkill", on_delete=models.CASCADE, related_name="job_positions")
+    skill_level = models.ForeignKey("SkillLevel", on_delete=models.CASCADE, null=True, blank=True, related_name="job_position_skills")
+    class Meta:
+        unique_together = ("job_position", "skill")
+
+    def __str__(self) -> str:
+        return f"{self.skill.name} ({self.skill_level.name})"

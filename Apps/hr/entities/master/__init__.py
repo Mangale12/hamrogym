@@ -12,3 +12,6 @@ from . import approval_workflow_level  # noqa: F401
 from . import hiring_plan  # noqa: F401
 from . import job_batch_  # noqa: F401
 from . import job_requisition  # noqa: F401
+from . import job_skill  # noqa: F401
+from . import skill_level  # noqa: F401
+from . import job_posting_channel  # noqa: F401

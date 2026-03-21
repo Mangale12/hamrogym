@@ -117,53 +117,55 @@
                 return;
             }
 
-            if ($select.data('select2')) {
-                return;
+            if (!$select.data('select2')) {
+                $select.select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    placeholder: fieldName ? `Select ${fieldName}` : 'Select option',
+                    allowClear: !($select.prop('required')),
+                    dropdownParent: $modal.length ? $modal : undefined,
+                    ajax: {
+                        url: url,
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term,
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function (data, params) {
+                            return {
+                                results: data.results || data,
+                                pagination: {
+                                    more: (params.page || 1) < (data.pagination?.total_pages || 1)
+                                }
+                            };
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
             }
 
-            $select.select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: fieldName ? `Select ${fieldName}` : 'Select option',
-                allowClear: !($select.prop('required')),
-                dropdownParent: $modal.length ? $modal : undefined,
-                ajax: {
-                    url: url,
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: params.term,
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function (data, params) {
-                        return {
-                            results: data.results || data,
-                            pagination: {
-                                more: (params.page || 1) < (data.pagination?.total_pages || 1)
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 0
-            });
-
+            const pendingValues = $select.data('selectedValues');
             const pendingValue = $select.attr('data-selected-value');
-            const currentValue = pendingValue || $select.val();
+            const currentValue = pendingValues || pendingValue || $select.val();
             if (!currentValue) {
                 return;
             }
 
-            const values = Array.isArray(currentValue) ? currentValue : [currentValue];
+            const values = (Array.isArray(currentValue) ? currentValue : [currentValue]).map(
+                (item) => String(item)
+            );
             const missing = values.filter(
                 (val) => $select.find(`option[value="${val}"]`).length === 0
             );
 
             if (!missing.length) {
-                $select.val(currentValue).trigger('change');
+                $select.val($select.prop('multiple') ? values : values[0]).trigger('change');
                 $select.removeAttr('data-selected-value');
+                $select.removeData('selectedValues');
                 $select.trigger('change');
                 return;
             }
@@ -175,8 +177,9 @@
                         const option = new Option(item.text, item.id, true, true);
                         $select.append(option);
                     });
-                    $select.val(currentValue);
+                    $select.val($select.prop('multiple') ? values : values[0]);
                     $select.removeAttr('data-selected-value');
+                    $select.removeData('selectedValues');
                     $select.trigger('change');
                 });
         });

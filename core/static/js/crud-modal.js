@@ -45,6 +45,23 @@
       if (!$field.length) return;
       if ($field.is(':checkbox')) {
         $field.prop('checked', !!value);
+      } else if ($field.is('select')) {
+        const normalizedValue = $field.prop('multiple')
+          ? (Array.isArray(value) ? value : (value ? [value] : [])).map((item) => String(item))
+          : (value == null ? '' : String(value));
+        if ($field.is('[data-url]')) {
+          if ($field.prop('multiple')) {
+            $field.data('selectedValues', normalizedValue);
+            $field.removeAttr('data-selected-value');
+          } else {
+            $field.attr('data-selected-value', normalizedValue);
+            $field.removeData('selectedValues');
+          }
+        } else {
+          $field.removeAttr('data-selected-value');
+          $field.removeData('selectedValues');
+        }
+        $field.val(normalizedValue).trigger('change');
       } else {
         $field.val(value == null ? '' : value);
       }
@@ -57,14 +74,18 @@
       const url = $select.data('url');
       if (!url) return;
 
-      const value = $select.val();
+      const pendingValues = $select.data('selectedValues');
+      const pendingValue = $select.attr('data-selected-value');
+      const value = pendingValues || pendingValue || $select.val();
       if (!value || (Array.isArray(value) && value.length === 0)) return;
 
-      const values = Array.isArray(value) ? value : [value];
+      const values = (Array.isArray(value) ? value : [value]).map((item) => String(item));
       const existing = values.filter((val) => $select.find(`option[value="${val}"]`).length);
 
       if (existing.length === values.length) {
-        $select.trigger('change');
+        $select.val($select.prop('multiple') ? values : values[0]).trigger('change');
+        $select.removeAttr('data-selected-value');
+        $select.removeData('selectedValues');
         return;
       }
 
@@ -75,7 +96,9 @@
             const option = new Option(item.text, item.id, true, true);
             $select.append(option);
           });
-          $select.trigger('change');
+          $select.val($select.prop('multiple') ? values : values[0]).trigger('change');
+          $select.removeAttr('data-selected-value');
+          $select.removeData('selectedValues');
         })
         .fail(function () {
           // silently ignore select hydration failures
@@ -99,6 +122,10 @@
           }
           if (res.data.__dynamic_sections__ && window.renderDynamicSections) {
             window.renderDynamicSections($form, res.data.__dynamic_sections__);
+          }
+          hydrateSelect2($form);
+          if (window.initializeModalSelect2) {
+            window.initializeModalSelect2($form);
           }
           syncFieldVisibility($form, idFieldName);
           syncTabsWithRecordState($form.closest('.modal'), $form, idFieldName);
@@ -188,6 +215,10 @@
             config.afterLoad($modal, $form, res.data);
           }
           setViewMode($modal, $form, !!isViewMode);
+          hydrateSelect2($form);
+          if (window.initializeModalSelect2) {
+            window.initializeModalSelect2($form);
+          }
           syncFieldVisibility($form, idFieldName);
           syncTabsWithRecordState($modal, $form, idFieldName);
           showTab($modal, $form, targetTabKey);
@@ -225,6 +256,9 @@
       $form[0].reset();
       $form.find(`[name="${idFieldName}"]`).val('');
       $form.find('[name="_active_tab"]').val('');
+      $form.find('select').each(function () {
+        $(this).removeAttr('data-selected-value').removeData('selectedValues').trigger('change');
+      });
       setViewMode($modal, $form, false);
       if (config.afterReset) config.afterReset();
       if (window.resetDynamicSections) {

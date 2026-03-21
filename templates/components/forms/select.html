@@ -13,6 +13,7 @@
     {% if data_url %}data-url="{{ data_url }}"{% endif %}
     {% if data_modal_id %}data-modal-id="{{ data_modal_id }}"{% endif %}
     {% if required %}required{% endif %}
+    {% if multiple %}multiple{% endif %}
     {% if attributes %}
       {% for key, value in attributes.items %}
         {{ key }}="{{ value }}"

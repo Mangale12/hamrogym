@@ -9,6 +9,7 @@
             name="{{ section_name }}[{{ index }}][{{ field.name }}]"
             class="form-select {{ field.class }}"
             {% if field.required %}required{% endif %}
+            {% if field.multiple %}multiple{% endif %}
             data-field-name="{{ field.label }}"
             data-url="{{ field.url|default:'' }}">
             <option value="">Select {{ field.label }}</option>
@@ -25,7 +26,8 @@
         {% elif field.type == "static_select" %}
           <select
             name="{{ section_name }}[{{ index }}][{{ field.name }}]"
-            class="form-select {{ field.class }}">
+            class="form-select {{ field.class }}"
+            {% if field.multiple %}multiple{% endif %}>
             {% for val, label in field.options %}
               <option value="{{ val }}">{{ label }}</option>
             {% endfor %}

@@ -26,8 +26,16 @@
     if (type === 'checkbox') {
       $field.prop('checked', !!value);
     } else if (tag === 'select') {
-      const normalizedValue = value == null ? '' : String(value);
-      $field.attr('data-selected-value', normalizedValue);
+      const normalizedValue = $field.prop('multiple')
+        ? (Array.isArray(value) ? value : (value ? [value] : [])).map((item) => String(item))
+        : (value == null ? '' : String(value));
+      if ($field.prop('multiple')) {
+        $field.data('selectedValues', normalizedValue);
+        $field.removeAttr('data-selected-value');
+      } else {
+        $field.attr('data-selected-value', normalizedValue);
+        $field.removeData('selectedValues');
+      }
       $field.val(normalizedValue).trigger('change');
     } else if (type === 'file') {
       // Cannot set file input value for security reasons.
@@ -149,6 +157,9 @@
         renderSection($section, rows);
       }
     });
+    if (window.initializeModalSelect2) {
+      window.initializeModalSelect2($form);
+    }
     syncRuleConditionOptions($form);
   };
 

@@ -24,4 +24,8 @@ from .job_requisition import JobRequisition
 from .approval_workflow_level import ApprovalWorkflowLevel
 from .hiring_plan import HiringPlan, HiringPlanItem
 from .job_batch_ import JobBatches
-from .job_requisition import JobRequisition
+from .job_requisition import JobRequisition, JobRequisitionApproval, JobRequisitionPosition,JobPositionSkill
+from .job_skill import JobSkill
+from .skill_level import SkillLevel
+from .job_posting_channel import JobPostingChannel
+from .job_posting import JobPostingChannelMap

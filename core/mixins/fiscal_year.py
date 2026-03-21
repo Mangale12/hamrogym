@@ -5,8 +5,8 @@ class FiscalYearModelMixin(models.Model):
     fiscal_year = models.ForeignKey(
         "core.FiscalYear",
         on_delete=models.CASCADE,
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
         help_text="Fiscal year",
     )
 
