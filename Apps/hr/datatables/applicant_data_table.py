@@ -1,4 +1,5 @@
 from core.datatables.views import BaseDataTableView
+from core.helpers.helper import encode_date_for_display
 from ..models import Applicant
 
 
@@ -10,7 +11,7 @@ APPLICANT_COLUMNS = [
     ("gender", "gender"),
     ("marital_status", "marital_status"),
     ("status", "status"),
-    ("date", "date"),
+    ("date", lambda obj, request: encode_date_for_display(obj.date, request)),
     ("country", "country.name"),
     ("state", "state.name"),
     ("city", "city"),

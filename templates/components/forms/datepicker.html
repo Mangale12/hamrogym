@@ -5,6 +5,25 @@
     {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
   </label>
 
+  {% if is_bs_calendar %}
+  <input type="hidden" name="__bs_date_fields" value="{{ name }}">
+  <input
+    type="text"
+    name="{{ name }}"
+    value="{{ value|default:'' }}"
+    {% if id %}id="{{ id }}"{% endif %}
+    class="form-control {{ class|default:'' }}"
+    placeholder="{{ placeholder|default:'YYYY-MM-DD' }}"
+    data-calendar-mode="bs"
+    autocomplete="off"
+    {% if required %}required{% endif %}
+    {% if attributes %}
+      {% for key, value in attributes.items %}
+        {{ key }}="{{ value }}"
+      {% endfor %}
+    {% endif %}
+  >
+  {% else %}
   <input
     type="date"
     name="{{ name }}"
@@ -22,6 +41,7 @@
       {% endfor %}
     {% endif %}
   >
+  {% endif %}
 
   {% if help %}
     <small class="text-muted">{{ help }}</small>

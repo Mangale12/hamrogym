@@ -1,4 +1,5 @@
 from core.datatables.views import BaseDataTableView
+from core.helpers.helper import encode_date_for_display
 
 from Apps.hr.models import Employee
 
@@ -23,7 +24,7 @@ EMPLOYEE_COLUMNS = [
     ("designation", "designation.name"),
     ("employment_status", lambda obj: obj.get_employment_status_display() if obj.employment_status else ""),
     ("phone", lambda obj: _safe_related(obj, "contact", "phone")),
-    ("join_date", lambda obj: obj.join_date.strftime("%Y-%m-%d") if obj.join_date else ""),
+    ("join_date", lambda obj, request: encode_date_for_display(obj.join_date, request)),
     ("is_active", "is_active"),
 ]
 

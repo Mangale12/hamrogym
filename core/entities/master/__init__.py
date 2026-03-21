@@ -3,7 +3,9 @@ from . import country  # noqa: F401
 from . import state  # noqa: F401
 from . import currency  # noqa: F401
 from . import organization  # noqa: F401
+from . import organization_settings  # noqa: F401
 from . import branch  # noqa: F401
+from . import user  # noqa: F401
 from . import erp_entity  # noqa: F401
 from . import approval_entities  # noqa: F401
 from . import approval_workflow  # noqa: F401

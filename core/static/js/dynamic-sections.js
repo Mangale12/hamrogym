@@ -103,6 +103,9 @@
     if (window.initializeModalSelect2) {
       window.initializeModalSelect2($row);
     }
+    if (window.initializeCalendarFields) {
+      window.initializeCalendarFields($row);
+    }
   }
 
   function removeRow($row) {
@@ -131,6 +134,9 @@
       $tbody.append($row);
       if (window.initializeModalSelect2) {
         window.initializeModalSelect2($row);
+      }
+      if (window.initializeCalendarFields) {
+        window.initializeCalendarFields($row);
       }
     });
   }

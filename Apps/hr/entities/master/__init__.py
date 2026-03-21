@@ -8,8 +8,7 @@ from . import job_category  # noqa: F401
 from . import job_position  # noqa: F401
 from . import job_posting  # noqa: F401
 from . import applicant  # noqa: F401
-from . import job_requiditon  # noqa: F401
 from . import approval_workflow_level  # noqa: F401
 from . import hiring_plan  # noqa: F401
 from . import job_batch_  # noqa: F401
-from . import jpb_requisition  # noqa: F401
+from . import job_requisition  # noqa: F401

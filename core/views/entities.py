@@ -5,6 +5,7 @@ import json
 from typing import Dict, List, Type
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.files import File
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -13,10 +14,11 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from core.config import EntityConfig
+from core.helpers.helper import encode_date_for_display
 from core.helpers.context import get_current_fiscal_year_id
 
 
-def _serialize_form_instance(form) -> Dict[str, object]:
+def _serialize_form_instance(form, request=None) -> Dict[str, object]:
     data = {}
     instance = form.instance
     for name, field in form.fields.items():
@@ -26,9 +28,12 @@ def _serialize_form_instance(form) -> Dict[str, object]:
             value = form.initial.get(name)
         else:
             value = field.initial
-        value = field.prepare_value(value)
+        if isinstance(value, File):
+            value = value.name if value else ""
         if isinstance(value, date):
-            value = value.strftime("%Y-%m-%d")
+            value = encode_date_for_display(value, request)
+        else:
+            value = field.prepare_value(value)
         data[name] = value
     return data
 
@@ -113,6 +118,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             context = super().get_context_data(**kwargs)
             fields = _resolve_field_urls(entity.fields)
             dynamic_sections = _resolve_dynamic_sections(entity.dynamic_sections or {})
+            singleton_object = None
+            singleton_form_data = None
             tabs = None
             if entity.tabs:
                 resolved_tabs = []
@@ -158,8 +165,30 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "modal_title_view": f"View {entity.verbose_name}",
                     "reset_defaults": entity.reset_defaults,
                     "show_create": entity.show_create,
+                    "is_singleton": entity.singleton,
                 }
             )
+
+            if entity.singleton:
+                singleton_object = entity.model.objects.first()
+                if singleton_object:
+                    singleton_form_data = _serialize_form_instance(
+                        entity.form_class(instance=singleton_object),
+                        self.request,
+                    )
+                else:
+                    singleton_form_data = dict(entity.reset_defaults or {})
+                context.update(
+                    {
+                        "singleton_object": singleton_object,
+                        "singleton_form_data": singleton_form_data or {},
+                        "singleton_save_url": (
+                            reverse(f"{entity.name}_update", args=[singleton_object.pk])
+                            if singleton_object
+                            else reverse(f"{entity.name}_create")
+                        ),
+                    }
+                )
 
             context["datatable_columns"] = list(entity.datatable_columns)
             if entity.show_actions:
@@ -178,7 +207,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
         def get(self, request, pk):
             obj = get_object_or_404(entity.model, pk=pk)
             form = entity.form_class(instance=obj)
-            data = _serialize_form_instance(form)
+            data = _serialize_form_instance(form, request)
             data["id"] = obj.pk
             if entity.dynamic_sections_loader:
                 data["__dynamic_sections__"] = entity.dynamic_sections_loader(obj)
@@ -186,7 +215,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
 
     class EntityCreateView(LoginRequiredMixin, View):
         def post(self, request):
-            form = entity.form_class(request.POST, request.FILES)
+            instance = entity.model.objects.first() if entity.singleton else None
+            form = entity.form_class(request.POST, request.FILES, instance=instance)
             if form.is_valid():
                 obj = form.save(commit=False)
                 _assign_context_defaults(request, obj, form)
@@ -229,6 +259,11 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
 
     class EntityDeleteView(LoginRequiredMixin, View):
         def post(self, request, pk):
+            if entity.singleton:
+                return JsonResponse(
+                    {"success": False, "message": f"{entity.verbose_name} cannot be deleted."},
+                    status=405,
+                )
             obj = get_object_or_404(entity.model, pk=pk)
             obj.delete()
             return JsonResponse({"success": True})

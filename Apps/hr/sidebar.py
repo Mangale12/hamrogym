@@ -41,7 +41,7 @@ SIDEBAR_ITEMS = [
             },
             {
                 "label": "Job Categories",
-                "icon": "tags",
+                "icon": "tag",
                 "url_name": "job_category_list",
                 "match": "/core/job-categories",
             },
@@ -74,7 +74,13 @@ SIDEBAR_ITEMS = [
                 "icon": "layers",
                 "url_name": "job_batch_list",
                 "match": "/core/job-batches",
-            }
+            },
+            {
+                "label": "Job Requisitions",
+                "icon": "layers",
+                "url_name": "job_requisition_list",
+                "match": "/core/job-requisitions",
+            },
         ],
     },
 ]

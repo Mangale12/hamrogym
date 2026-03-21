@@ -87,5 +87,5 @@ function renderActionButtons(id, options, row) {
         </button>`;
     }
   });
-  return `<div class="btn-group" role="group">${html}</div>`;
+  return `<div class="datatable-action-group" role="group">${html}</div>`;
 }

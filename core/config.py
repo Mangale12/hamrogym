@@ -36,6 +36,7 @@ class EntityConfig:
     show_actions: bool = True
     show_create: bool = True
     show_view: bool = True
+    singleton: bool = False
 
     @property
     def url_base(self) -> str:

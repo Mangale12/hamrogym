@@ -1,4 +1,5 @@
 from core.models import FiscalYear
+from core.helpers.helper import get_calendar_type, get_organization_settings
 
 
 FISCAL_YEAR_SESSION_KEYS = (
@@ -31,3 +32,13 @@ def get_current_fiscal_year_id(request):
 
     active_fiscal_year = FiscalYear.objects.filter(is_active=True).order_by("-start_date", "-id").first()
     return active_fiscal_year.pk if active_fiscal_year else None
+
+
+def organization_context(request):
+    calendar_type = get_calendar_type(request)
+    return {
+        "organization_settings": get_organization_settings(),
+        "calendar_type": calendar_type,
+        "is_bs_calendar": calendar_type == "BS",
+        "is_ad_calendar": calendar_type == "AD",
+    }

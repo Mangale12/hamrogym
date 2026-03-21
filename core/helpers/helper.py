@@ -2,6 +2,14 @@ from core.models import OrganizationSettings
 from django.core.cache import cache
 from nepali_datetime import date as bs_date
 from datetime import date
+
+CALENDAR_SESSION_KEYS = (
+    "calendar_type",
+    "active_calendar_type",
+    "organization_calendar_type",
+)
+
+
 def get_organization_settings():
     settings = cache.get("organization_settings")
 
@@ -12,21 +20,36 @@ def get_organization_settings():
     return settings
 
 
-def get_calendar_type():
+def _normalize_calendar_type(value):
+    value = (value or "").strip().upper()
+    return value if value in {"AD", "BS"} else None
+
+
+def get_calendar_type(request=None):
+    if request is not None:
+        for key in CALENDAR_SESSION_KEYS:
+            value = _normalize_calendar_type(request.session.get(key))
+            if value:
+                return value
+
     settings = get_organization_settings()
+    calendar_type = "AD"
 
-    if not settings:
-        return "AD"
+    if settings:
+        calendar_type = _normalize_calendar_type(settings.calendar) or "AD"
 
-    return settings.calendar_type
+    if request is not None:
+        request.session["calendar_type"] = calendar_type
+
+    return calendar_type
 
 
-def is_bs_calendar():
-    return get_calendar_type() == "BS"
+def is_bs_calendar(request=None):
+    return get_calendar_type(request) == "BS"
 
 
-def is_ad_calendar():
-    return get_calendar_type() == "AD"
+def is_ad_calendar(request=None):
+    return get_calendar_type(request) == "AD"
 
 
 def ad_to_bs(ad_date):
@@ -40,3 +63,22 @@ def bs_to_ad(bs_date_string):
     bs = bs_date(year, month, day)
 
     return bs.to_datetime_date()
+
+
+def encode_date_for_display(date_value, request=None):
+    if not date_value:
+        return ""
+    if get_calendar_type(request) == "BS":
+        bs_value = ad_to_bs(date_value)
+        return f"{bs_value.year:04d}-{bs_value.month:02d}-{bs_value.day:02d}"
+    return date_value.strftime("%Y-%m-%d")
+
+
+def decode_date_for_save(date_value, request=None):
+    if not date_value:
+        return date_value
+    if isinstance(date_value, date):
+        return date_value
+    if get_calendar_type(request) != "BS":
+        return date_value
+    return bs_to_ad(date_value)

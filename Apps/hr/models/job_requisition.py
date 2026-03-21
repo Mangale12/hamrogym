@@ -32,3 +32,19 @@ class JobRequisition(models.Model):
 
     def __str__(self) -> str:
         return self.job_title
+
+
+
+class JobRequisitionApproval(models.Model):
+    job_requisition = models.ManyToManyField(JobRequisition, related_name="approval")
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="approved_requisitions")
+    approve_level = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default="level_1")
+    approved_at = models.DateTimeField(auto_now_add=True)
+    approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default="pending")
+    remarks = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-approved_at"]
+
+    def __str__(self) -> str:
+        return f"Approval for {self.job_requisition.job_title} by {self.approved_by}"

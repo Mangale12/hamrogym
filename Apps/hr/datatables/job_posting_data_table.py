@@ -1,12 +1,13 @@
 from core.datatables.views import BaseDataTableView
+from core.helpers.helper import encode_date_for_display
 from ..models import JobPosting
 
 
 JOB_POSTING_COLUMNS = [
     ("id", "id"),
     ("job_position", "job_position.name"),
-    ("posting_date", "posting_date"),
-    ("closing_date", "closing_date"),
+    ("posting_date", lambda obj, request: encode_date_for_display(obj.posting_date, request)),
+    ("closing_date", lambda obj, request: encode_date_for_display(obj.closing_date, request)),
     ("is_active", "is_active"),
     ("remarks", "remarks"),
 ]

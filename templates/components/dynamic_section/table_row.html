@@ -39,11 +39,22 @@
             data-url="{{ field.url }}">
           </select>
         {% elif field.type == "date" %}
+          {% if is_bs_calendar %}
+          <input type="hidden" name="__bs_date_fields" value="{{ section_name }}[{{ index }}][{{ field.name }}]">
+          <input
+            type="text"
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-control {{ field.class }}"
+            data-calendar-mode="bs"
+            autocomplete="off"
+            {% if field.readonly %}readonly{% endif %}>
+          {% else %}
           <input
             type="date"
             name="{{ section_name }}[{{ index }}][{{ field.name }}]"
             class="form-control {{ field.class }}"
             {% if field.readonly %}readonly{% endif %}>
+          {% endif %}
         {% elif field.type == "file" %}
           <input
             type="file"

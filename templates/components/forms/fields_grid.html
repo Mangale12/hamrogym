@@ -14,6 +14,8 @@
       {% include "components/forms/select.html" with label=field.label name=field.name required=field.required value=field.value data_field_name=field.name data_url=field.url data_modal_id=modal_id attributes=field.attributes no_wrapper=True %}
     {% elif field.type == "static_select" %}
       {% include "components/forms/select.html" with label=field.label name=field.name required=field.required value=field.value options=field.options attributes=field.attributes no_wrapper=True %}
+    {% elif field.type == "date" %}
+      {% include "components/forms/datepicker.html" with label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step attributes=field.attributes no_wrapper=True %}
     {% elif field.type == "datetime" %}
       {% include "components/forms/input.html" with type="datetime-local" label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step prefix=field.prefix suffix=field.suffix attributes=field.attributes no_wrapper=True %}
     {% elif field.type == "file" %}

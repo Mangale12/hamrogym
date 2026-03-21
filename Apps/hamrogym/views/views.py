@@ -1,34 +1,78 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.http import JsonResponse
 from django.shortcuts import render
-
-from core.datatables import DataTableServer
-
 
 @login_required
 def dashboard(request):
-    return render(request, "index.html")
+    from django.contrib.auth import get_user_model
+    from Apps.hr.models import Applicant, Department, Employee, JobPosting, JobRequisition
 
+    User = get_user_model()
 
-@login_required
-def users_datatable(request):
-    queryset = User.objects.all()
-    datatable = DataTableServer(
-        request=request,
-        queryset=queryset,
-        columns=["id", "username", "email", "is_active", "is_staff", "date_joined"],
-        search_fields=["username", "email", "first_name", "last_name"],
-    )
+    users = User.objects.all()
+    employees = Employee.objects.all()
+    requisitions = JobRequisition.objects.all()
+    applicants = Applicant.objects.select_related("job_posting").all()
+    job_postings = JobPosting.objects.select_related("job_position").all()
 
-    def row_builder(user):
-        return {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "is_active": "Yes" if user.is_active else "No",
-            "is_staff": "Yes" if user.is_staff else "No",
-            "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M"),
-        }
-
-    return JsonResponse(datatable.get_result(row_builder=row_builder))
+    context = {
+        "stats": [
+            {
+                "label": "System Users",
+                "value": users.count(),
+                "subtitle": f"{users.filter(is_staff=True).count()} with staff access",
+                "icon": "users",
+                "theme": "sky",
+            },
+            {
+                "label": "Active Employees",
+                "value": employees.filter(is_active=True).count(),
+                "subtitle": f"{Department.objects.filter(is_active=True).count()} active departments",
+                "icon": "briefcase",
+                "theme": "emerald",
+            },
+            {
+                "label": "Open Job Posts",
+                "value": job_postings.filter(is_active=True).count(),
+                "subtitle": f"{requisitions.filter(status='pending').count()} pending requisitions",
+                "icon": "clipboard",
+                "theme": "amber",
+            },
+            {
+                "label": "Applicants",
+                "value": applicants.count(),
+                "subtitle": f"{applicants.filter(status='pending').count()} pending review",
+                "icon": "user-plus",
+                "theme": "rose",
+            },
+        ],
+        "quick_links": [
+            {
+                "title": "Manage Users",
+                "description": "Create login accounts and assign system access.",
+                "url_name": "user_list",
+                "icon": "shield",
+            },
+            {
+                "title": "Employees",
+                "description": "Maintain employee records and work assignments.",
+                "url_name": "employee_list",
+                "icon": "users",
+            },
+            {
+                "title": "Departments",
+                "description": "Keep organization units and structures updated.",
+                "url_name": "department_list",
+                "icon": "layers",
+            },
+            {
+                "title": "Recruitment",
+                "description": "Track openings, requisitions, and applicants.",
+                "url_name": "job_posting_list",
+                "icon": "target",
+            },
+        ],
+        "recent_users": users.order_by("-date_joined")[:5],
+        "recent_applicants": applicants.order_by("-created_at")[:5],
+        "recent_requisitions": requisitions.select_related("department", "designation").order_by("-created_at")[:5],
+    }
+    return render(request, "index.html", context)

@@ -1,3 +1,5 @@
+import inspect
+
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views import View
@@ -34,7 +36,11 @@ class BaseDataTableView(View):
         row = {}
         for key, accessor in self.columns:
             if callable(accessor):
-                row[key] = accessor(obj)
+                parameter_count = len(inspect.signature(accessor).parameters)
+                if parameter_count >= 2:
+                    row[key] = accessor(obj, self.request)
+                else:
+                    row[key] = accessor(obj)
             else:
                 value = obj
                 for part in accessor.split("."):
