@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import re
-from typing import Dict, List
-
 from core.config import EntityConfig
 from core.registry import register_entity
 
@@ -12,7 +9,11 @@ from ...datatables.hiring_plan_data_table import (
 )
 from ...forms.hiring_plan_form import HiringPlanForm
 from ...models import HiringPlan, HiringPlanItem
-
+from core.utils.dynamic_sections import (
+    RelatedDynamicSectionConfig,
+    build_related_section_loader,
+    build_related_section_saver,
+)
 
 ITEMS_SECTION = {
     "title": "Hiring Plan Items",
@@ -70,20 +71,27 @@ ITEMS_SECTION = {
     ],
 }
 
+ITEMS_SECTION_RELATION = RelatedDynamicSectionConfig(
+    section_name="items",
+    related_model=HiringPlanItem,
+    parent_field="hiring_plan",
+    fields=["branch", "department", "designation", "employeement_type", "planned_head_count", "planned_month", "remarks"],
+    required_fields=["branch", "department", "designation", "employeement_type", "planned_head_count", "planned_month"],
+    bool_fields=[],
+    empty_check_fields=["branch", "department", "designation", "employeement_type", "planned_head_count", "planned_month", "remarks"],
+    save_transformers={
+        "branch": lambda value: (value or "").strip(),
+        "department": lambda value: (value or "").strip(),
+        "designation": lambda value: (value or "").strip(),
+        "employeement_type": lambda value: (value or "").strip(),
+        "planned_head_count": lambda value: max(1, _to_int(value)),
+        "planned_month": lambda value: max(1, _to_int(value)),
+        "remarks": lambda value: (value or "").strip(),
+    },
+)
 
-def _parse_dynamic_section(request, section_name: str) -> List[Dict[str, object]]:
-    pattern = re.compile(rf"^{re.escape(section_name)}\[(\d+)\]\[(.+)\]$")
-    rows: Dict[int, Dict[str, object]] = {}
-
-    for key, value in request.POST.items():
-        match = pattern.match(key)
-        if not match:
-            continue
-        index = int(match.group(1))
-        field = match.group(2)
-        rows.setdefault(index, {})[field] = value
-
-    return [rows[idx] for idx in sorted(rows.keys())]
+_save_hiring_plan_items = build_related_section_saver(ITEMS_SECTION_RELATION)
+_load_hiring_plan_items = build_related_section_loader(ITEMS_SECTION_RELATION)
 
 
 def _to_int(value, default: int = 0) -> int:
@@ -91,81 +99,6 @@ def _to_int(value, default: int = 0) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
-
-
-def _save_hiring_plan_items(request, hiring_plan: HiringPlan) -> None:
-    rows = _parse_dynamic_section(request, "items")
-    existing = {item.id: item for item in HiringPlanItem.objects.filter(hiring_plan=hiring_plan)}
-    keep_ids = []
-
-    for row in rows:
-        item_id = row.get("id")
-        item = None
-        if item_id and str(item_id).isdigit():
-            item = existing.get(int(item_id))
-
-        if not item:
-            item = HiringPlanItem(hiring_plan=hiring_plan)
-
-        branch_id = row.get("branch")
-        department_id = row.get("department")
-        designation_id = row.get("designation")
-        employeement_type_id = row.get("employeement_type")
-
-        if not any(
-            [
-                branch_id,
-                department_id,
-                designation_id,
-                employeement_type_id,
-                row.get("planned_head_count"),
-                row.get("planned_month"),
-                row.get("remarks"),
-            ]
-        ):
-            continue
-
-        if not all([branch_id, department_id, designation_id, employeement_type_id]):
-            continue
-
-        item.branch_id = branch_id
-        item.department_id = department_id
-        item.designation_id = designation_id
-        item.employeement_type_id = employeement_type_id
-        item.planned_head_count = max(1, _to_int(row.get("planned_head_count"), default=1))
-        item.planned_month = max(1, _to_int(row.get("planned_month"), default=1))
-        item.remarks = (row.get("remarks") or "").strip()
-        item.save()
-        keep_ids.append(item.id)
-
-    queryset = HiringPlanItem.objects.filter(hiring_plan=hiring_plan)
-    if keep_ids:
-        queryset.exclude(id__in=keep_ids).delete()
-    else:
-        queryset.delete()
-
-
-def _load_hiring_plan_items(hiring_plan: HiringPlan) -> Dict[str, List[Dict[str, object]]]:
-    return {
-        "items": [
-            {
-                "id": item.id,
-                "branch": str(item.branch_id or ""),
-                "department": str(item.department_id or ""),
-                "designation": str(item.designation_id or ""),
-                "employeement_type": str(item.employeement_type_id or ""),
-                "planned_head_count": item.planned_head_count,
-                "planned_month": item.planned_month,
-                "remarks": item.remarks or "",
-            }
-            for item in hiring_plan.items.select_related(
-                "branch",
-                "department",
-                "designation",
-                "employeement_type",
-            ).order_by("id")
-        ]
-    }
 
 
 register_entity(

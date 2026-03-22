@@ -1,15 +1,19 @@
 from core.config import EntityConfig
 from core.registry import register_entity
+
+from core.choices import APPROVAL_STATUS_CHOICES, PRIORITY_CHOICES, WORK_LOCATION_CHOICES
+from core.utils.dynamic_sections import (
+    RelatedDynamicSectionConfig,
+    build_related_section_loader,
+    build_related_section_saver,
+)
 from ...datatables.job_requiditon_data_table import (
     JOB_REQUISITION_COLUMNS,
     JobRequisitionDataTableView,
 )
 from ...forms.job_requisition_form import JobRequisitionForm
 from ...models import JobPositionSkill, JobRequisition, JobRequisitionPosition
-import re
-from typing import Dict, List, Optional
 
-from core.choices import APPROVAL_STATUS_CHOICES, PRIORITY_CHOICES, WORK_LOCATION_CHOICES
 
 JOB_REQUISITION_POSITION = {
     "title" : "Job Requisition Position",
@@ -80,118 +84,85 @@ JOB_REQUISITION_POSITION = {
     ]
 }
 
-def __parse_dynamic_section(request, section_name : str) -> List[Dict[str, object]]:
-    pattern = re.compile(rf"^{re.escape(section_name)}\[(\d+)\]\[(.+?)\]$")
-    rows : Dict[int, Dict[str, object]] = {}
 
-    for key, values in request.POST.lists():
-        match = pattern.match(key)
-        if not match:
-            continue
-        index = int(match.group(1))
-        field_name = match.group(2)
-        rows.setdefault(index, {})[field_name] = values if len(values) > 1 else (values[0] if values else "")
-    return [rows[idx] for idx in sorted(rows.keys())]
+def _sync_position_skills(item: JobRequisitionPosition, row, _job_requisition: JobRequisition) -> None:
+    raw_skill_ids = row.get("skills") or []
+    skill_ids = []
+    if isinstance(raw_skill_ids, list):
+        skill_ids = [int(skill_id) for skill_id in raw_skill_ids if str(skill_id).isdigit()]
+    elif str(raw_skill_ids).isdigit():
+        skill_ids = [int(raw_skill_ids)]
 
-
-def _save_job_requisition_positions(request, job_requisition : JobRequisition) -> None:
-    rows = __parse_dynamic_section(request, "items")
-    existing = {
-        item.id: item
-        for item in JobRequisitionPosition.objects.filter(job_requisition=job_requisition)
-    }
-    keep_ids = []
-
-    for row in rows:
-        item_id = row.get("id")
-        item = None
-
-        if item_id and str(item_id).isdigit():
-            item_id = int(item_id)
-            item = existing.get(item_id)
-        if not item:
-            item = JobRequisitionPosition(job_requisition=job_requisition)
-        
-        if not any([
-            row.get("position_title"),
-            row.get("designation"),
-            row.get("position_description"),
-            row.get("responsibilities"),
-            row.get("requirements"),
-            row.get("salary"),
-            row.get("skills"),
-            row.get("skill_level"),
-            row.get("location")
-        ]):
-            continue
-        
-
-        if not row.get("position_title") and not row.get("designation"):
-            continue
-
-        item.position_title = (row.get("position_title", "") or "").strip()
-        item.designation_id = row.get("designation", "")
-        item.position_description = (row.get("position_description", "") or "").strip()
-        item.responsibilities = (row.get("responsibilities", "") or "").strip()
-        item.requirements = (row.get("requirements", "") or "").strip()
-        item.salary = row.get("salary", 0)
-        item.location = (row.get("location", "") or "").strip()
-
-        item.save()
-
-        raw_skill_ids = row.get("skills") or []
-        skill_ids = []
-        if isinstance(raw_skill_ids, list):
-            skill_ids = [int(skill_id) for skill_id in raw_skill_ids if str(skill_id).isdigit()]
-        elif str(raw_skill_ids).isdigit():
-            skill_ids = [int(raw_skill_ids)]
-
-        JobPositionSkill.objects.filter(job_position=item).exclude(skill_id__in=skill_ids).delete()
-        existing_skill_ids = set(
-            JobPositionSkill.objects.filter(job_position=item, skill_id__in=skill_ids).values_list("skill_id", flat=True)
+    JobPositionSkill.objects.filter(job_position=item).exclude(skill_id__in=skill_ids).delete()
+    existing_skill_ids = set(
+        JobPositionSkill.objects.filter(job_position=item, skill_id__in=skill_ids).values_list(
+            "skill_id",
+            flat=True,
         )
-        skill_level_id = row.get("skill_level") if str(row.get("skill_level") or "").isdigit() else None
-        for skill_id in skill_ids:
-            if skill_id in existing_skill_ids:
-                JobPositionSkill.objects.filter(job_position=item, skill_id=skill_id).update(
-                    skill_level_id=skill_level_id
-                )
-                continue
-            JobPositionSkill.objects.create(
-                job_position=item,
-                skill_id=skill_id,
-                skill_level_id=skill_level_id,
+    )
+    skill_level_id = row.get("skill_level") if str(row.get("skill_level") or "").isdigit() else None
+    for skill_id in skill_ids:
+        if skill_id in existing_skill_ids:
+            JobPositionSkill.objects.filter(job_position=item, skill_id=skill_id).update(
+                skill_level_id=skill_level_id
             )
+            continue
+        JobPositionSkill.objects.create(
+            job_position=item,
+            skill_id=skill_id,
+            skill_level_id=skill_level_id,
+        )
 
-        keep_ids.append(item.id)
-    queryset = JobRequisitionPosition.objects.filter(job_requisition=job_requisition)
-    if keep_ids:
-        queryset.exclude(id__in=keep_ids).delete()
-    else:
-        queryset.delete()
 
-
-def _load_job_requisition_positions(
-    job_requisition: JobRequisition,
-) -> Dict[str, List[Dict[str, object]]]:
+def _serialize_position_skills(item: JobRequisitionPosition):
     return {
-        "items": [
-            {
-                "id": item.id,
-                "position_title": item.position_title or "",
-                "designation": str(item.designation_id or ""),
-                "position_description": item.position_description or "",
-                "responsibilities": item.responsibilities or "",
-                "requirements": item.requirements or "",
-                "salary": item.salary or 0,
-                "skills": [str(skill.skill_id) for skill in item.skills.select_related("skill").order_by("skill__name")],
-                "skill_level": str(item.skills.filter(skill_level__isnull=False).values_list("skill_level_id", flat=True).first() or ""),
-                "location": item.location or "",
-            }
-            for item in job_requisition.job_positions.select_related("designation").order_by("id")
-        ]
+        "skills": [str(skill.skill_id) for skill in item.skills.select_related("skill").order_by("skill__name")],
+        "skill_level": str(
+            item.skills.filter(skill_level__isnull=False).values_list("skill_level_id", flat=True).first() or ""
+        ),
     }
 
+
+JOB_REQUISITION_POSITION_RELATION = RelatedDynamicSectionConfig(
+    section_name="items",
+    related_model=JobRequisitionPosition,
+    parent_field="job_requisition",
+    fields=[
+        "position_title",
+        "designation",
+        "position_description",
+        "responsibilities",
+        "requirements",
+        "salary",
+        "location",
+    ],
+    required_fields=["position_title", "designation"],
+    empty_check_fields=[
+        "position_title",
+        "designation",
+        "position_description",
+        "responsibilities",
+        "requirements",
+        "salary",
+        "skills",
+        "skill_level",
+        "location",
+    ],
+    use_post_lists=True,
+    save_transformers={
+        "position_title": lambda value: (value or "").strip(),
+        "position_description": lambda value: (value or "").strip(),
+        "responsibilities": lambda value: (value or "").strip(),
+        "requirements": lambda value: (value or "").strip(),
+        "location": lambda value: (value or "").strip(),
+    },
+    row_save_hook=_sync_position_skills,
+    row_load_hook=_serialize_position_skills,
+)
+
+
+_save_job_requisition_positions = build_related_section_saver(JOB_REQUISITION_POSITION_RELATION)
+_load_job_requisition_positions = build_related_section_loader(JOB_REQUISITION_POSITION_RELATION)
 
 register_entity(
     EntityConfig(

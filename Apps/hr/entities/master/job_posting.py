@@ -1,6 +1,3 @@
-import re
-from typing import Dict, List
-
 from core.config import EntityConfig
 from core.registry import register_entity
 from ...datatables.job_posting_data_table import (
@@ -9,7 +6,12 @@ from ...datatables.job_posting_data_table import (
 )
 from ...forms.job_posting_form import JobPostingForm
 from ...models import JobPosting, JobPostingChannelMap
-
+from core.utils.dynamic_sections import (
+    RelatedDynamicSectionConfig,
+    build_related_section_loader,
+    build_related_section_saver,
+)
+from datetime import datetime
 
 CHANNEL_MAP_SECTION = {
     "title": "Posting Channels",
@@ -39,77 +41,23 @@ CHANNEL_MAP_SECTION = {
 }
 
 
-def _parse_dynamic_section(request, section_name: str) -> List[Dict[str, object]]:
-    pattern = re.compile(rf"^{re.escape(section_name)}\[(\d+)\]\[(.+)\]$")
-    rows: Dict[int, Dict[str, object]] = {}
+CHANNEL_MAP_SECTION_RELATION = RelatedDynamicSectionConfig(
+    section_name="channels",
+    related_model=JobPostingChannelMap,
+    parent_field="job_posting",
+    fields=["job_posting_channel", "posted_url", "posted_date"],
+    required_fields=["job_posting_channel"],
+    bool_fields=[],
+    empty_check_fields=["job_posting_channel", "posted_url", "posted_date"],
+    save_transformers={
+        "job_posting_channel": lambda value: (value or "").strip(),
+        "posted_url": lambda value: (value or "").strip(),
+        "posted_date": lambda value: (value or datetime.now()),
+    },
+)
 
-    for key, value in request.POST.items():
-        match = pattern.match(key)
-        if not match:
-            continue
-        index = int(match.group(1))
-        field_name = match.group(2)
-        rows.setdefault(index, {})[field_name] = value
-
-    return [rows[idx] for idx in sorted(rows.keys())]
-
-
-def _save_job_posting_channels(request, job_posting: JobPosting) -> None:
-    rows = _parse_dynamic_section(request, "channels")
-    existing = {
-        item.id: item
-        for item in JobPostingChannelMap.objects.filter(job_posting=job_posting)
-    }
-    keep_ids = []
-
-    for row in rows:
-        item_id = row.get("id")
-        item = None
-
-        if item_id and str(item_id).isdigit():
-            item = existing.get(int(item_id))
-
-        if not item:
-            item = JobPostingChannelMap(job_posting=job_posting)
-
-        channel_id = row.get("job_posting_channel")
-        posted_url = (row.get("posted_url") or "").strip()
-        posted_date = row.get("posted_date") or None
-
-        if not any([channel_id, posted_url, posted_date]):
-            continue
-
-        if not channel_id:
-            continue
-
-        item.job_posting_channel_id = channel_id
-        item.posted_url = posted_url or None
-        item.posted_date = posted_date or None
-        item.save()
-        keep_ids.append(item.id)
-
-    queryset = JobPostingChannelMap.objects.filter(job_posting=job_posting)
-    if keep_ids:
-        queryset.exclude(id__in=keep_ids).delete()
-    else:
-        queryset.delete()
-
-
-def _load_job_posting_channels(job_posting: JobPosting) -> Dict[str, List[Dict[str, object]]]:
-    return {
-        "channels": [
-            {
-                "id": item.id,
-                "job_posting_channel": str(item.job_posting_channel_id or ""),
-                "posted_url": item.posted_url or "",
-                "posted_date": item.posted_date.isoformat() if item.posted_date else "",
-            }
-            for item in JobPostingChannelMap.objects.filter(job_posting=job_posting)
-            .select_related("job_posting_channel")
-            .order_by("id")
-        ]
-    }
-
+_save_job_posting_channels = build_related_section_saver(CHANNEL_MAP_SECTION_RELATION)
+_load_job_posting_channels = build_related_section_loader(CHANNEL_MAP_SECTION_RELATION)
 
 register_entity(
     EntityConfig(
@@ -137,6 +85,6 @@ register_entity(
             for key, _accessor in JOB_POSTING_COLUMNS
             if key != "id"
         ],
-        reset_defaults={},
+        reset_defaults={"is_active": True},
     )
 )

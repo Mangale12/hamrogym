@@ -6,7 +6,7 @@ from ..models import JobPosting
 JOB_POSTING_COLUMNS = [
     ("id", "id"),
     ("title", "title"),
-    ("job_position", "job_position__name"),
+    ("job_position", "job_position.name"),
     ("posting_date", lambda obj, request: encode_date_for_display(obj.posting_date, request)),
     ("closing_date", lambda obj, request: encode_date_for_display(obj.closing_date, request)),
     ("is_active", "is_active"),

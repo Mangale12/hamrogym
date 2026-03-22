@@ -30,3 +30,5 @@ from .skill_level import SkillLevel
 from .job_posting_channel import JobPostingChannel
 from .job_posting import JobPostingChannelMap
 from .job_application import JobApplication, JobApplicationStatus
+from .interview_stage import InterviewStage
+from .interview import Interview

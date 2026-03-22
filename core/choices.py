@@ -121,3 +121,16 @@ SCREENING_QUESTION_TYPE_CHOICES = [
     ("text", "Text"),
     ("yes_no", "Yes/No"),
 ]
+
+INTERVIEW_MODE_CHOICES = [
+    ("in_person", "In Person"),
+    ("video", "Video"),
+    ("phone", "Phone"),
+]
+
+INTERVIEW_STATUS_CHOICES = [
+    ("scheduled", "Scheduled"),
+    ("in_progress", "In Progress"),
+    ("completed", "Completed"),
+    ("cancelled", "Cancelled"),
+]

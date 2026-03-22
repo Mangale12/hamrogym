@@ -33,7 +33,12 @@ SIDEBAR_ITEMS = [
                 "url_name": "employee_list",
                 "match": "/core/employees",
             },
-            
+            {
+                "label": "Interview Stages",
+                "icon": "layers",
+                "url_name": "interview_stage_list",
+                "match": "/core/interview-stages",
+            },
             {
                 "label": "Leave Types",
                 "icon": "calendar",
