@@ -74,6 +74,12 @@ def encode_date_for_display(date_value, request=None):
     return date_value.strftime("%Y-%m-%d")
 
 
+def encode_datetime_for_display(datetime_value, request=None):
+    if not datetime_value:
+        return ""
+    return f"{encode_date_for_display(datetime_value.date(), request)} {datetime_value.strftime('%H:%M:%S')}"
+
+
 def decode_date_for_save(date_value, request=None):
     if not date_value:
         return date_value

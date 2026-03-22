@@ -100,6 +100,12 @@ SIDEBAR_ITEMS = [
                 "url_name": "applicant_list",
                 "match": "/core/applicants",
             },
+            {
+                "label": "Job Application",
+                "icon": "users",
+                "url_name": "job_application_list",
+                "match": "/core/job-applicants",
+            },
             
         ],
     },

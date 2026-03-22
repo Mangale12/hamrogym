@@ -22,7 +22,17 @@
             class="form-control {{ field.class }}"
             {% if field.readonly %}readonly{% endif %}
             {% if field.min %}min="{{ field.min }}"{% endif %}>
-  
+
+        {% elif field.type == "checkbox" %}
+          <div class="form-check d-flex justify-content-center">
+            <input
+              type="checkbox"
+              name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+              class="form-check-input {{ field.class }}"
+              value="on"
+              {% if field.readonly %}disabled{% endif %}>
+          </div>
+
         {% elif field.type == "static_select" %}
           <select
             name="{{ section_name }}[{{ index }}][{{ field.name }}]"

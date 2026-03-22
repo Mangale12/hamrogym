@@ -50,6 +50,17 @@ APPLICANT_STATUS_CHOICES = [
     ("rejected", "Rejected"),
 ]
 
+JOB_APPLICATION_STATUS_CHOICES = [
+    ("applied", "Applied"),
+    ("shortlisted", "Shortlisted"),
+    ("interview_scheduled", "Interview Scheduled"),
+    ("interviewed", "Interviewed"),
+    ("selected", "Selected"),
+    ("hired", "Hired"),
+    ("rejected", "Rejected"),
+    ("withdrawn", "Withdrawn"),
+]
+
 EMPLOYEE_TYPE_CHOICES = [
     ("full_time", "Full time"),
     ("part_time", "Part time"),
@@ -102,4 +113,11 @@ PRIORITY_CHOICES = [
     ("low", "Low"),
     ("medium", "Medium"),
     ("high", "High"),
+]
+
+
+SCREENING_QUESTION_TYPE_CHOICES = [
+    ("multiple_choice", "Multiple Choice"),
+    ("text", "Text"),
+    ("yes_no", "Yes/No"),
 ]

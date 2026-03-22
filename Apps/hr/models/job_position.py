@@ -1,5 +1,5 @@
 from django.db import models
-
+from core.choices import SCREENING_QUESTION_TYPE_CHOICES
 class JobPosition(models.Model):
     name = models.CharField(max_length=100, unique=True)
     department = models.ForeignKey("Department", on_delete=models.RESTRICT, null=True, blank=True, help_text="Department associated with this job position")
@@ -20,3 +20,19 @@ class JobPosition(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class ScreeningQuestion(models.Model):
+    job_position = models.ForeignKey(JobPosition, on_delete=models.CASCADE, related_name="screening_questions")
+    question_text = models.TextField()
+    question_type = models.CharField(max_length=50, choices=SCREENING_QUESTION_TYPE_CHOICES)
+    is_required = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self) -> str:
+        return self.question_text
