@@ -40,6 +40,12 @@ SIDEBAR_ITEMS = [
                 "match": "/core/interview-stages",
             },
             {
+                "label": "Interviews",
+                "icon": "calendar",
+                "url_name": "interview_list",
+                "match": "/core/interviews",
+            },
+            {
                 "label": "Leave Types",
                 "icon": "calendar",
                 "url_name": "leave_type_list",

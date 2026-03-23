@@ -134,3 +134,9 @@ INTERVIEW_STATUS_CHOICES = [
     ("completed", "Completed"),
     ("cancelled", "Cancelled"),
 ]
+
+INTERVIEW_FEEDBACK_RECOMMENDATIONS_CHOICES = [
+    ("hire", "Hire"),
+    ("reject", "Reject"),
+    ("next_round", "Next Round"),
+]
