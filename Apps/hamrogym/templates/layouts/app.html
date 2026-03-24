@@ -95,7 +95,7 @@
             padding: 20px 0;
         }
         
-        .nav-link {
+        .sidebar .nav-link {
             color: rgba(255, 255, 255, 0.8);
             padding: 12px 20px;
             margin: 2px 10px;
@@ -103,20 +103,44 @@
             transition: all 0.3s;
         }
         
-        .nav-link:hover, .nav-link.active {
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
             color: white;
             background-color: rgba(255, 255, 255, 0.1);
         }
         
-        .nav-link i {
+        .sidebar .nav-link i {
             margin-right: 10px;
             width: 20px;
             text-align: center;
         }
         
-        .nav-link .badge {
+        .sidebar .nav-link .badge {
             float: right;
             margin-top: 3px;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--primary-color);
+            margin: 0;
+            border: 1px solid transparent;
+        }
+
+        .nav-tabs .nav-link:hover,
+        .nav-tabs .nav-link:focus {
+            color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.06);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+            font-weight: 600;
+        }
+
+        .nav-tabs .nav-link:disabled,
+        .nav-tabs .nav-link.disabled {
+            color: #6c757d;
         }
         
         /* Main Content Styles */

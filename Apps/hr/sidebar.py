@@ -123,6 +123,18 @@ SIDEBAR_ITEMS = [
                 "url_name": "job_offer_list",
                 "match": "/core/job-offers",
             },
+            {
+                "label": "Hires",
+                "icon": "user-plus",
+                "url_name": "hire_list",
+                "match": "/core/hires",
+            },
+            {
+                "label": "Attendance",
+                "icon": "calendar",
+                "url_name": "attendance_list",
+                "match": "/core/attendances",
+            }
             
         ],
     },

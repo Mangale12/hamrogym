@@ -140,3 +140,12 @@ INTERVIEW_FEEDBACK_RECOMMENDATIONS_CHOICES = [
     ("reject", "Reject"),
     ("next_round", "Next Round"),
 ]
+
+ATTENDANCE_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("present", "Present"),
+    ("absent", "Absent"),
+    ("late", "Late"),
+    ("half_day", "Half Day"),
+    ("leave", "Leave"),
+]

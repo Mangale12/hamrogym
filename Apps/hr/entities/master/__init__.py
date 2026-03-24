@@ -10,6 +10,7 @@ from . import job_posting  # noqa: F401
 from . import applicant  # noqa: F401
 from . import approval_workflow_level  # noqa: F401
 from . import hiring_plan  # noqa: F401
+from . import hire  # noqa: F401
 from . import job_batch_  # noqa: F401
 from . import job_requisition  # noqa: F401
 from . import job_skill  # noqa: F401
@@ -19,3 +20,4 @@ from . import job_application  # noqa: F401
 from . import interview_stage  # noqa: F401
 from . import interview  # noqa: F401
 from . import job_offer  # noqa: F401
+from . import attendance  # noqa: F401

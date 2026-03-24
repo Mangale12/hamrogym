@@ -33,3 +33,5 @@ from .job_application import JobApplication, JobApplicationStatus
 from .interview_stage import InterviewStage
 from .interview import Interview, InterviewFeedback, InterviewPanel
 from .job_offer import JobOffer, JobOfferAttachment
+from .hire import Hire
+from .attendance import Attendance

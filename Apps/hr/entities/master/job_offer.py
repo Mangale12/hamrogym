@@ -12,7 +12,7 @@ from ...datatables.job_offer_data_table import (
     JobOfferDataTableView,
 )
 from ...forms.job_offer_form import JobOfferForm
-from ...models import JobApplicationStatus, JobOffer, JobOfferAttachment
+from ...models import Hire, JobApplicationStatus, JobOffer, JobOfferAttachment
 
 
 def _sync_job_application_status(request, job_offer: JobOffer, next_status: str) -> None:
@@ -42,10 +42,30 @@ def _sync_job_application_status(request, job_offer: JobOffer, next_status: str)
     )
 
 
+def _create_or_update_hire(job_offer: JobOffer) -> None:
+    job_application = job_offer.job_application
+    job_posting = job_application.job_posting
+    job_position = job_posting.job_position if job_posting else None
+
+    defaults = {
+        "candidate": job_application.applicant,
+        "hire_date": job_offer.joining_date,
+        "designation": getattr(job_position, "designation", None),
+        "department": getattr(job_position, "department", None),
+        "status": "approved",
+    }
+
+    Hire.objects.update_or_create(
+        job_offer=job_offer,
+        defaults=defaults,
+    )
+
+
 def _approve_job_offer(request, job_offer: JobOffer):
     job_offer.status = "approved"
     job_offer.save(update_fields=["status"])
     _sync_job_application_status(request, job_offer, "hired")
+    _create_or_update_hire(job_offer)
     return {"message": "Job offer approved successfully."}
 
 
