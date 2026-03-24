@@ -117,6 +117,12 @@ SIDEBAR_ITEMS = [
                 "url_name": "job_application_list",
                 "match": "/core/job-applicants",
             },
+            {
+                "label": "Job Offers",
+                "icon": "file-text",
+                "url_name": "job_offer_list",
+                "match": "/core/job-offers",
+            },
             
         ],
     },

@@ -68,11 +68,21 @@
             {% if field.readonly %}readonly{% endif %}>
           {% endif %}
         {% elif field.type == "file" %}
-          <input
-            type="file"
-            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
-            class="form-control {{ field.class }}"
-            {% if field.accept %}accept="{{ field.accept }}"{% endif %}>
+          <div class="d-flex flex-column gap-1">
+            <input
+              type="file"
+              name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+              class="form-control {{ field.class }}"
+              {% if field.accept %}accept="{{ field.accept }}"{% endif %}>
+            <a
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="small text-decoration-none d-none"
+              data-file-preview-for="{{ field.name }}">
+              View file
+            </a>
+          </div>
         {% elif field.type == "textarea" %}
           <textarea
             name="{{ section_name }}[{{ index }}][{{ field.name }}]"

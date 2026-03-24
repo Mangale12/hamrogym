@@ -18,3 +18,4 @@ from . import job_posting_channel  # noqa: F401
 from . import job_application  # noqa: F401
 from . import interview_stage  # noqa: F401
 from . import interview  # noqa: F401
+from . import job_offer  # noqa: F401

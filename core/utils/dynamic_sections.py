@@ -118,12 +118,17 @@ def build_related_section_saver(config: RelatedDynamicSectionConfig):
 
             for field_name in config.fields:
                 raw_value = row.get(field_name)
+                model_field = config.related_model._meta.get_field(field_name)
+
+                # Keep the current file when editing a row without uploading a replacement.
+                if isinstance(model_field, models.FileField) and not raw_value:
+                    continue
+
                 if field_name in bool_fields:
                     value = to_bool(raw_value)
                 else:
                     transformer = config.save_transformers.get(field_name)
                     value = transformer(raw_value) if transformer else raw_value
-                model_field = config.related_model._meta.get_field(field_name)
                 if isinstance(model_field, models.ForeignKey) and not isinstance(value, models.Model):
                     setattr(item, model_field.attname, value or None)
                 else:
@@ -163,6 +168,17 @@ def build_related_section_loader(config: RelatedDynamicSectionConfig):
                 if isinstance(model_field, models.ForeignKey):
                     value = getattr(item, model_field.attname, config.empty_value)
                     row[field_name] = config.empty_value if value is None else str(value)
+                    continue
+                if isinstance(model_field, models.FileField):
+                    value = getattr(item, field_name, None)
+                    row[field_name] = (
+                        {
+                            "name": value.name,
+                            "url": getattr(value, "url", ""),
+                        }
+                        if value
+                        else config.empty_value
+                    )
                     continue
                 value = getattr(item, field_name, config.empty_value)
                 row[field_name] = config.empty_value if value is None else value

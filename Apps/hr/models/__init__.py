@@ -32,3 +32,4 @@ from .job_posting import JobPostingChannelMap
 from .job_application import JobApplication, JobApplicationStatus
 from .interview_stage import InterviewStage
 from .interview import Interview, InterviewFeedback, InterviewPanel
+from .job_offer import JobOffer, JobOfferAttachment

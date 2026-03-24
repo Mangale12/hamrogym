@@ -94,3 +94,4 @@ class InterviewForm(forms.ModelForm):
             if hasattr(self, "save_m2m"):
                 self.save_m2m()
         return instance
+ 

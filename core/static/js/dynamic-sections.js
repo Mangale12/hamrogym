@@ -16,6 +16,34 @@
         $field.val('');
       }
     });
+    $row.find('[data-file-preview-for]').each(function () {
+      $(this)
+        .attr('href', '#')
+        .text('View file')
+        .addClass('d-none');
+    });
+  }
+
+  function updateFilePreview($row, name, value) {
+    const $link = $row.find(`[data-file-preview-for="${name}"]`);
+    if (!$link.length) return;
+
+    const fileData = value && typeof value === 'object'
+      ? value
+      : { name: value || '', url: '' };
+
+    if (fileData.url) {
+      $link
+        .attr('href', fileData.url)
+        .text(fileData.name || 'View file')
+        .removeClass('d-none');
+      return;
+    }
+
+    $link
+      .attr('href', '#')
+      .text('View file')
+      .addClass('d-none');
   }
 
   function setFieldValue($row, name, value) {
@@ -38,7 +66,8 @@
       }
       $field.val(normalizedValue).trigger('change');
     } else if (type === 'file') {
-      // Cannot set file input value for security reasons.
+      // Cannot set file input value for security reasons, but we can show a link.
+      updateFilePreview($row, name, value);
     } else {
       $field.val(value == null ? '' : value);
     }
