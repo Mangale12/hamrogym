@@ -21,3 +21,5 @@ from . import interview_stage  # noqa: F401
 from . import interview  # noqa: F401
 from . import job_offer  # noqa: F401
 from . import attendance  # noqa: F401
+from . import attendance_adjustment  # noqa: F401
+from . import employee_shift  # noqa: F401

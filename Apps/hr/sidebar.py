@@ -134,7 +134,13 @@ SIDEBAR_ITEMS = [
                 "icon": "calendar",
                 "url_name": "attendance_list",
                 "match": "/core/attendances",
-            }
+            },
+            {
+                "label": "Attendance Adjustments",
+                "icon": "edit-3",
+                "url_name": "attendance_adjustment_list",
+                "match": "/core/attendance-adjustments",
+            },
             
         ],
     },

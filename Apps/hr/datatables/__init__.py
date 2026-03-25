@@ -1,3 +1,4 @@
+from .attendance_adjustment_data_table import AttendanceAdjustmentDataTableView
 from .department_data_table import DepartmentDataTableView
 from .designation_data_table import DesignationDataTableView
 from .employee_data_table import EmployeeDataTableView

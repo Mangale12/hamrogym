@@ -149,3 +149,9 @@ ATTENDANCE_STATUS_CHOICES = [
     ("half_day", "Half Day"),
     ("leave", "Leave"),
 ]
+
+ATTENDANCE_ADJUSTMENT_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+]
