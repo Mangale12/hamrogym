@@ -1,8 +1,8 @@
 from django.db import models
-from django.conf import settings
+
 
 class EmployeeShift(models.Model):
-    employee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="shifts")
+    employee = models.ForeignKey("Employee", on_delete=models.CASCADE, related_name="shift_rotations")
     shift = models.ForeignKey("Shift", on_delete=models.CASCADE, related_name="employee_shifts")
     effective_from = models.DateTimeField(null=True, blank=True)
     effective_to = models.DateTimeField(null=True, blank=True)

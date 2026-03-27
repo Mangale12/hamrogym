@@ -5,7 +5,9 @@ import json
 from typing import Dict, List, Type
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
 from django.core.files import File
+from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -218,22 +220,26 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             instance = entity.model.objects.first() if entity.singleton else None
             form = entity.form_class(request.POST, request.FILES, instance=instance)
             if form.is_valid():
-                obj = form.save(commit=False)
-                _assign_context_defaults(request, obj, form)
-                if form.errors:
-                    return JsonResponse({"success": False, "errors": form.errors}, status=400)
-                if hasattr(obj, "created_by_id"):
-                    obj.created_by = request.user
-                if hasattr(obj, "updated_by_id"):
-                    obj.updated_by = request.user
-                obj.save()
-                if hasattr(form, "save_m2m"):
-                    form.save_m2m()
-                if entity.dynamic_sections_saver:
-                    entity.dynamic_sections_saver(request, obj)
-                if entity.post_save:
-                    entity.post_save(request, obj)
-                return JsonResponse({"success": True, "id": obj.pk})
+                try:
+                    with transaction.atomic():
+                        obj = form.save(commit=False)
+                        _assign_context_defaults(request, obj, form)
+                        if form.errors:
+                            return JsonResponse({"success": False, "errors": form.errors}, status=400)
+                        if hasattr(obj, "created_by_id"):
+                            obj.created_by = request.user
+                        if hasattr(obj, "updated_by_id"):
+                            obj.updated_by = request.user
+                        obj.save()
+                        if hasattr(form, "save_m2m"):
+                            form.save_m2m()
+                        if entity.dynamic_sections_saver:
+                            entity.dynamic_sections_saver(request, obj)
+                        if entity.post_save:
+                            entity.post_save(request, obj)
+                    return JsonResponse({"success": True, "id": obj.pk})
+                except ValidationError as exc:
+                    return JsonResponse({"success": False, "errors": exc.message_dict if hasattr(exc, "message_dict") else {"__all__": exc.messages}}, status=400)
             return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
     class EntityUpdateView(LoginRequiredMixin, View):
@@ -241,20 +247,24 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             obj = get_object_or_404(entity.model, pk=pk)
             form = entity.form_class(request.POST, request.FILES, instance=obj)
             if form.is_valid():
-                obj = form.save(commit=False)
-                _assign_context_defaults(request, obj, form)
-                if form.errors:
-                    return JsonResponse({"success": False, "errors": form.errors}, status=400)
-                if hasattr(obj, "updated_by_id"):
-                    obj.updated_by = request.user
-                obj.save()
-                if hasattr(form, "save_m2m"):
-                    form.save_m2m()
-                if entity.dynamic_sections_saver:
-                    entity.dynamic_sections_saver(request, obj)
-                if entity.post_save:
-                    entity.post_save(request, obj)
-                return JsonResponse({"success": True, "id": obj.pk})
+                try:
+                    with transaction.atomic():
+                        obj = form.save(commit=False)
+                        _assign_context_defaults(request, obj, form)
+                        if form.errors:
+                            return JsonResponse({"success": False, "errors": form.errors}, status=400)
+                        if hasattr(obj, "updated_by_id"):
+                            obj.updated_by = request.user
+                        obj.save()
+                        if hasattr(form, "save_m2m"):
+                            form.save_m2m()
+                        if entity.dynamic_sections_saver:
+                            entity.dynamic_sections_saver(request, obj)
+                        if entity.post_save:
+                            entity.post_save(request, obj)
+                    return JsonResponse({"success": True, "id": obj.pk})
+                except ValidationError as exc:
+                    return JsonResponse({"success": False, "errors": exc.message_dict if hasattr(exc, "message_dict") else {"__all__": exc.messages}}, status=400)
             return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
     class EntityDeleteView(LoginRequiredMixin, View):

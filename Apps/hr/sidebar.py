@@ -1,8 +1,14 @@
 SIDEBAR_ITEMS = [
     {
-        "label": "HR",
+        "label": "Workforce",
         "icon": "users",
         "children": [
+            {
+                "label": "Employees",
+                "icon": "user-check",
+                "url_name": "employee_list",
+                "match": "/core/employees",
+            },
             {
                 "label": "Departments",
                 "icon": "layers",
@@ -28,28 +34,202 @@ SIDEBAR_ITEMS = [
                 "match": "/core/shifts",
             },
             {
-                "label": "Employees",
-                "icon": "user-check",
-                "url_name": "employee_list",
-                "match": "/core/employees",
+                "label": "Shift Rotations",
+                "icon": "repeat",
+                "url_name": "employee_shift_list",
+                "match": "/core/employee-shifts",
             },
-            {
-                "label": "Interview Stages",
-                "icon": "layers",
-                "url_name": "interview_stage_list",
-                "match": "/core/interview-stages",
-            },
-            {
-                "label": "Interviews",
-                "icon": "calendar",
-                "url_name": "interview_list",
-                "match": "/core/interviews",
-            },
+        ],
+    },
+    {
+        "label": "Leave",
+        "icon": "calendar",
+        "children": [
             {
                 "label": "Leave Types",
                 "icon": "calendar",
                 "url_name": "leave_type_list",
                 "match": "/core/leave-types",
+            },
+            {
+                "label": "Holiday Calendars",
+                "icon": "calendar-days",
+                "url_name": "holiday_calendar_list",
+                "match": "/core/holiday-calendars",
+            },
+            {
+                "label": "Leave Requests",
+                "icon": "calendar-check",
+                "url_name": "leave_request_list",
+                "match": "/core/leave-requests",
+            },
+            {
+                "label": "Leave Balances",
+                "icon": "scale",
+                "url_name": "leave_balance_list",
+                "match": "/core/leave-balances",
+            },
+            {
+                "label": "Leave Ledger",
+                "icon": "file-text",
+                "url_name": "leave_ledger_list",
+                "match": "/core/leave-ledger",
+            },
+            {
+                "label": "Leave Accruals",
+                "icon": "trending-up",
+                "url_name": "leave_accrual_list",
+                "match": "/core/leave-accruals",
+            },
+        ],
+    },
+    {
+        "label": "Attendance",
+        "icon": "clipboard",
+        "children": [
+            {
+                "label": "Attendance",
+                "icon": "calendar",
+                "url_name": "attendance_list",
+                "match": "/core/attendances",
+            },
+            {
+                "label": "Attendance Adjustments",
+                "icon": "edit-3",
+                "url_name": "attendance_adjustment_list",
+                "match": "/core/attendance-adjustments",
+            },
+            {
+                "label": "Overtime Requests",
+                "icon": "clock",
+                "url_name": "overtime_request_list",
+                "match": "/core/overtime-requests",
+            },
+            {
+                "label": "Overtime Records",
+                "icon": "file-text",
+                "url_name": "overtime_record_list",
+                "match": "/core/overtime-records",
+            },
+        ],
+    },
+    {
+        "label": "Rules & Compliance",
+        "icon": "shield",
+        "children": [
+            {
+                "label": "Policies",
+                "icon": "shield",
+                "url_name": "policy_list",
+                "match": "/core/policies",
+            },
+        ],
+    },
+    {
+        "label": "Payroll",
+        "icon": "dollar-sign",
+        "children": [
+            {
+                "label": "Salary Components",
+                "icon": "list",
+                "url_name": "salary_component_list",
+                "match": "/core/salary-components",
+            },
+            {
+                "label": "Salary Structures",
+                "icon": "layers",
+                "url_name": "salary_structure_list",
+                "match": "/core/salary-structures",
+            },
+            {
+                "label": "Employee Salary",
+                "icon": "user-check",
+                "url_name": "employee_salary_assignment_list",
+                "match": "/core/employee-salary-assignments",
+            },
+            {
+                "label": "Payroll Runs",
+                "icon": "play-circle",
+                "url_name": "payroll_run_list",
+                "match": "/core/payroll-runs",
+            },
+            {
+                "label": "Processed Payroll",
+                "icon": "file-text",
+                "url_name": "payroll_run_employee_list",
+                "match": "/core/payroll-run-employees",
+            },
+            {
+                "label": "Payroll Components",
+                "icon": "list",
+                "url_name": "payroll_run_component_list",
+                "match": "/core/payroll-run-components",
+            },
+            {
+                "label": "Attendance Inputs",
+                "icon": "clipboard",
+                "url_name": "attendance_payroll_summary_list",
+                "match": "/core/attendance-payroll-summaries",
+            },
+            {
+                "label": "Leave Inputs",
+                "icon": "calendar",
+                "url_name": "leave_payroll_impact_list",
+                "match": "/core/leave-payroll-impacts",
+            },
+            {
+                "label": "Adjustments",
+                "icon": "sliders",
+                "url_name": "payroll_adjustment_list",
+                "match": "/core/payroll-adjustments",
+            },
+            {
+                "label": "Loan Types",
+                "icon": "credit-card",
+                "url_name": "loan_type_list",
+                "match": "/core/loan-types",
+            },
+            {
+                "label": "Loan Applications",
+                "icon": "file-plus",
+                "url_name": "loan_application_list",
+                "match": "/core/loan-applications",
+            },
+            {
+                "label": "Loan Accounts",
+                "icon": "briefcase",
+                "url_name": "loan_account_list",
+                "match": "/core/loan-accounts",
+            },
+            {
+                "label": "Loan Installments",
+                "icon": "list",
+                "url_name": "loan_installment_list",
+                "match": "/core/loan-installments",
+            },
+            {
+                "label": "Loan Repayments",
+                "icon": "repeat",
+                "url_name": "loan_repayment_list",
+                "match": "/core/loan-repayments",
+            },
+            {
+                "label": "Loan Ledger",
+                "icon": "file-text",
+                "url_name": "loan_ledger_list",
+                "match": "/core/loan-ledger",
+            },
+        ],
+    },
+    {
+        "label": "Recruitment",
+        "icon": "briefcase",
+        "children": [
+            {
+                "label": "Job Categories",
+                "icon": "tag",
+                "url_name": "job_category_list",
+                "match": "/core/job-categories",
             },
             {
                 "label": "Job Skills",
@@ -58,22 +238,22 @@ SIDEBAR_ITEMS = [
                 "match": "/core/job-skills",
             },
             {
-                "label": "Job Posting Channels",
-                "icon": "tag",
-                "url_name": "job_posting_channel_list",
-                "match": "/core/job-posting-channels",
-            },
-            {
                 "label": "Skill Levels",
                 "icon": "tag",
                 "url_name": "skill_level_list",
                 "match": "/core/skill-levels",
             },
             {
-                "label": "Job Categories",
+                "label": "Job Posting Channels",
                 "icon": "tag",
-                "url_name": "job_category_list",
-                "match": "/core/job-categories",
+                "url_name": "job_posting_channel_list",
+                "match": "/core/job-posting-channels",
+            },
+            {
+                "label": "Job Positions",
+                "icon": "briefcase",
+                "url_name": "job_position_list",
+                "match": "/core/job_position",
             },
             {
                 "label": "Hiring Plans",
@@ -94,12 +274,6 @@ SIDEBAR_ITEMS = [
                 "match": "/core/job-requisitions",
             },
             {
-                "label": "Job Positions",
-                "icon": "briefcase",
-                "url_name": "job_position_list",
-                "match": "/core/job_position",
-            },
-            {
                 "label": "Job Postings",
                 "icon": "briefcase",
                 "url_name": "job_posting_list",
@@ -112,10 +286,22 @@ SIDEBAR_ITEMS = [
                 "match": "/core/applicants",
             },
             {
-                "label": "Job Application",
+                "label": "Applications",
                 "icon": "users",
                 "url_name": "job_application_list",
                 "match": "/core/job-applicants",
+            },
+            {
+                "label": "Interview Stages",
+                "icon": "layers",
+                "url_name": "interview_stage_list",
+                "match": "/core/interview-stages",
+            },
+            {
+                "label": "Interviews",
+                "icon": "calendar",
+                "url_name": "interview_list",
+                "match": "/core/interviews",
             },
             {
                 "label": "Job Offers",
@@ -129,19 +315,6 @@ SIDEBAR_ITEMS = [
                 "url_name": "hire_list",
                 "match": "/core/hires",
             },
-            {
-                "label": "Attendance",
-                "icon": "calendar",
-                "url_name": "attendance_list",
-                "match": "/core/attendances",
-            },
-            {
-                "label": "Attendance Adjustments",
-                "icon": "edit-3",
-                "url_name": "attendance_adjustment_list",
-                "match": "/core/attendance-adjustments",
-            },
-            
         ],
     },
 ]

@@ -7,7 +7,9 @@
         {% for field in section.fields %}
           <th>{{ field.label }}</th>
         {% endfor %}
-        <th>Action</th>
+        {% if section.allow_remove != False %}
+          <th>Action</th>
+        {% endif %}
       </tr>
     </thead>
 

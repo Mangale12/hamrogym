@@ -5,3 +5,5 @@ from .employee_data_table import EmployeeDataTableView
 from .hire_data_table import HireDataTableView
 from .shift_data_table import ShiftDataTableView
 from .leave_type_data_table import LeaveTypeDataTableView
+from .overtime_record_data_table import OvertimeRecordDataTableView
+from .overtime_request_data_table import OvertimeRequestDataTableView

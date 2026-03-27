@@ -2,7 +2,8 @@ from django.utils import timezone
 from django.http import JsonResponse
 
 from core.datatables.views import BaseDataTableView
-from ..models import Attendance, Employee, Shift
+from ..models import Attendance, Employee
+from ..services import resolve_employee_shift
 
 
 def _today_attendance(employee: Employee):
@@ -10,15 +11,9 @@ def _today_attendance(employee: Employee):
 
 
 def _employee_shift(employee: Employee):
-    shift_value = (employee.shift or "").strip()
-    if not shift_value:
-        return None
     if hasattr(employee, "_resolved_shift"):
         return employee._resolved_shift
-    shift = (
-        Shift.objects.filter(code__iexact=shift_value).first()
-        or Shift.objects.filter(name__iexact=shift_value).first()
-    )
+    shift = resolve_employee_shift(employee)
     employee._resolved_shift = shift
     return shift
 
@@ -41,11 +36,18 @@ def _attendance_action_label(employee: Employee):
     }.get(state, "")
 
 
+def _shift_label(employee: Employee):
+    shift = _employee_shift(employee)
+    if shift:
+        return shift.name or shift.code or str(shift)
+    return (employee.shift or "").strip()
+
+
 ATTENDANCE_COLUMNS = [
     ("id", "id"),
     ("employee_id", "employee_id"),
     ("employee", lambda obj: obj.full_name or obj.user.username),
-    ("shift", lambda obj: (obj.shift or "").strip()),
+    ("shift", _shift_label),
     (
         "date",
         lambda obj: timezone.localdate().isoformat(),
@@ -101,7 +103,7 @@ class AttendanceDataTableView(BaseDataTableView):
             if term in (employee.employee_id or "").lower()
             or term in (employee.full_name or "").lower()
             or term in (employee.user.username or "").lower()
-            or term in ((employee.shift or "").lower())
+            or term in (_shift_label(employee).lower())
         ]
 
     def order_queryset(self, queryset, order_index, order_dir):
@@ -111,6 +113,8 @@ class AttendanceDataTableView(BaseDataTableView):
         def _sort_key(employee):
             if key_name == "user__first_name":
                 return (employee.full_name or employee.user.username or "").lower()
+            if key_name == "shift":
+                return _shift_label(employee).lower()
             return (getattr(employee, key_name.split("__")[0], "") or "").lower()
 
         return sorted(queryset, key=_sort_key, reverse=reverse)

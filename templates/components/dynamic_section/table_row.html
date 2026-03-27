@@ -67,6 +67,12 @@
             class="form-control {{ field.class }}"
             {% if field.readonly %}readonly{% endif %}>
           {% endif %}
+        {% elif field.type == "time" %}
+          <input
+            type="time"
+            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            class="form-control {{ field.class }}"
+            {% if field.readonly %}readonly{% endif %}>
         {% elif field.type == "file" %}
           <div class="d-flex flex-column gap-1">
             <input
@@ -99,10 +105,12 @@
       </td>
     {% endfor %}
   
-    <td>
-      <button type="button" class="btn btn-sm btn-outline-danger remove-row">
-        <i class="fas fa-trash"></i>
-      </button>
-    </td>
+    {% if section.allow_remove != False %}
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    {% endif %}
   </tr>
   

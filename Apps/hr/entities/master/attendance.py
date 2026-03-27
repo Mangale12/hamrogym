@@ -5,17 +5,8 @@ from core.registry import register_entity
 
 from ...datatables.attendance_data_table import AttendanceDataTableView, ATTENDANCE_COLUMNS
 from ...forms.attendance_form import AttendanceDashboardForm
-from ...models import Attendance, Employee, Shift
-
-
-def _resolve_shift(employee: Employee):
-    shift_value = (employee.shift or "").strip()
-    if not shift_value:
-        return None
-    return (
-        Shift.objects.filter(code__iexact=shift_value).first()
-        or Shift.objects.filter(name__iexact=shift_value).first()
-    )
+from ...models import Attendance, Employee
+from ...services import apply_policies, build_policy_context, resolve_employee_shift
 
 
 def _today_attendance(employee: Employee):
@@ -31,10 +22,25 @@ def _today_attendance(employee: Employee):
 def _derive_status(employee: Employee, check_in_time):
     if not check_in_time:
         return "pending"
-    shift = _resolve_shift(employee)
+    shift = resolve_employee_shift(employee)
     if not shift or not shift.grace_end_time:
         return "present"
     return "late" if check_in_time > shift.grace_end_time else "present"
+
+
+def _apply_attendance_policies(employee: Employee, attendance: Attendance, *, event: str, shift=None):
+    context = build_policy_context(
+        employee=employee,
+        attendance=attendance,
+        shift=shift,
+        event=event,
+    )
+    return apply_policies(
+        module="attendance",
+        event=event,
+        context=context,
+        instance=attendance,
+    )
 
 
 def _check_in_employee(request, employee: Employee):
@@ -43,10 +49,19 @@ def _check_in_employee(request, employee: Employee):
         return {"message": "Employee is already checked in today."}
 
     now = timezone.localtime()
+    shift = resolve_employee_shift(employee, at_time=now)
+    if shift and attendance.shift_id is None:
+        attendance.shift = shift
+
     attendance.check_in_time = now.time().replace(microsecond=0)
     attendance.status = _derive_status(employee, attendance.check_in_time)
     attendance.remarks = attendance.remarks or f"Checked in at {attendance.check_in_time.strftime('%H:%M:%S')}."
-    attendance.save(update_fields=["check_in_time", "status", "remarks", "updated_at"])
+    policy_result = _apply_attendance_policies(employee, attendance, event="check_in", shift=shift)
+    update_fields = {"check_in_time", "status", "remarks", "updated_at"}
+    if shift and attendance.shift_id:
+        update_fields.add("shift")
+    update_fields.update(policy_result["changed_fields"])
+    attendance.save(update_fields=sorted(update_fields))
     return {"message": "Check in recorded successfully."}
 
 
@@ -59,7 +74,11 @@ def _check_out_employee(request, employee: Employee):
 
     now = timezone.localtime()
     attendance.check_out_time = now.time().replace(microsecond=0)
-    attendance.save(update_fields=["check_out_time", "updated_at"])
+    shift = attendance.shift or resolve_employee_shift(employee, at_time=now)
+    policy_result = _apply_attendance_policies(employee, attendance, event="check_out", shift=shift)
+    update_fields = {"check_out_time", "updated_at"}
+    update_fields.update(policy_result["changed_fields"])
+    attendance.save(update_fields=sorted(update_fields))
     return {"message": "Check out recorded successfully."}
 
 

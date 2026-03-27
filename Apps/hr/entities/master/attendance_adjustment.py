@@ -8,23 +8,14 @@ from ...datatables.attendance_adjustment_data_table import (
     AttendanceAdjustmentDataTableView,
 )
 from ...forms.attendance_form import AttendanceAdjustmentForm
-from ...models import Attendance, AttendanceAdjustment, Employee, Shift
-
-
-def _resolve_employee_shift(employee: Employee):
-    shift_value = (employee.shift or "").strip()
-    if not shift_value:
-        return None
-    return (
-        Shift.objects.filter(code__iexact=shift_value).first()
-        or Shift.objects.filter(name__iexact=shift_value).first()
-    )
+from ...models import Attendance, AttendanceAdjustment, Employee
+from ...services import resolve_employee_shift
 
 
 def _derive_attendance_status(employee: Employee, check_in_time):
     if not check_in_time:
         return "pending"
-    shift = _resolve_employee_shift(employee)
+    shift = resolve_employee_shift(employee)
     if not shift or not shift.grace_end_time:
         return "present"
     return "late" if check_in_time > shift.grace_end_time else "present"

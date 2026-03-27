@@ -23,3 +23,12 @@ from . import job_offer  # noqa: F401
 from . import attendance  # noqa: F401
 from . import attendance_adjustment  # noqa: F401
 from . import employee_shift  # noqa: F401
+from . import policy  # noqa: F401
+from . import overtime_request  # noqa: F401
+from . import overtime_record  # noqa: F401
+from . import holiday  # noqa: F401
+from . import leave_request  # noqa: F401
+from . import leave_balance  # noqa: F401
+from . import payroll  # noqa: F401
+from . import loan_type  # noqa: F401
+from . import loan  # noqa: F401

@@ -17,6 +17,7 @@ from Apps.hr.models import (
     EmployeeDocument,
     EmployeePayroll,
     EmployeeProfile,
+    EmployeeShift,
     EmployeeWork,
 )
 
@@ -32,6 +33,20 @@ DOCUMENT_SECTION = {
         {"name": "issue_date", "label": "Issue Date", "type": "date"},
         {"name": "expiry_date", "label": "Expiry Date", "type": "date"},
         {"name": "remarks", "label": "Remarks", "type": "text"},
+    ],
+}
+
+SHIFT_HISTORY_SECTION = {
+    "title": "Shift History",
+    "layout": "table",
+    "allow_add": False,
+    "allow_remove": False,
+    "fields": [
+        {"name": "shift_name", "label": "Shift", "type": "text", "readonly": True},
+        {"name": "rotation_status", "label": "Status", "type": "text", "readonly": True},
+        {"name": "effective_from_display", "label": "Effective From", "type": "text", "readonly": True},
+        {"name": "effective_to_display", "label": "Effective To", "type": "text", "readonly": True},
+        {"name": "remarks", "label": "Remarks", "type": "textarea", "readonly": True},
     ],
 }
 
@@ -109,6 +124,45 @@ def _load_employee_documents(employee: Employee) -> Dict[str, List[Dict[str, obj
             }
         )
     return {"documents": rows}
+
+
+def _rotation_status(rotation: EmployeeShift) -> str:
+    from django.utils import timezone
+
+    now = timezone.localtime()
+    if rotation.effective_from and rotation.effective_from > now:
+        return "Upcoming"
+    if rotation.effective_to and rotation.effective_to < now:
+        return "Expired"
+    return "Current"
+
+
+def _load_employee_shift_history(employee: Employee) -> Dict[str, List[Dict[str, object]]]:
+    rows = []
+    rotations = (
+        EmployeeShift.objects.filter(employee=employee)
+        .select_related("shift")
+        .order_by("-effective_from", "-created_at", "-id")
+    )
+    for rotation in rotations:
+        rows.append(
+            {
+                "id": rotation.id,
+                "shift_name": rotation.shift.name or rotation.shift.code or str(rotation.shift),
+                "rotation_status": _rotation_status(rotation),
+                "effective_from_display": rotation.effective_from.strftime("%Y-%m-%d %H:%M") if rotation.effective_from else "",
+                "effective_to_display": rotation.effective_to.strftime("%Y-%m-%d %H:%M") if rotation.effective_to else "",
+                "remarks": rotation.remarks,
+            }
+        )
+    return {"shift_history": rows}
+
+
+def _load_employee_dynamic_sections(employee: Employee) -> Dict[str, List[Dict[str, object]]]:
+    data = {}
+    data.update(_load_employee_documents(employee))
+    data.update(_load_employee_shift_history(employee))
+    return data
 
 
 register_entity(
@@ -700,11 +754,19 @@ register_entity(
                 "fields": [],
                 "sections": ["documents"],
             },
+            {
+                "key": "shift_history",
+                "label": "Shift History",
+                "fields": [],
+                "sections": ["shift_history"],
+                "requires_id": True,
+            },
         ],
         dynamic_sections={
             "documents": DOCUMENT_SECTION,
+            "shift_history": SHIFT_HISTORY_SECTION,
         },
-        dynamic_sections_loader=_load_employee_documents,
+        dynamic_sections_loader=_load_employee_dynamic_sections,
         dynamic_sections_saver=_save_employee_documents,
         datatable_columns=[
             (

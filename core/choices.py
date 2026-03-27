@@ -83,6 +83,12 @@ SALARY_TYPE_CHOICES = [
     ("hourly", "Hourly"),
 ]
 
+PAYMENT_FREQUENCY_CHOICES = [
+    ("monthly", "Monthly"),
+    ("biweekly", "Biweekly"),
+    ("weekly", "Weekly"),
+]
+
 WORK_LOCATION_CHOICES = [
     ("office", "Office"),
     ("branch", "Branch"),
@@ -100,6 +106,7 @@ APPROVAL_STATUS_CHOICES = [
     ("pending", "Pending"),
     ("approved", "Approved"),
     ("rejected", "Rejected"),
+    ("cancelled", "Cancelled"),
 ]
 
 RECRUITMENT_REASON_CHOICES = [
@@ -154,4 +161,149 @@ ATTENDANCE_ADJUSTMENT_STATUS_CHOICES = [
     ("pending", "Pending"),
     ("approved", "Approved"),
     ("rejected", "Rejected"),
+]
+
+
+MODULE_CHOICES = [
+    ("attendance", "Attendance"),
+    ("leave", "Leave"),
+    ("overtime", "Overtime"),
+    ("payroll", "Payroll"),
+    ("inventory", "Inventory"),
+    ("sales", "Sales"),
+]
+
+WEEKDAY_CHOICES = [
+    (0, "Monday"),
+    (1, "Tuesday"),
+    (2, "Wednesday"),
+    (3, "Thursday"),
+    (4, "Friday"),
+    (5, "Saturday"),
+    (6, "Sunday"),
+]
+
+LEAVE_ACCRUAL_TYPE_CHOICES = [
+    ("monthly", "Monthly"),
+    ("yearly", "Yearly"),
+]
+
+LEAVE_HALF_DAY_TYPE_CHOICES = [
+    ("first_half", "First Half"),
+    ("second_half", "Second Half"),
+]
+
+LEAVE_LEDGER_CHANGE_TYPE_CHOICES = [
+    ("opening", "Opening"),
+    ("accrual", "Accrual"),
+    ("leave_approved", "Leave Approved"),
+    ("leave_cancelled", "Leave Cancelled"),
+    ("leave_rejected", "Leave Rejected"),
+    ("encashment", "Encashment"),
+    ("carry_forward", "Carry Forward"),
+    ("adjustment", "Adjustment"),
+    ("compoff_earned", "Comp Off Earned"),
+    ("compoff_used", "Comp Off Used"),
+]
+
+PAYROLL_COMPONENT_TYPE_CHOICES = [
+    ("earning", "Earning"),
+    ("deduction", "Deduction"),
+    ("employer_contribution", "Employer Contribution"),
+    ("information", "Information"),
+]
+
+PAYROLL_COMPONENT_VALUE_TYPE_CHOICES = [
+    ("fixed", "Fixed"),
+    ("percentage", "Percentage"),
+    ("formula", "Formula"),
+]
+
+PAYROLL_TAX_TREATMENT_CHOICES = [
+    ("taxable", "Taxable"),
+    ("non_taxable", "Non Taxable"),
+    ("tax_exempt", "Tax Exempt"),
+]
+
+PAYROLL_ROUNDING_RULE_CHOICES = [
+    ("round_2", "Round 2 Decimals"),
+    ("round_0", "Round Whole Number"),
+    ("ceil", "Ceil"),
+    ("floor", "Floor"),
+]
+
+PAYROLL_RUN_STATUS_CHOICES = [
+    ("draft", "Draft"),
+    ("processed", "Processed"),
+    ("reviewed", "Reviewed"),
+    ("approved", "Approved"),
+    ("locked", "Locked"),
+]
+
+PAYROLL_RUN_EMPLOYEE_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("processed", "Processed"),
+    ("error", "Error"),
+]
+
+PAYROLL_COMPONENT_SOURCE_TYPE_CHOICES = [
+    ("structure", "Structure"),
+    ("override", "Override"),
+    ("adjustment", "Adjustment"),
+    ("attendance", "Attendance"),
+    ("leave", "Leave"),
+    ("overtime", "Overtime"),
+    ("tax", "Tax"),
+    ("statutory", "Statutory"),
+]
+
+PAYROLL_ADJUSTMENT_TYPE_CHOICES = [
+    ("earning", "Earning"),
+    ("deduction", "Deduction"),
+    ("arrear", "Arrear"),
+    ("bonus", "Bonus"),
+    ("correction", "Correction"),
+]
+
+
+INTEREST_TYPE_CHOICES = [
+        ("flat", "Flat"),
+        ("reducing", "Reducing"),
+        ("none", "No Interest"),
+    ]
+
+LOAN_APPLICATION_STATUS_CHOICES = [
+    ("draft", "Draft"),
+    ("submitted", "Submitted"),
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+    ("cancelled", "Cancelled"),
+]
+
+LOAN_ACCOUNT_STATUS_CHOICES = [
+    ("active", "Active"),
+    ("closed", "Closed"),
+    ("defaulted", "Defaulted"),
+]
+
+LOAN_INSTALLMENT_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("partial", "Partial"),
+    ("paid", "Paid"),
+    ("overdue", "Overdue"),
+]
+
+LOAN_ADJUSTMENT_TYPE_CHOICES = [
+    ("waiver", "Waiver"),
+    ("penalty", "Penalty"),
+    ("extra_payment", "Extra Payment"),
+]
+
+LOAN_LEDGER_TRANSACTION_TYPE_CHOICES = [
+    ("disbursement", "Disbursement"),
+    ("repayment", "Repayment"),
+    ("adjustment", "Adjustment"),
+    ("penalty", "Penalty"),
+    ("closure", "Closure"),
+    ("payroll_deduction", "Payroll Deduction"),
 ]
