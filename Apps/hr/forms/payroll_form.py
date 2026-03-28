@@ -4,13 +4,22 @@ from ..models import (
     AttendancePayrollSummary,
     Employee,
     EmployeeSalaryAssignment,
+    EmployeeTaxDeclaration,
     LeavePayrollImpact,
     PayrollAdjustment,
+    PayrollApproval,
+    PayrollLock,
+    PayrollLog,
     PayrollRun,
     PayrollRunComponent,
     PayrollRunEmployee,
+    PayrollSetting,
+    Payslip,
+    ProvidentFund,
     SalaryComponent,
     SalaryStructure,
+    SSFContribution,
+    TaxSlab,
 )
 
 
@@ -197,3 +206,171 @@ class PayrollAdjustmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["employee"].label_from_instance = _employee_label
+
+
+class TaxSlabForm(forms.ModelForm):
+    class Meta:
+        model = TaxSlab
+        fields = [
+            "fiscal_year",
+            "min_income",
+            "max_income",
+            "tax_rate",
+            "rebate_amount",
+            "is_active",
+            "remarks",
+        ]
+
+
+class EmployeeTaxDeclarationForm(forms.ModelForm):
+    employee = forms.ModelChoiceField(queryset=Employee.objects.all())
+
+    class Meta:
+        model = EmployeeTaxDeclaration
+        fields = [
+            "employee",
+            "fiscal_year",
+            "declared_amount",
+            "investment_amount",
+            "insurance_amount",
+            "other_deductions",
+            "remarks",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["employee"].label_from_instance = _employee_label
+
+
+class ProvidentFundForm(forms.ModelForm):
+    employee = forms.ModelChoiceField(queryset=Employee.objects.all())
+
+    class Meta:
+        model = ProvidentFund
+        fields = [
+            "employee",
+            "employee_percent",
+            "employer_percent",
+            "effective_from",
+            "effective_to",
+            "is_active",
+            "remarks",
+        ]
+        widgets = {
+            "effective_from": forms.DateInput(attrs={"type": "date"}),
+            "effective_to": forms.DateInput(attrs={"type": "date"}),
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["employee"].label_from_instance = _employee_label
+
+
+class SSFContributionForm(forms.ModelForm):
+    employee = forms.ModelChoiceField(queryset=Employee.objects.all())
+
+    class Meta:
+        model = SSFContribution
+        fields = [
+            "employee",
+            "employee_percent",
+            "employer_percent",
+            "effective_from",
+            "effective_to",
+            "is_active",
+            "remarks",
+        ]
+        widgets = {
+            "effective_from": forms.DateInput(attrs={"type": "date"}),
+            "effective_to": forms.DateInput(attrs={"type": "date"}),
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["employee"].label_from_instance = _employee_label
+
+
+class PayslipForm(forms.ModelForm):
+    class Meta:
+        model = Payslip
+        fields = [
+            "payroll_run_employee",
+            "payslip_number",
+            "generated_date",
+            "file_path",
+            "email_sent",
+            "remarks",
+        ]
+        widgets = {
+            "generated_date": forms.DateInput(attrs={"type": "date"}),
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class PayrollApprovalForm(forms.ModelForm):
+    class Meta:
+        model = PayrollApproval
+        fields = [
+            "payroll_run",
+            "approval_level",
+            "approved_by",
+            "status",
+            "remarks",
+            "approved_at",
+        ]
+        widgets = {
+            "approved_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class PayrollLockForm(forms.ModelForm):
+    class Meta:
+        model = PayrollLock
+        fields = [
+            "payroll_run",
+            "locked_by",
+            "locked_at",
+            "remarks",
+        ]
+        widgets = {
+            "locked_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class PayrollLogForm(forms.ModelForm):
+    class Meta:
+        model = PayrollLog
+        fields = [
+            "payroll_run",
+            "action",
+            "performed_by",
+            "old_data",
+            "new_data",
+        ]
+
+
+class PayrollSettingForm(forms.ModelForm):
+    class Meta:
+        model = PayrollSetting
+        fields = [
+            "organization",
+            "branch",
+            "default_working_days",
+            "overtime_calculation_method",
+            "rounding_method",
+            "adjustment_reference_type",
+            "tax_deduction_component",
+            "provident_fund_employee_component",
+            "provident_fund_employer_component",
+            "ssf_employee_component",
+            "ssf_employer_component",
+            "is_active",
+            "remarks",
+        ]
+        widgets = {
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }

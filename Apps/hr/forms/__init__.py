@@ -11,12 +11,21 @@ from .overtime_form import OvertimeRecordForm, OvertimeRequestForm
 from .payroll_form import (
     AttendancePayrollSummaryForm,
     EmployeeSalaryAssignmentForm,
+    EmployeeTaxDeclarationForm,
     LeavePayrollImpactForm,
     PayrollAdjustmentForm,
+    PayrollApprovalForm,
+    PayrollLockForm,
+    PayrollLogForm,
     PayrollRunComponentForm,
     PayrollRunEmployeeForm,
     PayrollRunForm,
+    PayrollSettingForm,
+    PayslipForm,
+    ProvidentFundForm,
     SalaryComponentForm,
     SalaryStructureForm,
+    SSFContributionForm,
+    TaxSlabForm,
 )
 from .shift_form import ShiftForm

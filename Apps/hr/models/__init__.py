@@ -45,14 +45,23 @@ from .payroll import (
     AttendancePayrollSummary,
     EmployeeComponentOverride,
     EmployeeSalaryAssignment,
+    EmployeeTaxDeclaration,
     LeavePayrollImpact,
     PayrollAdjustment,
+    PayrollApproval,
+    PayrollLock,
+    PayrollLog,
     PayrollRun,
     PayrollRunComponent,
     PayrollRunEmployee,
+    PayrollSetting,
+    Payslip,
+    ProvidentFund,
     SalaryComponent,
     SalaryStructure,
     SalaryStructureComponent,
+    SSFContribution,
+    TaxSlab,
 )
 from .loan_type import LoanPolicy, LoanType
 from .loan import (

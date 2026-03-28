@@ -1,12 +1,17 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from core.choices import (
     PAYMENT_FREQUENCY_CHOICES,
     PAYROLL_ADJUSTMENT_TYPE_CHOICES,
+    PAYROLL_APPROVAL_STATUS_CHOICES,
     PAYROLL_COMPONENT_SOURCE_TYPE_CHOICES,
     PAYROLL_COMPONENT_TYPE_CHOICES,
     PAYROLL_COMPONENT_VALUE_TYPE_CHOICES,
+    PAYROLL_LOG_ACTION_CHOICES,
+    PAYROLL_OVERTIME_CALCULATION_METHOD_CHOICES,
+    PAYROLL_REFERENCE_TYPE_CHOICES,
     PAYROLL_ROUNDING_RULE_CHOICES,
     PAYROLL_RUN_EMPLOYEE_STATUS_CHOICES,
     PAYROLL_RUN_STATUS_CHOICES,
@@ -36,6 +41,17 @@ class SalaryComponent(models.Model):
 
     class Meta:
         ordering = ["sequence", "name"]
+
+    def clean(self):
+        errors = {}
+        if self.value_type == "formula" and not (self.formula_expression or "").strip():
+            errors["formula_expression"] = "Formula expression is required when value type is formula."
+        if self.value_type != "formula" and (self.formula_expression or "").strip():
+            errors["formula_expression"] = "Formula expression should only be set for formula-based components."
+        if self.component_type == "deduction" and self.affects_gross:
+            errors["affects_gross"] = "Deduction components should not affect gross salary."
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self) -> str:
         return f"{self.code} - {self.name}"
@@ -78,6 +94,15 @@ class SalaryStructure(models.Model):
                 name="unique_salary_structure_scope_name_effective_from",
             ),
         ]
+
+    def clean(self):
+        errors = {}
+        if self.branch_id and not self.organization_id:
+            errors["organization"] = "Organization is required when branch is selected."
+        if self.effective_to and self.effective_from and self.effective_to < self.effective_from:
+            errors["effective_to"] = "Effective to date cannot be earlier than effective from date."
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self) -> str:
         return f"{self.code} - {self.name}"
@@ -126,6 +151,28 @@ class SalaryStructureComponent(models.Model):
             ),
         ]
 
+    def clean(self):
+        errors = {}
+        formula_expression = (self.formula_expression or "").strip()
+        if self.percentage_of_component_id and self.percentage_of_component_id == self.salary_component_id:
+            errors["percentage_of_component"] = "Percentage base component cannot be the same as salary component."
+        if self.min_value is not None and self.max_value is not None and self.min_value > self.max_value:
+            errors["max_value"] = "Max value cannot be less than min value."
+        if self.default_value is not None and self.default_value < 0:
+            errors["default_value"] = "Default value cannot be negative."
+        if self.min_value is not None and self.min_value < 0:
+            errors["min_value"] = "Min value cannot be negative."
+        if self.max_value is not None and self.max_value < 0:
+            errors["max_value"] = "Max value cannot be negative."
+        if self.percentage_of_component_id and self.default_value is None:
+            errors["default_value"] = "Percentage value is required when percentage base component is selected."
+        if formula_expression and self.default_value is not None:
+            errors["default_value"] = "Default value should be empty when formula expression is used."
+        if formula_expression and self.percentage_of_component_id:
+            errors["percentage_of_component"] = "Percentage base component should be empty when formula expression is used."
+        if errors:
+            raise ValidationError(errors)
+
     def __str__(self) -> str:
         return f"{self.salary_structure} - {self.salary_component}"
 
@@ -166,6 +213,17 @@ class EmployeeSalaryAssignment(models.Model):
     class Meta:
         ordering = ["employee__employee_id", "-effective_from", "-id"]
 
+    def clean(self):
+        errors = {}
+        if self.gross_salary is not None and self.gross_salary <= 0:
+            errors["gross_salary"] = "Gross salary must be greater than zero."
+        if self.annual_ctc is not None and self.annual_ctc < 0:
+            errors["annual_ctc"] = "Annual CTC cannot be negative."
+        if self.effective_to and self.effective_from and self.effective_to < self.effective_from:
+            errors["effective_to"] = "Effective to date cannot be earlier than effective from date."
+        if errors:
+            raise ValidationError(errors)
+
     def __str__(self) -> str:
         return f"{self.employee} - {self.salary_structure} ({self.effective_from})"
 
@@ -197,6 +255,20 @@ class EmployeeComponentOverride(models.Model):
                 name="unique_employee_salary_override_component",
             ),
         ]
+
+    def clean(self):
+        errors = {}
+        override_formula = (self.override_formula or "").strip()
+        if self.override_value is None and not override_formula:
+            errors["override_value"] = "Set either an override value or override formula."
+        if self.override_value is not None and override_formula:
+            errors["override_formula"] = "Use either override value or override formula, not both."
+        if self.override_value is not None and self.override_value < 0:
+            errors["override_value"] = "Override value cannot be negative."
+        if self.effective_to and self.effective_from and self.effective_to < self.effective_from:
+            errors["effective_to"] = "Effective to date cannot be earlier than effective from date."
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self) -> str:
         return f"{self.employee_salary_assignment} - {self.salary_component}"
@@ -265,6 +337,23 @@ class PayrollRun(models.Model):
                 name="unique_payroll_run_scope_period",
             ),
         ]
+
+    def clean(self):
+        errors = {}
+        if self.branch_id and not self.organization_id:
+            errors["organization"] = "Organization is required when branch is selected."
+        if self.payroll_month and not 1 <= self.payroll_month <= 12:
+            errors["payroll_month"] = "Payroll month must be between 1 and 12."
+        if self.period_end and self.period_start and self.period_end < self.period_start:
+            errors["period_end"] = "Period end cannot be earlier than period start."
+        if self.period_start and self.payroll_year and self.period_start.year != self.payroll_year:
+            errors["period_start"] = "Period start year must match payroll year."
+        if self.period_end and self.payroll_year and self.period_end.year != self.payroll_year:
+            errors["period_end"] = "Period end year must match payroll year."
+        if self.period_start and self.payroll_month and self.period_start.month != self.payroll_month:
+            errors["period_start"] = "Period start month must match payroll month."
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self) -> str:
         return f"{self.name} ({self.payroll_year}-{self.payroll_month:02d})"
@@ -468,5 +557,418 @@ class PayrollAdjustment(models.Model):
     class Meta:
         ordering = ["employee__employee_id", "-created_at", "-id"]
 
+    def clean(self):
+        errors = {}
+        if self.amount is not None and self.amount <= 0:
+            errors["amount"] = "Adjustment amount must be greater than zero."
+        if self.payroll_run_id and self.employee_id:
+            has_employee = self.payroll_run.employees.filter(employee_id=self.employee_id).exists()
+            if self.payroll_run.status in {"processed", "reviewed", "approved", "locked"} and not has_employee:
+                errors["employee"] = "Selected employee is not part of this payroll run."
+        if errors:
+            raise ValidationError(errors)
+
     def __str__(self) -> str:
         return f"{self.payroll_run} - {self.employee} - {self.adjustment_type}"
+
+
+class TaxSlab(models.Model):
+    fiscal_year = models.ForeignKey(
+        "core.FiscalYear",
+        on_delete=models.PROTECT,
+        related_name="payroll_tax_slabs",
+    )
+    min_income = models.DecimalField(max_digits=14, decimal_places=2)
+    max_income = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2)
+    rebate_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["fiscal_year__start_date", "min_income", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["fiscal_year", "min_income"],
+                name="unique_tax_slab_fiscal_year_min_income",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.min_income is not None and self.min_income < 0:
+            errors["min_income"] = "Min income cannot be negative."
+        if self.max_income is not None and self.max_income < 0:
+            errors["max_income"] = "Max income cannot be negative."
+        if self.max_income is not None and self.min_income is not None and self.max_income <= self.min_income:
+            errors["max_income"] = "Max income must be greater than min income."
+        if self.tax_rate is not None and (self.tax_rate < 0 or self.tax_rate > 100):
+            errors["tax_rate"] = "Tax rate must be between 0 and 100."
+        if self.rebate_amount is not None and self.rebate_amount < 0:
+            errors["rebate_amount"] = "Rebate amount cannot be negative."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        upper = self.max_income if self.max_income is not None else "Above"
+        return f"{self.fiscal_year} - {self.min_income} to {upper}"
+
+
+class EmployeeTaxDeclaration(models.Model):
+    employee = models.ForeignKey(
+        "Employee",
+        on_delete=models.CASCADE,
+        related_name="tax_declarations",
+        db_column="employee_id",
+    )
+    fiscal_year = models.ForeignKey(
+        "core.FiscalYear",
+        on_delete=models.PROTECT,
+        related_name="employee_tax_declarations",
+    )
+    declared_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    investment_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    insurance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    other_deductions = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["employee__employee_id", "-fiscal_year__start_date", "-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["employee", "fiscal_year"],
+                name="unique_employee_tax_declaration_fiscal_year",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+        for field_name in [
+            "declared_amount",
+            "investment_amount",
+            "insurance_amount",
+            "other_deductions",
+        ]:
+            value = getattr(self, field_name)
+            if value is not None and value < 0:
+                errors[field_name] = "Amount cannot be negative."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.employee} - {self.fiscal_year}"
+
+
+class ProvidentFund(models.Model):
+    employee = models.ForeignKey(
+        "Employee",
+        on_delete=models.CASCADE,
+        related_name="provident_funds",
+        db_column="employee_id",
+    )
+    employee_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    employer_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    effective_from = models.DateField()
+    effective_to = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["employee__employee_id", "-effective_from", "-id"]
+
+    def clean(self):
+        errors = {}
+        if self.employee_percent is not None and not 0 <= self.employee_percent <= 100:
+            errors["employee_percent"] = "Employee percent must be between 0 and 100."
+        if self.employer_percent is not None and not 0 <= self.employer_percent <= 100:
+            errors["employer_percent"] = "Employer percent must be between 0 and 100."
+        if self.effective_to and self.effective_from and self.effective_to < self.effective_from:
+            errors["effective_to"] = "Effective to date cannot be earlier than effective from date."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.employee} PF ({self.employee_percent}%/{self.employer_percent}%)"
+
+
+class SSFContribution(models.Model):
+    employee = models.ForeignKey(
+        "Employee",
+        on_delete=models.CASCADE,
+        related_name="ssf_contributions",
+        db_column="employee_id",
+    )
+    employee_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    employer_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    effective_from = models.DateField()
+    effective_to = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["employee__employee_id", "-effective_from", "-id"]
+
+    def clean(self):
+        errors = {}
+        if self.employee_percent is not None and not 0 <= self.employee_percent <= 100:
+            errors["employee_percent"] = "Employee percent must be between 0 and 100."
+        if self.employer_percent is not None and not 0 <= self.employer_percent <= 100:
+            errors["employer_percent"] = "Employer percent must be between 0 and 100."
+        if self.effective_to and self.effective_from and self.effective_to < self.effective_from:
+            errors["effective_to"] = "Effective to date cannot be earlier than effective from date."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.employee} SSF ({self.employee_percent}%/{self.employer_percent}%)"
+
+
+class Payslip(models.Model):
+    payroll_run_employee = models.OneToOneField(
+        PayrollRunEmployee,
+        on_delete=models.CASCADE,
+        related_name="payslip",
+    )
+    payslip_number = models.CharField(max_length=50, unique=True)
+    generated_date = models.DateField()
+    file_path = models.CharField(max_length=255, blank=True)
+    email_sent = models.BooleanField(default=False)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-generated_date", "-id"]
+
+    def clean(self):
+        errors = {}
+        if self.payroll_run_employee_id and self.generated_date:
+            period_start = self.payroll_run_employee.payroll_run.period_start
+            if self.generated_date < period_start:
+                errors["generated_date"] = "Generated date cannot be earlier than the payroll period start."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return self.payslip_number
+
+
+class PayrollApproval(models.Model):
+    payroll_run = models.ForeignKey(
+        PayrollRun,
+        on_delete=models.CASCADE,
+        related_name="approvals",
+    )
+    approval_level = models.PositiveIntegerField(default=1)
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payroll_approvals",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=PAYROLL_APPROVAL_STATUS_CHOICES,
+        default="pending",
+    )
+    remarks = models.TextField(blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["payroll_run__payroll_year", "payroll_run__payroll_month", "approval_level", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["payroll_run", "approval_level"],
+                name="unique_payroll_approval_level_per_run",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.approval_level is not None and self.approval_level < 1:
+            errors["approval_level"] = "Approval level must be at least 1."
+        if self.status == "approved" and not self.approved_by_id:
+            errors["approved_by"] = "Approved by is required when status is approved."
+        if self.status == "approved" and not self.approved_at:
+            errors["approved_at"] = "Approved at is required when status is approved."
+        if self.status == "pending" and self.approved_at:
+            errors["approved_at"] = "Approved at should be empty while approval is pending."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.payroll_run} - Level {self.approval_level}"
+
+
+class PayrollLock(models.Model):
+    payroll_run = models.OneToOneField(
+        PayrollRun,
+        on_delete=models.CASCADE,
+        related_name="lock_record",
+    )
+    locked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payroll_locks",
+    )
+    locked_at = models.DateTimeField()
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-locked_at", "-id"]
+
+    def clean(self):
+        errors = {}
+        if self.payroll_run_id and self.payroll_run.status != "approved":
+            errors["payroll_run"] = "Only approved payroll runs can be locked."
+        if not self.locked_by_id:
+            errors["locked_by"] = "Locked by is required."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.payroll_run} locked"
+
+
+class PayrollLog(models.Model):
+    payroll_run = models.ForeignKey(
+        PayrollRun,
+        on_delete=models.CASCADE,
+        related_name="logs",
+    )
+    action = models.CharField(max_length=20, choices=PAYROLL_LOG_ACTION_CHOICES)
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payroll_logs",
+    )
+    old_data = models.JSONField(blank=True, null=True)
+    new_data = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self) -> str:
+        return f"{self.payroll_run} - {self.action}"
+
+
+class PayrollSetting(models.Model):
+    organization = models.ForeignKey(
+        "core.Organization",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings",
+    )
+    branch = models.ForeignKey(
+        "core.Branch",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings",
+    )
+    default_working_days = models.PositiveSmallIntegerField(default=30)
+    overtime_calculation_method = models.CharField(
+        max_length=30,
+        choices=PAYROLL_OVERTIME_CALCULATION_METHOD_CHOICES,
+        default="hourly_rate",
+    )
+    rounding_method = models.CharField(
+        max_length=20,
+        choices=PAYROLL_ROUNDING_RULE_CHOICES,
+        default="round_2",
+    )
+    adjustment_reference_type = models.CharField(
+        max_length=20,
+        choices=PAYROLL_REFERENCE_TYPE_CHOICES,
+        default="manual",
+    )
+    tax_deduction_component = models.ForeignKey(
+        "SalaryComponent",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings_tax_component",
+    )
+    provident_fund_employee_component = models.ForeignKey(
+        "SalaryComponent",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings_pf_employee_component",
+    )
+    provident_fund_employer_component = models.ForeignKey(
+        "SalaryComponent",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings_pf_employer_component",
+    )
+    ssf_employee_component = models.ForeignKey(
+        "SalaryComponent",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings_ssf_employee_component",
+    )
+    ssf_employer_component = models.ForeignKey(
+        "SalaryComponent",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings_ssf_employer_component",
+    )
+    is_active = models.BooleanField(default=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["organization__name", "branch__name", "-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "branch"],
+                name="unique_payroll_setting_scope",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.branch_id and not self.organization_id:
+            errors["organization"] = "Organization is required when branch is selected."
+
+        component_rules = [
+            ("tax_deduction_component", {"deduction"}),
+            ("provident_fund_employee_component", {"deduction"}),
+            ("provident_fund_employer_component", {"employer_contribution"}),
+            ("ssf_employee_component", {"deduction"}),
+            ("ssf_employer_component", {"employer_contribution"}),
+        ]
+        for field_name, allowed_types in component_rules:
+            component = getattr(self, field_name)
+            if component and component.component_type not in allowed_types:
+                errors[field_name] = f"Selected component must be one of: {', '.join(sorted(allowed_types))}."
+
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        scope = self.branch or self.organization or "Global"
+        return f"{scope} Payroll Settings"

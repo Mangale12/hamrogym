@@ -7,11 +7,20 @@ from django.utils import timezone
 from Apps.hr.models import (
     AttendancePayrollSummary,
     EmployeeSalaryAssignment,
+    EmployeeTaxDeclaration,
     LeavePayrollImpact,
     PayrollAdjustment,
+    PayrollApproval,
+    PayrollLock,
+    PayrollLog,
     PayrollRun,
     PayrollRunComponent,
     PayrollRunEmployee,
+    PayrollSetting,
+    Payslip,
+    ProvidentFund,
+    SSFContribution,
+    TaxSlab,
 )
 from Apps.hr.services.payroll_formula_engine import (
     FormulaEvaluationError,
@@ -205,8 +214,256 @@ def _calculate_totals(component_rows):
     }
 
 
+def _payment_period_factor(payment_frequency: str) -> Decimal:
+    return {
+        "monthly": Decimal("12"),
+        "biweekly": Decimal("26"),
+        "weekly": Decimal("52"),
+    }.get(payment_frequency or "monthly", Decimal("12"))
+
+
+def _get_fiscal_year_for_run(payroll_run: PayrollRun):
+    from core.models import FiscalYear
+
+    return (
+        FiscalYear.objects.filter(
+            start_date__lte=payroll_run.period_end,
+            end_date__gte=payroll_run.period_start,
+        )
+        .order_by("-start_date", "-id")
+        .first()
+    )
+
+
+def _calculate_tax_from_slabs(annual_taxable_income: Decimal, slabs):
+    annual_tax = Decimal("0.00")
+    remaining_income = to_decimal(annual_taxable_income)
+
+    for slab in slabs:
+        lower = to_decimal(slab.min_income)
+        upper = to_decimal(slab.max_income) if slab.max_income is not None else None
+        if remaining_income <= lower:
+            continue
+
+        taxable_portion = (remaining_income - lower) if upper is None else min(remaining_income, upper) - lower
+        if taxable_portion <= 0:
+            continue
+        annual_tax += (taxable_portion * to_decimal(slab.tax_rate)) / Decimal("100")
+        if slab.rebate_amount:
+            annual_tax -= to_decimal(slab.rebate_amount)
+
+    return max(annual_tax, Decimal("0.00")).quantize(Decimal("0.01"))
+
+
+def _get_payroll_setting(payroll_run: PayrollRun):
+    scoped_settings = PayrollSetting.objects.filter(is_active=True)
+    if payroll_run.organization_id:
+        branch_setting = scoped_settings.filter(
+            organization_id=payroll_run.organization_id,
+            branch_id=payroll_run.branch_id,
+        ).first()
+        if branch_setting:
+            return branch_setting
+
+        org_setting = scoped_settings.filter(
+            organization_id=payroll_run.organization_id,
+            branch__isnull=True,
+        ).first()
+        if org_setting:
+            return org_setting
+
+    return scoped_settings.filter(organization__isnull=True, branch__isnull=True).first()
+
+
+def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalaryAssignment, component_rows):
+    effective_date = payroll_run.period_end
+    statutory_rows = []
+    payroll_setting = _get_payroll_setting(payroll_run)
+
+    provident_fund = (
+        ProvidentFund.objects.filter(
+            employee=assignment.employee,
+            is_active=True,
+            effective_from__lte=effective_date,
+        )
+        .filter(Q(effective_to__isnull=True) | Q(effective_to__gte=payroll_run.period_start))
+        .order_by("-effective_from", "-id")
+        .first()
+    )
+    if provident_fund:
+        pf_employee_amount = (
+            to_decimal(assignment.gross_salary) * to_decimal(provident_fund.employee_percent) / Decimal("100")
+        ).quantize(Decimal("0.01"))
+        pf_employer_amount = (
+            to_decimal(assignment.gross_salary) * to_decimal(provident_fund.employer_percent) / Decimal("100")
+        ).quantize(Decimal("0.01"))
+        statutory_rows.extend(
+            [
+                {
+                    "salary_component": payroll_setting.provident_fund_employee_component if payroll_setting else None,
+                    "source_type": "statutory",
+                    "sequence": 970,
+                    "amount": pf_employee_amount,
+                    "component_type": "deduction",
+                    "tax_treatment": "non_taxable",
+                    "calculation_trace": {
+                        "statutory_type": "provident_fund_employee",
+                        "percent": str(provident_fund.employee_percent),
+                    },
+                },
+                {
+                    "salary_component": payroll_setting.provident_fund_employer_component if payroll_setting else None,
+                    "source_type": "statutory",
+                    "sequence": 971,
+                    "amount": pf_employer_amount,
+                    "component_type": "employer_contribution",
+                    "tax_treatment": "non_taxable",
+                    "calculation_trace": {
+                        "statutory_type": "provident_fund_employer",
+                        "percent": str(provident_fund.employer_percent),
+                    },
+                },
+            ]
+        )
+
+    ssf_contribution = (
+        SSFContribution.objects.filter(
+            employee=assignment.employee,
+            is_active=True,
+            effective_from__lte=effective_date,
+        )
+        .filter(Q(effective_to__isnull=True) | Q(effective_to__gte=payroll_run.period_start))
+        .order_by("-effective_from", "-id")
+        .first()
+    )
+    if ssf_contribution:
+        ssf_employee_amount = (
+            to_decimal(assignment.gross_salary) * to_decimal(ssf_contribution.employee_percent) / Decimal("100")
+        ).quantize(Decimal("0.01"))
+        ssf_employer_amount = (
+            to_decimal(assignment.gross_salary) * to_decimal(ssf_contribution.employer_percent) / Decimal("100")
+        ).quantize(Decimal("0.01"))
+        statutory_rows.extend(
+            [
+                {
+                    "salary_component": payroll_setting.ssf_employee_component if payroll_setting else None,
+                    "source_type": "statutory",
+                    "sequence": 972,
+                    "amount": ssf_employee_amount,
+                    "component_type": "deduction",
+                    "tax_treatment": "non_taxable",
+                    "calculation_trace": {
+                        "statutory_type": "ssf_employee",
+                        "percent": str(ssf_contribution.employee_percent),
+                    },
+                },
+                {
+                    "salary_component": payroll_setting.ssf_employer_component if payroll_setting else None,
+                    "source_type": "statutory",
+                    "sequence": 973,
+                    "amount": ssf_employer_amount,
+                    "component_type": "employer_contribution",
+                    "tax_treatment": "non_taxable",
+                    "calculation_trace": {
+                        "statutory_type": "ssf_employer",
+                        "percent": str(ssf_contribution.employer_percent),
+                    },
+                },
+            ]
+        )
+
+    component_rows.extend([row for row in statutory_rows if row["amount"] > 0])
+    return component_rows
+
+
+def _apply_income_tax(*, payroll_run: PayrollRun, assignment: EmployeeSalaryAssignment, component_rows, totals):
+    fiscal_year = _get_fiscal_year_for_run(payroll_run)
+    if not fiscal_year:
+        return totals, component_rows
+    payroll_setting = _get_payroll_setting(payroll_run)
+
+    slabs = list(TaxSlab.objects.filter(fiscal_year=fiscal_year, is_active=True).order_by("min_income", "id"))
+    if not slabs:
+        return totals, component_rows
+
+    declaration = EmployeeTaxDeclaration.objects.filter(
+        employee=assignment.employee,
+        fiscal_year=fiscal_year,
+    ).first()
+    declaration_deduction = Decimal("0.00")
+    if declaration:
+        declaration_deduction = (
+            to_decimal(declaration.declared_amount)
+            + to_decimal(declaration.investment_amount)
+            + to_decimal(declaration.insurance_amount)
+            + to_decimal(declaration.other_deductions)
+        )
+
+    factor = _payment_period_factor(assignment.payment_frequency)
+    annual_taxable_income = max(
+        (to_decimal(totals["taxable_income"]) * factor) - declaration_deduction,
+        Decimal("0.00"),
+    )
+    annual_tax = _calculate_tax_from_slabs(annual_taxable_income, slabs)
+    period_tax = (annual_tax / factor).quantize(Decimal("0.01")) if factor else Decimal("0.00")
+
+    if period_tax > 0:
+        component_rows.append(
+            {
+                "salary_component": payroll_setting.tax_deduction_component if payroll_setting else None,
+                "source_type": "tax",
+                "sequence": 980,
+                "amount": period_tax,
+                "component_type": "deduction",
+                "tax_treatment": "non_taxable",
+                "calculation_trace": {
+                    "fiscal_year": str(fiscal_year),
+                    "annual_taxable_income": str(annual_taxable_income),
+                    "annual_tax": str(annual_tax),
+                    "period_factor": str(factor),
+                    "declaration_deduction": str(declaration_deduction),
+                },
+            }
+        )
+        totals["income_tax"] = period_tax
+        totals["total_deductions"] = (to_decimal(totals["total_deductions"]) + period_tax).quantize(Decimal("0.01"))
+        totals["net_salary"] = (to_decimal(totals["gross_earnings"]) - to_decimal(totals["total_deductions"])).quantize(
+            Decimal("0.01")
+        )
+
+    return totals, component_rows
+
+
+def _build_payslip_number(*, payroll_run: PayrollRun, payroll_employee: PayrollRunEmployee):
+    employee_code = payroll_employee.employee.employee_id or payroll_employee.employee_id
+    return f"PS-{payroll_run.payroll_year}-{payroll_run.payroll_month:02d}-{employee_code}"
+
+
+def _create_or_update_payslip(*, payroll_run: PayrollRun, payroll_employee: PayrollRunEmployee):
+    Payslip.objects.update_or_create(
+        payroll_run_employee=payroll_employee,
+        defaults={
+            "payslip_number": _build_payslip_number(payroll_run=payroll_run, payroll_employee=payroll_employee),
+            "generated_date": timezone.localdate(),
+            "email_sent": False,
+        },
+    )
+
+
+def _log_payroll_action(*, payroll_run: PayrollRun, action: str, acting_user=None, old_data=None, new_data=None):
+    PayrollLog.objects.create(
+        payroll_run=payroll_run,
+        action=action,
+        performed_by=acting_user,
+        old_data=old_data,
+        new_data=new_data,
+    )
+
+
 @transaction.atomic
 def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
+    if payroll_run.status == "locked" or PayrollLock.objects.filter(payroll_run=payroll_run).exists():
+        raise ValueError("Locked payroll runs cannot be processed.")
     if payroll_run.status not in {"draft", "processed"}:
         raise ValueError("Only draft or processed payroll runs can be recalculated.")
 
@@ -214,6 +471,7 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
     build_leave_payroll_inputs(payroll_run=payroll_run)
 
     PayrollRunComponent.objects.filter(payroll_run_employee__payroll_run=payroll_run).delete()
+    Payslip.objects.filter(payroll_run_employee__payroll_run=payroll_run).delete()
     PayrollRunEmployee.objects.filter(payroll_run=payroll_run).delete()
 
     assignments = []
@@ -237,7 +495,18 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
                 assignment=assignment,
                 component_rows=component_rows,
             )
+            component_rows = _build_statutory_rows(
+                payroll_run=payroll_run,
+                assignment=assignment,
+                component_rows=component_rows,
+            )
             totals = _calculate_totals(component_rows)
+            totals, component_rows = _apply_income_tax(
+                payroll_run=payroll_run,
+                assignment=assignment,
+                component_rows=component_rows,
+                totals=totals,
+            )
             attendance_summary = AttendancePayrollSummary.objects.filter(
                 payroll_run=payroll_run,
                 employee=assignment.employee,
@@ -277,6 +546,7 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
                     if row["salary_component"] is not None
                 ]
             )
+            _create_or_update_payslip(payroll_run=payroll_run, payroll_employee=payroll_employee)
 
             total_gross += totals["gross_earnings"]
             total_deductions += totals["total_deductions"]
@@ -314,18 +584,42 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
             "updated_at",
         ]
     )
+    _log_payroll_action(
+        payroll_run=payroll_run,
+        action="processed",
+        acting_user=acting_user,
+        new_data={
+            "employee_count": employee_count,
+            "total_gross": str(payroll_run.total_gross),
+            "total_deductions": str(payroll_run.total_deductions),
+            "total_net": str(payroll_run.total_net),
+        },
+    )
     return payroll_run
 
 
 @transaction.atomic
 def reset_payroll_run(*, payroll_run: PayrollRun):
-    if payroll_run.status not in {"processed", "reviewed"}:
+    if payroll_run.status == "locked" or PayrollLock.objects.filter(payroll_run=payroll_run).exists():
+        raise ValueError("Locked payroll runs cannot be reset.")
+    if payroll_run.status not in {"processed", "reviewed", "approved"}:
         raise ValueError("Only processed payroll runs can be reset to draft.")
+    old_data = {
+        "status": payroll_run.status,
+        "employee_count": payroll_run.employee_count,
+        "total_gross": str(payroll_run.total_gross),
+        "total_deductions": str(payroll_run.total_deductions),
+        "total_net": str(payroll_run.total_net),
+    }
     PayrollRunComponent.objects.filter(payroll_run_employee__payroll_run=payroll_run).delete()
+    Payslip.objects.filter(payroll_run_employee__payroll_run=payroll_run).delete()
     PayrollRunEmployee.objects.filter(payroll_run=payroll_run).delete()
+    PayrollApproval.objects.filter(payroll_run=payroll_run).delete()
     payroll_run.status = "draft"
     payroll_run.processed_at = None
     payroll_run.processed_by = None
+    payroll_run.approved_at = None
+    payroll_run.approved_by = None
     payroll_run.employee_count = 0
     payroll_run.total_gross = Decimal("0.00")
     payroll_run.total_deductions = Decimal("0.00")
@@ -335,11 +629,77 @@ def reset_payroll_run(*, payroll_run: PayrollRun):
             "status",
             "processed_at",
             "processed_by",
+            "approved_at",
+            "approved_by",
             "employee_count",
             "total_gross",
             "total_deductions",
             "total_net",
             "updated_at",
         ]
+    )
+    _log_payroll_action(
+        payroll_run=payroll_run,
+        action="reset",
+        old_data=old_data,
+        new_data={"status": "draft"},
+    )
+    return payroll_run
+
+
+@transaction.atomic
+def approve_payroll_run(*, payroll_run: PayrollRun, acting_user):
+    if payroll_run.status not in {"processed", "reviewed"}:
+        raise ValueError("Only processed or reviewed payroll runs can be approved.")
+    if PayrollLock.objects.filter(payroll_run=payroll_run).exists() or payroll_run.status == "locked":
+        raise ValueError("Locked payroll runs cannot be approved.")
+
+    last_approval = payroll_run.approvals.order_by("-approval_level", "-id").first()
+    level = (last_approval.approval_level + 1) if last_approval else 1
+    PayrollApproval.objects.create(
+        payroll_run=payroll_run,
+        approval_level=level,
+        approved_by=acting_user,
+        status="approved",
+        approved_at=timezone.now(),
+        remarks="Approved from payroll run action.",
+    )
+    payroll_run.status = "approved"
+    payroll_run.approved_at = timezone.now()
+    payroll_run.approved_by = acting_user
+    payroll_run.save(update_fields=["status", "approved_at", "approved_by", "updated_at"])
+    _log_payroll_action(
+        payroll_run=payroll_run,
+        action="approved",
+        acting_user=acting_user,
+        new_data={"approval_level": level, "status": "approved"},
+    )
+    return payroll_run
+
+
+@transaction.atomic
+def lock_payroll_run(*, payroll_run: PayrollRun, acting_user):
+    if payroll_run.status != "approved":
+        raise ValueError("Only approved payroll runs can be locked.")
+
+    lock_record, created = PayrollLock.objects.get_or_create(
+        payroll_run=payroll_run,
+        defaults={
+            "locked_by": acting_user,
+            "locked_at": timezone.now(),
+            "remarks": "Locked from payroll run action.",
+        },
+    )
+    if not created:
+        raise ValueError("This payroll run is already locked.")
+
+    payroll_run.status = "locked"
+    payroll_run.locked_at = lock_record.locked_at
+    payroll_run.save(update_fields=["status", "locked_at", "updated_at"])
+    _log_payroll_action(
+        payroll_run=payroll_run,
+        action="locked",
+        acting_user=acting_user,
+        new_data={"locked_at": lock_record.locked_at.isoformat()},
     )
     return payroll_run

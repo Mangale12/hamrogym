@@ -21,7 +21,7 @@ from .loan_workflow import (
 )
 from .payroll_formula_engine import FormulaEvaluationError, apply_rounding, evaluate_formula
 from .payroll_inputs import build_attendance_payroll_inputs, build_leave_payroll_inputs, get_payroll_adjustments
-from .payroll_processor import process_payroll_run, reset_payroll_run
+from .payroll_processor import approve_payroll_run, lock_payroll_run, process_payroll_run, reset_payroll_run
 from .policy_engine import apply_policies, build_policy_context
 from .shift_rotation import current_shift_rotation, resolve_employee_shift
 
@@ -31,6 +31,7 @@ __all__ = [
     "apply_leave_accrual",
     "apply_policies",
     "apply_rounding",
+    "approve_payroll_run",
     "build_policy_context",
     "build_attendance_payroll_inputs",
     "build_leave_payroll_inputs",
@@ -50,6 +51,7 @@ __all__ = [
     "get_or_create_leave_balance",
     "get_payroll_adjustments",
     "get_weekly_off_weekdays",
+    "lock_payroll_run",
     "prepare_leave_request",
     "prepare_loan_application",
     "process_payroll_run",

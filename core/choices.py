@@ -265,6 +265,34 @@ PAYROLL_ADJUSTMENT_TYPE_CHOICES = [
     ("correction", "Correction"),
 ]
 
+PAYROLL_APPROVAL_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+]
+
+PAYROLL_LOG_ACTION_CHOICES = [
+    ("created", "Created"),
+    ("updated", "Updated"),
+    ("processed", "Processed"),
+    ("approved", "Approved"),
+    ("locked", "Locked"),
+    ("reset", "Reset"),
+]
+
+PAYROLL_REFERENCE_TYPE_CHOICES = [
+    ("manual", "Manual"),
+    ("system", "System"),
+    ("loan", "Loan"),
+    ("incentive", "Incentive"),
+]
+
+PAYROLL_OVERTIME_CALCULATION_METHOD_CHOICES = [
+    ("fixed_rate", "Fixed Rate"),
+    ("hourly_rate", "Hourly Rate"),
+    ("multiplier", "Multiplier"),
+]
+
 
 INTEREST_TYPE_CHOICES = [
         ("flat", "Flat"),
@@ -306,4 +334,18 @@ LOAN_LEDGER_TRANSACTION_TYPE_CHOICES = [
     ("penalty", "Penalty"),
     ("closure", "Closure"),
     ("payroll_deduction", "Payroll Deduction"),
+]
+
+
+SALARY_COMPONENT_TYPE_CHOICES = [
+    ("earning", "Earning"),
+    ("deduction", "Deduction"),
+    ("employer_contribution", "Employer Contribution"),
+]
+
+
+SALARY_COMPONENT_CALCULATION_TYPE_CHOICES = [
+    ("fixed", "Fixed"),
+    ("percentage", "Percentage"),
+    ("formula", "Formula"),
 ]
