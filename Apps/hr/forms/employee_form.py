@@ -105,6 +105,7 @@ class EmployeeForm(forms.ModelForm):
             "last_working_date",
             "exit_reason",
             "exit_notes",
+            "remarks",
         ],
         "documents": [],
     }

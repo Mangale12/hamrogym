@@ -16,6 +16,8 @@ from ..models import (
     PayrollSetting,
     Payslip,
     ProvidentFund,
+    ReportLayout,
+    ReportTemplate,
     SalaryComponent,
     SalaryStructure,
     SSFContribution,
@@ -223,6 +225,29 @@ PAYROLL_SETTING_COLUMNS = [
     ("overtime_calculation_method", "overtime_calculation_method"),
     ("rounding_method", "rounding_method"),
     ("tax_deduction_component", lambda obj: str(obj.tax_deduction_component) if obj.tax_deduction_component else ""),
+    ("is_active", "is_active"),
+    ("updated_at", lambda obj, request: encode_datetime_for_display(obj.updated_at, request)),
+]
+
+REPORT_LAYOUT_COLUMNS = [
+    ("id", "id"),
+    ("organization", lambda obj: str(obj.organization) if obj.organization else ""),
+    ("branch", lambda obj: str(obj.branch) if obj.branch else ""),
+    ("code", "code"),
+    ("name", "name"),
+    ("is_active", "is_active"),
+    ("updated_at", lambda obj, request: encode_datetime_for_display(obj.updated_at, request)),
+]
+
+REPORT_TEMPLATE_COLUMNS = [
+    ("id", "id"),
+    ("organization", lambda obj: str(obj.organization) if obj.organization else ""),
+    ("branch", lambda obj: str(obj.branch) if obj.branch else ""),
+    ("layout", lambda obj: str(obj.layout)),
+    ("code", "code"),
+    ("name", "name"),
+    ("report_key", "report_key"),
+    ("is_default", "is_default"),
     ("is_active", "is_active"),
     ("updated_at", lambda obj, request: encode_datetime_for_display(obj.updated_at, request)),
 ]
@@ -491,3 +516,43 @@ class PayrollSettingDataTableView(BaseDataTableView):
         "remarks",
     ]
     orderable_columns = ["organization__name", "branch__name", "default_working_days", "is_active", "updated_at"]
+
+
+class ReportLayoutDataTableView(BaseDataTableView):
+    model = ReportLayout
+    columns = REPORT_LAYOUT_COLUMNS
+    searchable_columns = [
+        "organization__name",
+        "branch__name",
+        "code",
+        "name",
+        "description",
+        "remarks",
+    ]
+    orderable_columns = ["organization__name", "branch__name", "code", "name", "is_active", "updated_at"]
+
+
+class ReportTemplateDataTableView(BaseDataTableView):
+    model = ReportTemplate
+    columns = REPORT_TEMPLATE_COLUMNS
+    searchable_columns = [
+        "organization__name",
+        "branch__name",
+        "layout__code",
+        "layout__name",
+        "code",
+        "name",
+        "report_key",
+        "description",
+        "remarks",
+    ]
+    orderable_columns = [
+        "organization__name",
+        "branch__name",
+        "report_key",
+        "code",
+        "name",
+        "is_default",
+        "is_active",
+        "updated_at",
+    ]

@@ -57,6 +57,8 @@ from .payroll import (
     PayrollSetting,
     Payslip,
     ProvidentFund,
+    ReportLayout,
+    ReportTemplate,
     SalaryComponent,
     SalaryStructure,
     SalaryStructureComponent,

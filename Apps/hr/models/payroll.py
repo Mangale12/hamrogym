@@ -972,3 +972,120 @@ class PayrollSetting(models.Model):
     def __str__(self) -> str:
         scope = self.branch or self.organization or "Global"
         return f"{scope} Payroll Settings"
+
+
+class ReportLayout(models.Model):
+    organization = models.ForeignKey(
+        "core.Organization",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="report_layouts",
+    )
+    branch = models.ForeignKey(
+        "core.Branch",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="report_layouts",
+    )
+    code = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=120, unique=True)
+    description = models.TextField(blank=True)
+    html_wrapper = models.TextField(
+        help_text="Shared HTML shell. Use {{ report_styles }}, {{ report_header }}, {{ report_body }}, and {{ report_footer }} placeholders.",
+    )
+    css_content = models.TextField(blank=True)
+    header_html = models.TextField(blank=True)
+    footer_html = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name", "code"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "branch", "name"],
+                name="unique_report_layout_scope_name",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.branch_id and not self.organization_id:
+            errors["organization"] = "Organization is required when branch is selected."
+        if "{{ report_body }}" not in (self.html_wrapper or ""):
+            errors["html_wrapper"] = "HTML wrapper must include {{ report_body }} placeholder."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.code} - {self.name}"
+
+
+class ReportTemplate(models.Model):
+    organization = models.ForeignKey(
+        "core.Organization",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="report_templates",
+    )
+    branch = models.ForeignKey(
+        "core.Branch",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="report_templates",
+    )
+    layout = models.ForeignKey(
+        ReportLayout,
+        on_delete=models.PROTECT,
+        related_name="report_templates",
+    )
+    code = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=120)
+    report_key = models.CharField(
+        max_length=50,
+        help_text="Logical report identifier like payslip, salary_register, attendance_summary, or member_invoice.",
+    )
+    description = models.TextField(blank=True)
+    body_html = models.TextField(
+        help_text="Template body HTML. You can use Django-style variables such as {{ employee_name }} or {{ company_name }}.",
+    )
+    css_content = models.TextField(blank=True)
+    header_html = models.TextField(blank=True)
+    footer_html = models.TextField(blank=True)
+    sample_context = models.JSONField(default=dict, blank=True)
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["report_key", "name", "code"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "branch", "report_key", "name"],
+                name="unique_report_template_scope_key_name",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.branch_id and not self.organization_id:
+            errors["organization"] = "Organization is required when branch is selected."
+        if self.layout_id and self.branch_id and self.layout.branch_id and self.layout.branch_id != self.branch_id:
+            errors["layout"] = "Layout branch must match the report template branch."
+        if self.layout_id and self.organization_id and self.layout.organization_id and self.layout.organization_id != self.organization_id:
+            errors["layout"] = "Layout organization must match the report template organization."
+        if not (self.body_html or "").strip():
+            errors["body_html"] = "Body HTML is required."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.code} - {self.name}"

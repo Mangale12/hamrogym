@@ -10,6 +10,8 @@ from . import payroll_lock  # noqa: F401
 from . import payroll_log  # noqa: F401
 from . import payroll_setting  # noqa: F401
 from . import payslip  # noqa: F401
+from . import report_layout  # noqa: F401
+from . import report_template  # noqa: F401
 from . import salary_component  # noqa: F401
 from . import salary_structure  # noqa: F401
 from . import tax_slab  # noqa: F401

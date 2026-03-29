@@ -81,6 +81,12 @@ SIDEBAR_ITEMS = [
                 "url_name": "leave_accrual_list",
                 "match": "/core/leave-accruals",
             },
+            {
+                "label": "Leave Balance Report",
+                "icon": "bar-chart-2",
+                "url_name": "leave_balance_summary_report",
+                "match": "/hr/reports/leave-balance-summary",
+            },
         ],
     },
     {
@@ -110,6 +116,12 @@ SIDEBAR_ITEMS = [
                 "icon": "file-text",
                 "url_name": "overtime_record_list",
                 "match": "/core/overtime-records",
+            },
+            {
+                "label": "Attendance History Report",
+                "icon": "bar-chart-2",
+                "url_name": "attendance_history_report",
+                "match": "/hr/reports/attendance-history",
             },
         ],
     },
@@ -236,6 +248,18 @@ SIDEBAR_ITEMS = [
                 "icon": "settings",
                 "url_name": "payroll_setting_list",
                 "match": "/core/payroll-settings",
+            },
+            {
+                "label": "Report Layouts",
+                "icon": "layout",
+                "url_name": "report_layout_list",
+                "match": "/core/report-layouts",
+            },
+            {
+                "label": "Report Templates",
+                "icon": "file-text",
+                "url_name": "report_template_list",
+                "match": "/core/report-templates",
             },
             {
                 "label": "Loan Types",

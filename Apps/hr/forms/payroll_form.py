@@ -16,6 +16,8 @@ from ..models import (
     PayrollSetting,
     Payslip,
     ProvidentFund,
+    ReportLayout,
+    ReportTemplate,
     SalaryComponent,
     SalaryStructure,
     SSFContribution,
@@ -372,5 +374,62 @@ class PayrollSettingForm(forms.ModelForm):
             "remarks",
         ]
         widgets = {
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class ReportLayoutForm(forms.ModelForm):
+    class Meta:
+        model = ReportLayout
+        fields = [
+            "organization",
+            "branch",
+            "code",
+            "name",
+            "description",
+            "html_wrapper",
+            "css_content",
+            "header_html",
+            "footer_html",
+            "is_active",
+            "remarks",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 2}),
+            "html_wrapper": forms.Textarea(attrs={"rows": 12}),
+            "css_content": forms.Textarea(attrs={"rows": 8}),
+            "header_html": forms.Textarea(attrs={"rows": 4}),
+            "footer_html": forms.Textarea(attrs={"rows": 4}),
+            "remarks": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class ReportTemplateForm(forms.ModelForm):
+    class Meta:
+        model = ReportTemplate
+        fields = [
+            "organization",
+            "branch",
+            "layout",
+            "code",
+            "name",
+            "report_key",
+            "description",
+            "body_html",
+            "css_content",
+            "header_html",
+            "footer_html",
+            "sample_context",
+            "is_default",
+            "is_active",
+            "remarks",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 2}),
+            "body_html": forms.Textarea(attrs={"rows": 12}),
+            "css_content": forms.Textarea(attrs={"rows": 8}),
+            "header_html": forms.Textarea(attrs={"rows": 4}),
+            "footer_html": forms.Textarea(attrs={"rows": 4}),
+            "sample_context": forms.Textarea(attrs={"rows": 6}),
             "remarks": forms.Textarea(attrs={"rows": 2}),
         }

@@ -1,0 +1,82 @@
+{% load report_tags %}
+<div class="card report-filter-panel">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-1">{{ report_title }}</h5>
+      <small class="text-muted">{{ report_subtitle }}</small>
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3 report-filter-form" data-report-form="true">
+      {% for block in filter_blocks %}
+        {% if block.hidden %}
+          {% for filter_field in block.fields %}
+            {% render_report_field form filter_field %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+
+      {% for block in filter_blocks %}
+        {% if not block.hidden and not block.advanced %}
+          {% if block.title %}
+            <div class="col-12">
+              <h6 class="mb-1">{{ block.title }}</h6>
+              {% if block.description %}
+                <small class="text-muted">{{ block.description }}</small>
+              {% endif %}
+            </div>
+          {% endif %}
+          {% for filter_field in block.fields %}
+            {% render_report_field form filter_field %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+
+      {% if filter_blocks|has_advanced_blocks %}
+        <div class="col-12">
+          <button
+            class="btn btn-light"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#reportAdvancedFilters"
+            aria-expanded="false"
+            aria-controls="reportAdvancedFilters">
+            Advanced Filters
+          </button>
+        </div>
+        <div class="col-12">
+          <div class="collapse" id="reportAdvancedFilters">
+            <div class="border rounded p-3 bg-light">
+              <div class="row g-3">
+                {% for block in filter_blocks %}
+                  {% if block.advanced %}
+                    {% if block.title %}
+                      <div class="col-12">
+                        <h6 class="mb-1">{{ block.title }}</h6>
+                        {% if block.description %}
+                          <small class="text-muted">{{ block.description }}</small>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                    {% for filter_field in block.fields %}
+                      {% render_report_field form filter_field %}
+                    {% endfor %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="col-12 d-flex justify-content-end gap-2">
+        {% for action in filter_actions %}
+          {% render_report_action action report_data export_query %}
+        {% endfor %}
+        {% if not filter_actions %}
+          <button type="submit" name="generate" value="1" class="btn btn-primary">View Report</button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>

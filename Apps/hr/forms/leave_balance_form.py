@@ -1,6 +1,8 @@
 from django import forms
+from django.utils import timezone
 
 from ..models import Employee, LeaveAccrual, LeaveBalance, LeaveLedger
+from ..models.leave_type import LeaveType
 
 
 def _employee_label(obj):
@@ -71,3 +73,14 @@ class LeaveAccrualForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["employee"].label_from_instance = _employee_label
+
+
+class LeaveBalanceReportForm(forms.Form):
+    employee = forms.ModelChoiceField(queryset=Employee.objects.all(), required=False)
+    leave_type = forms.ModelChoiceField(queryset=LeaveType.objects.filter(is_active=True), required=False)
+    year = forms.IntegerField(required=False, min_value=2000)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["employee"].label_from_instance = _employee_label
+        self.fields["year"].initial = timezone.localdate().year

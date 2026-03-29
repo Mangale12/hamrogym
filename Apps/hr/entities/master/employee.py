@@ -75,6 +75,10 @@ def _parse_dynamic_section(request, section_name: str) -> List[Dict[str, object]
 
 
 def _save_employee_documents(request, employee: Employee) -> None:
+    active_tab = (request.POST.get("_active_tab") or "").strip()
+    if active_tab and active_tab != "documents":
+        return
+
     rows = _parse_dynamic_section(request, "documents")
     existing = {doc.id: doc for doc in EmployeeDocument.objects.filter(employee=employee)}
     keep_ids = []
@@ -294,6 +298,7 @@ register_entity(
             {
                 "key": "contact",
                 "label": "Contact",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "phone",
@@ -315,6 +320,7 @@ register_entity(
             {
                 "key": "address",
                 "label": "Address",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "address",
@@ -365,6 +371,7 @@ register_entity(
             {
                 "key": "employment",
                 "label": "Employment",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "organization",
@@ -457,6 +464,7 @@ register_entity(
             {
                 "key": "payroll",
                 "label": "Payroll",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "salary_type",
@@ -502,6 +510,7 @@ register_entity(
             {
                 "key": "bank",
                 "label": "Bank",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "bank_name",
@@ -537,6 +546,7 @@ register_entity(
             {
                 "key": "legal",
                 "label": "Legal",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "citizenship_no",
@@ -578,6 +588,7 @@ register_entity(
             {
                 "key": "work",
                 "label": "Work",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "job_description",
@@ -620,6 +631,7 @@ register_entity(
             {
                 "key": "attendance",
                 "label": "Attendance",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "attendance_required",
@@ -648,6 +660,7 @@ register_entity(
             {
                 "key": "emergency",
                 "label": "Emergency",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "emergency_contact_name",
@@ -682,6 +695,7 @@ register_entity(
             {
                 "key": "access",
                 "label": "Access",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "login_enabled",
@@ -710,6 +724,7 @@ register_entity(
             {
                 "key": "exit",
                 "label": "Exit",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "resignation_date",
@@ -751,6 +766,7 @@ register_entity(
             {
                 "key": "documents",
                 "label": "Documents",
+                "requires_id": True,
                 "fields": [],
                 "sections": ["documents"],
             },

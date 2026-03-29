@@ -1,0 +1,26 @@
+{% if show %}
+  {% if kind == "link" %}
+    <a
+      href="{{ href }}"
+      class="{{ config.class_name|default:'btn btn-outline-primary' }}"
+      {% if config.target %}target="{{ config.target }}"{% endif %}
+      {% if config.rel %}rel="{{ config.rel }}"{% endif %}
+      {% for key, val in attrs.items %}{{ key }}="{{ val }}"{% endfor %}
+      {% for key, val in data_attrs.items %}data-{{ key }}="{{ val }}"{% endfor %}>
+      {% if config.icon_class %}<i class="{{ config.icon_class }}"></i>{% endif %}
+      {{ config.label }}
+    </a>
+  {% else %}
+    <button
+      type="{{ config.button_type|default:'submit' }}"
+      class="{{ config.class_name|default:'btn btn-primary' }}"
+      {% if config.name %}name="{{ config.name }}"{% endif %}
+      {% if config.value %}value="{{ config.value }}"{% endif %}
+      {% if config.disabled %}disabled{% endif %}
+      {% for key, val in attrs.items %}{{ key }}="{{ val }}"{% endfor %}
+      {% for key, val in data_attrs.items %}data-{{ key }}="{{ val }}"{% endfor %}>
+      {% if config.icon_class %}<i class="{{ config.icon_class }}"></i>{% endif %}
+      {{ config.label }}
+    </button>
+  {% endif %}
+{% endif %}

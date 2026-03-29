@@ -47,5 +47,7 @@ from . import payroll_approval  # noqa: F401
 from . import payroll_lock  # noqa: F401
 from . import payroll_log  # noqa: F401
 from . import payroll_setting  # noqa: F401
+from . import report_layout  # noqa: F401
+from . import report_template  # noqa: F401
 from . import loan_type  # noqa: F401
 from . import loan  # noqa: F401
