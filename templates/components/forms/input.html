@@ -2,28 +2,73 @@
 <div class="mb-3 {{ wrapper_class|default:'' }}">
 {% endif %}
   {% with explicit_calendar_mode=calendar_mode|default:'' %}
+  {% with is_switchable=calendar_switchable|default:False %}
   <label class="form-label">
     {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
   </label>
 
-  {% if type == "date" and explicit_calendar_mode|lower == "bs" %}
-    <input type="hidden" name="__bs_date_fields" value="{{ name }}">
-    <input
-      type="text"
-      name="{{ name }}"
-      value="{{ value|default:'' }}"
-      {% if id %}id="{{ id }}"{% endif %}
-      class="form-control {{ class|default:'' }}"
-      placeholder="{{ placeholder|default:'YYYY-MM-DD' }}"
-      data-calendar-mode="bs"
-      autocomplete="off"
-      {% if required %}required{% endif %}
-      {% if attributes %}
-        {% for key, value in attributes.items %}
-          {{ key }}="{{ value }}"
-        {% endfor %}
+  {% if type == "date" %}
+    <div class="{% if is_switchable %}date-switcher{% endif %}">
+      {% if explicit_calendar_mode|lower == "bs" or is_bs_calendar %}
+      <input
+        type="text"
+        name="{{ name }}"
+        value="{{ value|default:'' }}"
+        {% if id %}id="{{ id }}"{% endif %}
+        class="form-control {{ class|default:'' }}"
+        placeholder="{{ placeholder|default:'YYYY-MM-DD' }}"
+        data-calendar-mode="bs"
+        {% if is_switchable %}data-calendar-switchable="true" data-calendar-current="bs"{% endif %}
+        autocomplete="off"
+        {% if required %}required{% endif %}
+        {% if attributes %}
+          {% for key, value in attributes.items %}
+            {{ key }}="{{ value }}"
+          {% endfor %}
+        {% endif %}
+      >
+      <input
+        type="hidden"
+        name="__bs_date_fields"
+        value="{{ name }}"
+        data-bs-date-field="true">
+      {% else %}
+      <input
+        type="date"
+        name="{{ name }}"
+        value="{{ value|default:'' }}"
+        {% if id %}id="{{ id }}"{% endif %}
+        class="form-control {{ class|default:'' }}"
+        placeholder="{{ placeholder|default:'' }}"
+        {% if is_switchable %}data-calendar-switchable="true" data-calendar-current="ad"{% endif %}
+        autocomplete="off"
+        {% if required %}required{% endif %}
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if step %}step="{{ step }}"{% endif %}
+        {% if attributes %}
+          {% for key, value in attributes.items %}
+            {{ key }}="{{ value }}"
+          {% endfor %}
+        {% endif %}
+      >
+      <input
+        type="hidden"
+        name="__bs_date_fields"
+        value="{{ name }}"
+        disabled
+        data-bs-date-field="true">
       {% endif %}
-    >
+      {% if is_switchable %}
+        <button
+          type="button"
+          class="switch-icon"
+          data-calendar-toggle="true"
+          title="Switch Calendar">
+          <span aria-hidden="true">↻</span>
+        </button>
+      {% endif %}
+    </div>
   {% elif prefix or suffix %}
     <div class="input-group">
       {% if prefix %}
@@ -76,6 +121,7 @@
   {% if errors %}
     <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
   {% endif %}
+  {% endwith %}
   {% endwith %}
 {% if not no_wrapper %}
 </div>

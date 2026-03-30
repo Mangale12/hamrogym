@@ -13,12 +13,12 @@
     {% elif component_type == "checkbox" %}
       {% include "components/forms/checkbox.html" with label=label name=field_name required=required checked=checked value=config.checkbox_value|default:'1' class=input_class id=field_id attributes=attrs help=help_text errors=errors no_wrapper=True %}
     {% elif component_type == "date" %}
-      {% include "components/forms/datepicker.html" with label=label name=field_name required=required value=value placeholder=placeholder class=input_class id=field_id min=min_value max=max_value step=step attributes=attrs calendar_mode=config.calendar_mode help=help_text no_wrapper=True %}
+      {% include "components/forms/datepicker.html" with label=label name=field_name required=required value=value placeholder=placeholder class=input_class id=field_id min=min_value max=max_value step=step attributes=attrs calendar_mode=config.calendar_mode calendar_switchable=config.calendar_switchable help=help_text no_wrapper=True %}
       {% if errors %}
         <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
       {% endif %}
     {% else %}
-      {% include "components/forms/input.html" with type=input_type label=label name=field_name required=required value=value placeholder=placeholder class=input_class id=field_id min=min_value max=max_value step=step prefix=prefix suffix=suffix attributes=attrs calendar_mode=config.calendar_mode help=help_text errors=errors no_wrapper=True %}
+      {% include "components/forms/input.html" with type=input_type label=label name=field_name required=required value=value placeholder=placeholder class=input_class id=field_id min=min_value max=max_value step=step prefix=prefix suffix=suffix attributes=attrs calendar_mode=config.calendar_mode calendar_switchable=config.calendar_switchable help=help_text errors=errors no_wrapper=True %}
     {% endif %}
   </div>
 {% endif %}
