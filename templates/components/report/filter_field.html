@@ -6,72 +6,19 @@
   {% endif %}
 {% else %}
   <div class="{{ wrapper_class }}">
-    {% if bound_field %}
-      <label class="form-label" for="{{ bound_field.id_for_label }}">
-        {{ config.label|default:bound_field.label }}
-      </label>
-      {{ bound_field }}
-      {% if bound_field.errors %}
-        <div class="invalid-feedback d-block">{{ bound_field.errors|join:", " }}</div>
-      {% endif %}
-      {% if config.help_text %}
-        <div class="form-text">{{ config.help_text }}</div>
+    {% if component_type == "textarea" %}
+      {% include "components/forms/textarea.html" with label=label name=field_name required=required value=value placeholder=placeholder class=input_class id=field_id rows=rows style=style attributes=attrs help=help_text errors=errors no_wrapper=True %}
+    {% elif component_type == "select" %}
+      {% include "components/forms/select.html" with label=label name=field_name required=required value=value options=options class=input_class id=field_id attributes=attrs help=help_text errors=errors empty_label=empty_label multiple=multiple data_field_name=data_field_name data_url=data_url no_wrapper=True %}
+    {% elif component_type == "checkbox" %}
+      {% include "components/forms/checkbox.html" with label=label name=field_name required=required checked=checked value=config.checkbox_value|default:'1' class=input_class id=field_id attributes=attrs help=help_text errors=errors no_wrapper=True %}
+    {% elif component_type == "date" %}
+      {% include "components/forms/datepicker.html" with label=label name=field_name required=required value=value placeholder=placeholder class=input_class id=field_id min=min_value max=max_value step=step attributes=attrs calendar_mode=config.calendar_mode help=help_text no_wrapper=True %}
+      {% if errors %}
+        <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
       {% endif %}
     {% else %}
-      <label class="form-label" for="report-field-{{ field_name }}">{{ config.label }}</label>
-      {% if field_type == "textarea" %}
-        <textarea
-          id="report-field-{{ field_name }}"
-          name="{{ field_name }}"
-          class="{{ config.input_class|default:'form-control' }}"
-          {% if config.rows %}rows="{{ config.rows }}"{% else %}rows="2"{% endif %}
-          {% if config.placeholder %}placeholder="{{ config.placeholder }}"{% endif %}
-          {% for key, val in attrs.items %}{{ key }}="{{ val }}"{% endfor %}
-          {% for key, val in data_attrs.items %}data-{{ key }}="{{ val }}"{% endfor %}>{{ value|default:'' }}</textarea>
-      {% elif field_type == "select" %}
-        <select
-          id="report-field-{{ field_name }}"
-          name="{{ field_name }}"
-          class="{{ config.input_class|default:'form-select' }}"
-          {% if config.multiple %}multiple{% endif %}
-          {% for key, val in attrs.items %}{{ key }}="{{ val }}"{% endfor %}
-          {% for key, val in data_attrs.items %}data-{{ key }}="{{ val }}"{% endfor %}>
-          {% if not config.multiple %}
-            <option value="">{{ config.empty_label|default:'All' }}</option>
-          {% endif %}
-          {% for option in options %}
-            <option value="{{ option.value }}" {% if option.value|stringformat:'s' == value|stringformat:'s' %}selected{% endif %}>
-              {{ option.label }}
-            </option>
-          {% endfor %}
-        </select>
-      {% elif field_type == "checkbox" %}
-        <div class="form-check mt-2">
-          <input
-            id="report-field-{{ field_name }}"
-            type="checkbox"
-            name="{{ field_name }}"
-            class="{{ config.input_class|default:'form-check-input' }}"
-            value="{{ config.checkbox_value|default:'1' }}"
-            {% if value %}checked{% endif %}
-            {% for key, val in attrs.items %}{{ key }}="{{ val }}"{% endfor %}
-            {% for key, val in data_attrs.items %}data-{{ key }}="{{ val }}"{% endfor %}>
-          <label class="form-check-label" for="report-field-{{ field_name }}">{{ config.checkbox_label|default:config.label }}</label>
-        </div>
-      {% else %}
-        <input
-          id="report-field-{{ field_name }}"
-          type="{{ field_type|default:'text' }}"
-          name="{{ field_name }}"
-          value="{{ value|default:'' }}"
-          class="{{ config.input_class|default:'form-control' }}"
-          {% if config.placeholder %}placeholder="{{ config.placeholder }}"{% endif %}
-          {% for key, val in attrs.items %}{{ key }}="{{ val }}"{% endfor %}
-          {% for key, val in data_attrs.items %}data-{{ key }}="{{ val }}"{% endfor %}>
-      {% endif %}
-      {% if config.help_text %}
-        <div class="form-text">{{ config.help_text }}</div>
-      {% endif %}
+      {% include "components/forms/input.html" with type=input_type label=label name=field_name required=required value=value placeholder=placeholder class=input_class id=field_id min=min_value max=max_value step=step prefix=prefix suffix=suffix attributes=attrs calendar_mode=config.calendar_mode help=help_text errors=errors no_wrapper=True %}
     {% endif %}
   </div>
 {% endif %}

@@ -1,11 +1,30 @@
 {% if not no_wrapper %}
 <div class="mb-3 {{ wrapper_class|default:'' }}">
 {% endif %}
+  {% with explicit_calendar_mode=calendar_mode|default:'' %}
   <label class="form-label">
     {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
   </label>
 
-  {% if prefix or suffix %}
+  {% if type == "date" and explicit_calendar_mode|lower == "bs" %}
+    <input type="hidden" name="__bs_date_fields" value="{{ name }}">
+    <input
+      type="text"
+      name="{{ name }}"
+      value="{{ value|default:'' }}"
+      {% if id %}id="{{ id }}"{% endif %}
+      class="form-control {{ class|default:'' }}"
+      placeholder="{{ placeholder|default:'YYYY-MM-DD' }}"
+      data-calendar-mode="bs"
+      autocomplete="off"
+      {% if required %}required{% endif %}
+      {% if attributes %}
+        {% for key, value in attributes.items %}
+          {{ key }}="{{ value }}"
+        {% endfor %}
+      {% endif %}
+    >
+  {% elif prefix or suffix %}
     <div class="input-group">
       {% if prefix %}
         <span class="input-group-text">{{ prefix }}</span>
@@ -57,6 +76,7 @@
   {% if errors %}
     <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
   {% endif %}
+  {% endwith %}
 {% if not no_wrapper %}
 </div>
 {% endif %}

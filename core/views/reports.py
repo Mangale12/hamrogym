@@ -1,9 +1,12 @@
 import csv
 
+from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.views.generic import TemplateView
+
+from core.helpers.helper import decode_date_for_save, get_calendar_type
 
 
 class BaseReportView(LoginRequiredMixin, TemplateView):
@@ -55,10 +58,39 @@ class BaseReportView(LoginRequiredMixin, TemplateView):
     ]
     report_actions = []
 
+    def get_form_data(self):
+        if not self.request.GET:
+            return None
+
+        data = self.request.GET.copy()
+        requested_fields = set(data.getlist("__bs_date_fields"))
+        if not requested_fields and get_calendar_type(self.request) != "BS":
+            return data
+
+        inspector_form = self.form_class()
+        date_field_names = {
+            name for name, field in inspector_form.fields.items() if isinstance(field, forms.DateField)
+        }
+        target_fields = requested_fields & date_field_names if requested_fields else date_field_names
+
+        for field_name in target_fields:
+            raw_value = (data.get(field_name) or "").strip()
+            if not raw_value:
+                continue
+            try:
+                converted = decode_date_for_save(raw_value, self.request)
+                if hasattr(converted, "isoformat"):
+                    converted = converted.isoformat()
+                data[field_name] = converted
+            except Exception:
+                continue
+
+        return data
+
     def get_form(self):
         if self.form_class is None:
             raise ValueError("form_class must be defined for BaseReportView subclasses.")
-        return self.form_class(self.request.GET or None)
+        return self.form_class(self.get_form_data())
 
     def should_generate(self, form) -> bool:
         return bool(self.request.GET.get("generate")) and form.is_valid()

@@ -11,16 +11,17 @@ class BSDateConverterMiddleware(MiddlewareMixin):
         "start_date",
         "end_date",
         "dob",
+        "date_from",
+        "date_to"
     ]
 
     def process_request(self, request):
 
         if request.method in ["POST", "PUT", "PATCH"]:
-            if get_calendar_type(request) != "BS":
-                return
-
             data = request.POST.copy()  # make mutable
             requested_fields = set(data.getlist("__bs_date_fields"))
+            if not requested_fields and get_calendar_type(request) != "BS":
+                return
             date_fields = requested_fields or set(self.DATE_FIELDS)
 
             for field in date_fields:

@@ -2,8 +2,13 @@ from django.urls import path
 
 from core.registry import get_entities
 from core.views.entities import build_entity_views
+from core.views.calendar_switch import CalendarSwitchView
 
 urlpatterns = []
+
+urlpatterns.append(
+    path("calendar/switch/", CalendarSwitchView.as_view(), name="calendar_switch")
+)
 
 for entity in get_entities():
     views = build_entity_views(entity)

@@ -15,13 +15,13 @@
     {% elif field.type == "static_select" %}
       {% include "components/forms/select.html" with label=field.label name=field.name required=field.required value=field.value options=field.options attributes=field.attributes multiple=field.multiple no_wrapper=True %}
     {% elif field.type == "date" %}
-      {% include "components/forms/datepicker.html" with label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step attributes=field.attributes no_wrapper=True %}
+      {% include "components/forms/datepicker.html" with label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step attributes=field.attributes calendar_mode=field.calendar_mode calendar_switchable=field.calendar_switchable no_wrapper=True %}
     {% elif field.type == "datetime" %}
-      {% include "components/forms/input.html" with type="datetime-local" label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step prefix=field.prefix suffix=field.suffix attributes=field.attributes no_wrapper=True %}
+      {% include "components/forms/input.html" with type="datetime-local" label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step prefix=field.prefix suffix=field.suffix attributes=field.attributes calendar_mode=field.calendar_mode calendar_switchable=field.calendar_switchable no_wrapper=True %}
     {% elif field.type == "file" %}
       {% include "components/forms/file.html" with label=field.label name=field.name required=field.required class=field.class id=field.id accept=field.accept multiple=field.multiple attributes=field.attributes no_wrapper=True %}
     {% else %}
-      {% include "components/forms/input.html" with type=field.type label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step prefix=field.prefix suffix=field.suffix attributes=field.attributes no_wrapper=True %}
+      {% include "components/forms/input.html" with type=field.type label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step prefix=field.prefix suffix=field.suffix attributes=field.attributes calendar_mode=field.calendar_mode calendar_switchable=field.calendar_switchable no_wrapper=True %}
     {% endif %}
 </div>
 {% endfor %}

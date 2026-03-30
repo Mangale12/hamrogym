@@ -1,11 +1,12 @@
 {% if not no_wrapper %}
 <div class="mb-3 {{ wrapper_class|default:'' }}">
 {% endif %}
+  {% with explicit_calendar_mode=calendar_mode|default:'' %}
   <label class="form-label">
     {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
   </label>
 
-  {% if is_bs_calendar %}
+  {% if explicit_calendar_mode == "bs" or explicit_calendar_mode == "BS" or is_bs_calendar %}
   <input type="hidden" name="__bs_date_fields" value="{{ name }}">
   <input
     type="text"
@@ -42,6 +43,7 @@
     {% endif %}
   >
   {% endif %}
+  {% endwith %}
 
   {% if help %}
     <small class="text-muted">{{ help }}</small>
