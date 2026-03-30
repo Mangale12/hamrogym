@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+import inspect
 import json
 from typing import Dict, List, Type
 
@@ -20,6 +21,18 @@ from core.helpers.helper import encode_date_for_display
 from core.helpers.context import get_current_fiscal_year_id
 
 
+def _serialize_value(value, request=None):
+    if isinstance(value, File):
+        return value.name if value else ""
+    if isinstance(value, date):
+        return encode_date_for_display(value, request)
+    if isinstance(value, dict):
+        return {key: _serialize_value(item, request) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_serialize_value(item, request) for item in value]
+    return value
+
+
 def _serialize_form_instance(form, request=None) -> Dict[str, object]:
     data = {}
     instance = form.instance
@@ -36,8 +49,22 @@ def _serialize_form_instance(form, request=None) -> Dict[str, object]:
             value = encode_date_for_display(value, request)
         else:
             value = field.prepare_value(value)
-        data[name] = value
+        data[name] = _serialize_value(value, request)
     return data
+
+
+def _load_dynamic_sections_data(entity: EntityConfig, obj, request):
+    if not entity.dynamic_sections_loader:
+        return None
+
+    loader = entity.dynamic_sections_loader
+    try:
+        parameters = inspect.signature(loader).parameters
+        if len(parameters) >= 2:
+            return loader(obj, request)
+    except (TypeError, ValueError):
+        pass
+    return loader(obj)
 
 
 def _actions_render(entity: EntityConfig) -> str:
@@ -165,7 +192,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "modal_title_add": f"Add {entity.verbose_name}",
                     "modal_title_edit": f"Edit {entity.verbose_name}",
                     "modal_title_view": f"View {entity.verbose_name}",
-                    "reset_defaults": entity.reset_defaults,
+                    "reset_defaults": _serialize_value(entity.reset_defaults, self.request),
                     "show_create": entity.show_create,
                     "is_singleton": entity.singleton,
                 }
@@ -211,8 +238,9 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             form = entity.form_class(instance=obj)
             data = _serialize_form_instance(form, request)
             data["id"] = obj.pk
-            if entity.dynamic_sections_loader:
-                data["__dynamic_sections__"] = entity.dynamic_sections_loader(obj)
+            dynamic_sections_data = _load_dynamic_sections_data(entity, obj, request)
+            if dynamic_sections_data is not None:
+                data["__dynamic_sections__"] = dynamic_sections_data
             return JsonResponse({"success": True, "data": data})
 
     class EntityCreateView(LoginRequiredMixin, View):

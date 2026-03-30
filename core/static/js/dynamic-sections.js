@@ -480,6 +480,9 @@
     if (window.initializeCalendarFields) {
       window.initializeCalendarFields($row);
     }
+    if (window.initializeCalendarSwitchFields) {
+      window.initializeCalendarSwitchFields($row);
+    }
   }
 
   function removeRow($row) {
@@ -511,6 +514,9 @@
       }
       if (window.initializeCalendarFields) {
         window.initializeCalendarFields($row);
+      }
+      if (window.initializeCalendarSwitchFields) {
+        window.initializeCalendarSwitchFields($row);
       }
     });
   }

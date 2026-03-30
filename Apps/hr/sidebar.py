@@ -58,6 +58,12 @@ SIDEBAR_ITEMS = [
                 "match": "/core/holiday-calendars",
             },
             {
+                "label": "Holiday Calendar View",
+                "icon": "calendar",
+                "url_name": "holiday_calendar_view",
+                "match": "/hr/holiday-calendar",
+            },
+            {
                 "label": "Leave Requests",
                 "icon": "calendar-check",
                 "url_name": "leave_request_list",

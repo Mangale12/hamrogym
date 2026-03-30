@@ -51,22 +51,46 @@
             data-url="{{ field.url }}">
           </select>
         {% elif field.type == "date" %}
-          {% if is_bs_calendar %}
-          <input type="hidden" name="__bs_date_fields" value="{{ section_name }}[{{ index }}][{{ field.name }}]">
-          <input
-            type="text"
-            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
-            class="form-control {{ field.class }}"
-            data-calendar-mode="bs"
-            autocomplete="off"
-            {% if field.readonly %}readonly{% endif %}>
-          {% else %}
-          <input
-            type="date"
-            name="{{ section_name }}[{{ index }}][{{ field.name }}]"
-            class="form-control {{ field.class }}"
-            {% if field.readonly %}readonly{% endif %}>
-          {% endif %}
+          <div
+            class="calendar-switch-field"
+            data-calendar-field="true"
+            data-field-name="{{ section_name }}[{{ index }}][{{ field.name }}]"
+            data-current-mode="{% if is_bs_calendar %}bs{% else %}ad{% endif %}">
+            <div class="input-wrapper">
+              <input
+                type="text"
+                data-bs-input="true"
+                {% if is_bs_calendar %}name="{{ section_name }}[{{ index }}][{{ field.name }}]"{% endif %}
+                class="form-control {{ field.class }} {% if not is_bs_calendar %}hidden{% endif %}"
+                placeholder="Select BS Date"
+                data-calendar-mode="bs"
+                autocomplete="off"
+                readonly
+                {% if field.readonly %}readonly{% endif %}>
+              <input
+                type="date"
+                data-ad-input="true"
+                {% if not is_bs_calendar %}name="{{ section_name }}[{{ index }}][{{ field.name }}]"{% endif %}
+                class="form-control {{ field.class }} {% if is_bs_calendar %}hidden{% endif %}"
+                {% if field.readonly %}readonly{% endif %}>
+              <input
+                type="hidden"
+                name="__bs_date_fields"
+                value="{{ section_name }}[{{ index }}][{{ field.name }}]"
+                {% if not is_bs_calendar %}disabled{% endif %}
+                data-bs-date-field="true">
+              <button type="button" class="rotate-btn" data-calendar-toggle="true" title="Switch Calendar">
+                <i data-feather="refresh-cw"></i>
+              </button>
+            </div>
+            <div class="mode-indicator" data-calendar-mode-indicator>
+              {% if is_bs_calendar %}
+              🇳🇵 BS (Bikram Sambat)
+              {% else %}
+              🌍 AD (Gregorian)
+              {% endif %}
+            </div>
+          </div>
         {% elif field.type == "time" %}
           <input
             type="time"

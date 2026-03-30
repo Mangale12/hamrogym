@@ -1,0 +1,255 @@
+{% extends "layouts/app.html" %}
+{% load calendar_tags %}
+
+{% block title %}Holiday Calendar | HamroGym{% endblock %}
+{% block page_title %}Holiday Calendar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .holiday-calendar-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .holiday-calendar-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .holiday-calendar-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: #fff4eb;
+    color: #c2410c;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .holiday-month-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .holiday-month-card {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  }
+
+  .holiday-month-header {
+    padding: 1rem 1.1rem;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+  }
+
+  .holiday-month-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .holiday-month-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .holiday-month-table th,
+  .holiday-month-table td {
+    border: 1px solid #eef2f7;
+    width: 14.285%;
+    vertical-align: top;
+  }
+
+  .holiday-month-table th {
+    padding: 0.55rem 0.25rem;
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #64748b;
+    background: #f8fafc;
+  }
+
+  .holiday-day-cell {
+    min-height: 90px;
+    padding: 0.45rem;
+    background: #fff;
+  }
+
+  .holiday-day-cell.is-outside {
+    background: #f8fafc;
+    color: #94a3b8;
+  }
+
+  .holiday-day-cell.is-holiday {
+    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  }
+
+  .holiday-day-number {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.35rem;
+  }
+
+  .holiday-day-cell.is-holiday .holiday-day-number {
+    color: #c2410c;
+  }
+
+  .holiday-chip {
+    display: block;
+    margin-top: 0.25rem;
+    padding: 0.22rem 0.4rem;
+    border-radius: 10px;
+    background: rgba(194, 65, 12, 0.12);
+    color: #9a3412;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    font-weight: 600;
+  }
+
+  .holiday-chip.optional {
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+  }
+
+  .holiday-list-item + .holiday-list-item {
+    border-top: 1px solid #edf2f7;
+  }
+
+  @media (max-width: 768px) {
+    .holiday-day-cell {
+      min-height: 72px;
+      padding: 0.35rem;
+    }
+
+    .holiday-chip {
+      font-size: 0.65rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="holiday-calendar-toolbar">
+          <div>
+            <h4 class="mb-1">Holiday Calendar for {{ selected_year }} {{ calendar_mode }}</h4>
+            <p class="text-muted mb-0">Visual yearly calendar with highlighted holiday dates in {{ calendar_mode }} mode.</p>
+          </div>
+          <form method="get" class="d-flex gap-2 align-items-end flex-wrap">
+            <div>
+              <label class="form-label mb-1">Year</label>
+              <select name="year" class="form-select">
+                {% for year in available_years %}
+                  <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">View Calendar</button>
+          </form>
+        </div>
+        <div class="holiday-calendar-meta mt-3">
+          <span class="holiday-calendar-badge">
+            <i data-feather="calendar"></i>
+            {{ holiday_rows|length }} Holidays
+          </span>
+          {% for calendar in active_calendars %}
+            <span class="holiday-calendar-badge">
+              <i data-feather="bookmark"></i>
+              {{ calendar.name }}
+            </span>
+          {% empty %}
+            <span class="text-muted">No active holiday calendar found for {{ selected_year }}.</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-9 col-lg-8">
+    <div class="holiday-month-grid">
+      {% for month in months %}
+        <div class="holiday-month-card">
+          <div class="holiday-month-header">
+            <h5>{{ month.name }} {{ selected_year }}</h5>
+          </div>
+          <table class="holiday-month-table">
+            <thead>
+              <tr>
+                {% for weekday in weekday_labels %}
+                  <th>{{ weekday }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for week in month.weeks %}
+                <tr>
+                  {% for day in week %}
+                    <td>
+                      <div class="holiday-day-cell {% if not day.is_current_month %}is-outside{% endif %} {% if day.is_holiday %}is-holiday{% endif %}">
+                        <div class="holiday-day-number">{{ day.day }}</div>
+                        {% for holiday in day.holiday_items %}
+                          <span class="holiday-chip {% if holiday.is_optional %}optional{% endif %}">
+                            {{ holiday.name }}
+                          </span>
+                        {% endfor %}
+                      </div>
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Holiday List</h5>
+      </div>
+      <div class="card-body p-0">
+        {% for item in holiday_rows %}
+          <div class="holiday-list-item p-3">
+            <div class="fw-semibold">{{ item.name }}</div>
+            <div class="small text-muted">
+              {% if calendar_mode == "BS" %}
+                {{ item.display_date }}
+              {% else %}
+                {% display_date item.date %}
+              {% endif %}
+            </div>
+            <div class="small text-muted">{{ item.calendar_name }}</div>
+            {% if item.is_optional %}
+              <div class="small text-primary">Optional Holiday</div>
+            {% endif %}
+            {% if item.is_half_day %}
+              <div class="small text-warning">Half Day</div>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div class="p-3 text-muted">No holidays configured for this year.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

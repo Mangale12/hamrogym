@@ -42,8 +42,8 @@ class AttendanceHistoryReportView(BaseReportView):
             "title": "Primary Filters",
             "fields": [
                 {"name": "employee", "label": "Employee", "col": "col-md-4"},
-                {"name": "date_from", "label": "Date From", "col": "col-md-3"},
-                {"name": "date_to", "label": "Date To", "col": "col-md-3"},
+                {"name": "date_from", "label": "Date From", "col": "col-md-3", "calendar_switchable": True},
+                {"name": "date_to", "label": "Date To", "col": "col-md-3", "calendar_switchable": True},
                 {"name": "status", "label": "Status", "col": "col-md-2"},
             ]
         },

@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from django.db import models
+
+from core.helpers.helper import encode_date_for_display
 
 
 SaveTransformer = Callable[[Any], Any]
@@ -151,7 +154,7 @@ def build_related_section_saver(config: RelatedDynamicSectionConfig):
 
 
 def build_related_section_loader(config: RelatedDynamicSectionConfig):
-    def _load(parent_obj) -> Dict[str, List[Dict[str, Any]]]:
+    def _load(parent_obj, request=None) -> Dict[str, List[Dict[str, Any]]]:
         rows = []
         queryset = config.related_model.objects.filter(**{config.parent_field: parent_obj}).order_by(
             config.order_by
@@ -181,7 +184,10 @@ def build_related_section_loader(config: RelatedDynamicSectionConfig):
                     )
                     continue
                 value = getattr(item, field_name, config.empty_value)
-                row[field_name] = config.empty_value if value is None else value
+                if isinstance(value, date):
+                    row[field_name] = encode_date_for_display(value, request)
+                else:
+                    row[field_name] = config.empty_value if value is None else value
             if config.row_load_hook:
                 row.update(config.row_load_hook(item))
             rows.append(row)

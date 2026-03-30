@@ -1,2 +1,4 @@
 from .attendance_report import AttendanceHistoryReportView
+from .calendar_holidays import HolidayCalendarDatesView
+from .holiday_calendar_view import HolidayCalendarView
 from .leave_balance_report import LeaveBalanceSummaryReportView

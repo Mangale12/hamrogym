@@ -284,39 +284,57 @@
             box-shadow: 0 10px 20px rgba(249, 115, 22, 0.22);
         }
 
-        .date-switcher {
+        .hidden {
+            display: none !important;
+        }
+
+        .calendar-switch-field .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             position: relative;
-            width: 100%;
         }
 
-        .date-switcher .form-control {
-            padding-right: 46px;
-        }
-
-        .date-switcher .switch-icon {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 32px;
-            height: 32px;
-            border: 0;
-            border-radius: 999px;
-            background: rgba(15, 23, 42, 0.06);
-            color: var(--primary-color);
+        .calendar-switch-field .rotate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #5568d3 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
-            z-index: 2;
+            transition: all 0.3s ease;
+            min-width: 46px;
+            min-height: 46px;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.22);
         }
 
-        .date-switcher .switch-icon:hover,
-        .date-switcher .switch-icon:focus {
-            background: rgba(249, 115, 22, 0.14);
-            color: var(--accent-color);
-            transform: translateY(-50%) rotate(180deg);
+        .calendar-switch-field .rotate-btn:hover,
+        .calendar-switch-field .rotate-btn:focus {
+            background: linear-gradient(135deg, #5568d3 0%, #4757c4 100%);
+            transform: rotate(180deg);
+        }
+
+        .calendar-switch-field .rotate-btn svg {
+            color: #fff;
+            width: 18px;
+            height: 18px;
+        }
+
+        .calendar-switch-field .mode-indicator {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .np-holiday-date {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-radius: 8px !important;
+            font-weight: 700 !important;
+            box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.18) !important;
         }
         
         .user-info {
@@ -872,41 +890,259 @@
         });
     };
 
-    window.toggleCalendarFieldMode = function (input) {
-        if (!input) {
+    window._holidayCalendarDatesPromise = null;
+    window._holidayCalendarDates = null;
+
+    window.normalizeBsDateString = function (value) {
+        const raw = String(value || '').trim();
+        const match = raw.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (!match) {
+            return '';
+        }
+        return `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+    };
+
+    window.loadHolidayCalendarDates = function () {
+        if (window._holidayCalendarDates) {
+            return Promise.resolve(window._holidayCalendarDates);
+        }
+        if (window._holidayCalendarDatesPromise) {
+            return window._holidayCalendarDatesPromise;
+        }
+
+        window._holidayCalendarDatesPromise = fetch('/hr/calendar/holidays/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+            .then((response) => response.ok ? response.json() : { dates: {} })
+            .then((payload) => {
+                window._holidayCalendarDates = payload && payload.dates ? payload.dates : {};
+                return window._holidayCalendarDates;
+            })
+            .catch(() => {
+                window._holidayCalendarDates = {};
+                return window._holidayCalendarDates;
+            });
+
+        return window._holidayCalendarDatesPromise;
+    };
+
+    window.applyHolidayHighlights = function ($scope) {
+        const $container = $scope && $scope.length ? $scope : $(document);
+        window.loadHolidayCalendarDates().then((holidayDates) => {
+            const candidates = $container.find(
+                '.np-datepicker-container [data-date], ' +
+                '.np-datepicker-container [data-value], ' +
+                '.np-datepicker-container [data-bs-date], ' +
+                '.np-datepicker-box [data-date], ' +
+                '.np-datepicker-box [data-value], ' +
+                '.np-datepicker-box [data-bs-date]'
+            );
+
+            candidates.each(function () {
+                const element = this;
+                const rawDate =
+                    element.getAttribute('data-bs-date') ||
+                    element.getAttribute('data-date') ||
+                    element.getAttribute('data-value') ||
+                    '';
+                const normalizedDate = window.normalizeBsDateString(rawDate);
+                element.classList.toggle('np-holiday-date', !!(normalizedDate && holidayDates[normalizedDate]));
+                if (normalizedDate && holidayDates[normalizedDate]) {
+                    const titles = holidayDates[normalizedDate].map((item) => item.name).join(', ');
+                    if (titles) {
+                        element.setAttribute('title', titles);
+                    }
+                }
+            });
+        });
+    };
+
+    window.convertBSToAD = function (bsDate) {
+        const parts = String(bsDate || '').split('-');
+        if (parts.length !== 3) {
+            return '';
+        }
+
+        let bsYear = parseInt(parts[0], 10);
+        let bsMonth = parseInt(parts[1], 10);
+        let bsDay = parseInt(parts[2], 10);
+        if (Number.isNaN(bsYear) || Number.isNaN(bsMonth) || Number.isNaN(bsDay)) {
+            return '';
+        }
+
+        if (window.NepaliFunctions && typeof window.NepaliFunctions.BS2AD === 'function') {
+            try {
+                const converted = window.NepaliFunctions.BS2AD({
+                    year: bsYear,
+                    month: bsMonth,
+                    day: bsDay,
+                });
+                if (converted && converted.year && converted.month && converted.day) {
+                    return `${converted.year}-${String(converted.month).padStart(2, '0')}-${String(converted.day).padStart(2, '0')}`;
+                }
+            } catch (error) {
+                console.warn('BS2AD conversion fallback used:', error);
+            }
+        }
+
+        let adYear = bsYear - 57;
+        let adMonth = bsMonth - 9;
+        let adDay = bsDay - 15;
+
+        if (adMonth < 1) {
+            adMonth += 12;
+            adYear -= 1;
+        }
+
+        if (adDay < 1) {
+            adDay += 30;
+            adMonth -= 1;
+            if (adMonth < 1) {
+                adMonth = 12;
+                adYear -= 1;
+            }
+        }
+
+        return `${adYear}-${String(adMonth).padStart(2, '0')}-${String(adDay).padStart(2, '0')}`;
+    };
+
+    window.convertADToBS = function (adDate) {
+        const parts = String(adDate || '').split('-');
+        if (parts.length !== 3) {
+            return '';
+        }
+
+        let adYear = parseInt(parts[0], 10);
+        let adMonth = parseInt(parts[1], 10);
+        let adDay = parseInt(parts[2], 10);
+        if (Number.isNaN(adYear) || Number.isNaN(adMonth) || Number.isNaN(adDay)) {
+            return '';
+        }
+
+        if (window.NepaliFunctions && typeof window.NepaliFunctions.AD2BS === 'function') {
+            try {
+                const converted = window.NepaliFunctions.AD2BS({
+                    year: adYear,
+                    month: adMonth,
+                    day: adDay,
+                });
+                if (converted && converted.year && converted.month && converted.day) {
+                    return `${converted.year}-${String(converted.month).padStart(2, '0')}-${String(converted.day).padStart(2, '0')}`;
+                }
+            } catch (error) {
+                console.warn('AD2BS conversion fallback used:', error);
+            }
+        }
+
+        let bsYear = adYear + 57;
+        let bsMonth = adMonth + 9;
+        let bsDay = adDay + 15;
+
+        if (bsMonth > 12) {
+            bsMonth -= 12;
+            bsYear += 1;
+        }
+
+        if (bsDay > 32) {
+            bsDay -= 30;
+            bsMonth += 1;
+            if (bsMonth > 12) {
+                bsMonth = 1;
+                bsYear += 1;
+            }
+        }
+
+        return `${bsYear}-${String(bsMonth).padStart(2, '0')}-${String(bsDay).padStart(2, '0')}`;
+    };
+
+    window.syncCalendarFieldValues = function (wrapper, sourceMode) {
+        if (!wrapper) {
             return;
         }
 
-        const currentMode = input.dataset.calendarCurrent === 'bs' ? 'bs' : 'ad';
-        const nextMode = currentMode === 'bs' ? 'ad' : 'bs';
-        const wrapper = input.closest('.date-switcher');
-        const hiddenBsField = wrapper ? wrapper.querySelector('input[data-bs-date-field="true"]') : null;
+        const bsInput = wrapper.querySelector('input[data-bs-input="true"]');
+        const adInput = wrapper.querySelector('input[data-ad-input="true"]');
 
-        input.value = '';
-        input.dataset.calendarInitialized = 'false';
-        input.dataset.calendarCurrent = nextMode;
+        if (sourceMode === 'bs' && bsInput && adInput && bsInput.value) {
+            adInput.value = window.convertBSToAD(bsInput.value);
+        } else if (sourceMode === 'ad' && adInput && bsInput && adInput.value) {
+            bsInput.value = window.convertADToBS(adInput.value);
+        }
+    };
+
+    window.updateCalendarModeIndicator = function (wrapper, mode) {
+        if (!wrapper) {
+            return;
+        }
+
+        const indicator = wrapper.querySelector('[data-calendar-mode-indicator]');
+        if (!indicator) {
+            return;
+        }
+
+        indicator.textContent = mode === 'bs' ? '🇳🇵 BS (Bikram Sambat)' : '🌍 AD (Gregorian)';
+    };
+
+    window.toggleCalendarFieldMode = function (wrapper) {
+        if (!wrapper) {
+            return;
+        }
+
+        const fieldName = wrapper.dataset.fieldName || '';
+        const currentMode = wrapper.dataset.currentMode === 'bs' ? 'bs' : 'ad';
+        const nextMode = currentMode === 'bs' ? 'ad' : 'bs';
+        const bsInput = wrapper.querySelector('input[data-bs-input="true"]');
+        const adInput = wrapper.querySelector('input[data-ad-input="true"]');
+        const hiddenBsField = wrapper.querySelector('input[data-bs-date-field="true"]');
+
+        if (!bsInput || !adInput) {
+            return;
+        }
 
         if (nextMode === 'bs') {
-            input.type = 'text';
-            input.placeholder = 'YYYY-MM-DD';
-            input.setAttribute('data-calendar-mode', 'bs');
-            input.setAttribute('autocomplete', 'off');
-            input.removeAttribute('min');
-            input.removeAttribute('max');
-            input.removeAttribute('step');
+            if (adInput.value) {
+                bsInput.value = window.convertADToBS(adInput.value);
+            }
+            bsInput.classList.remove('hidden');
+            adInput.classList.add('hidden');
+            bsInput.name = fieldName;
+            adInput.removeAttribute('name');
             if (hiddenBsField) {
                 hiddenBsField.disabled = false;
             }
-            window.ensureCalendarFieldInitialized(input);
+            wrapper.dataset.currentMode = 'bs';
+            window.updateCalendarModeIndicator(wrapper, 'bs');
+            window.ensureCalendarFieldInitialized(bsInput);
             return;
         }
 
-        input.type = 'date';
-        input.placeholder = '';
-        input.removeAttribute('data-calendar-mode');
+        if (bsInput.value) {
+            adInput.value = window.convertBSToAD(bsInput.value);
+        }
+        adInput.classList.remove('hidden');
+        bsInput.classList.add('hidden');
+        adInput.name = fieldName;
+        bsInput.removeAttribute('name');
         if (hiddenBsField) {
             hiddenBsField.disabled = true;
         }
+        wrapper.dataset.currentMode = 'ad';
+        window.updateCalendarModeIndicator(wrapper, 'ad');
+    };
+
+    window.initializeCalendarSwitchFields = function ($scope) {
+        const $container = $scope && $scope.length ? $scope : $(document);
+        $container.find('[data-calendar-field="true"]').each(function () {
+            const wrapper = this;
+            const currentMode = wrapper.dataset.currentMode === 'bs' ? 'bs' : 'ad';
+            window.syncCalendarFieldValues(wrapper, currentMode);
+            window.updateCalendarModeIndicator(wrapper, currentMode);
+            if (currentMode === 'bs') {
+                const bsInput = wrapper.querySelector('input[data-bs-input="true"]');
+                window.ensureCalendarFieldInitialized(bsInput);
+            }
+        });
     };
 
     window.ensureCalendarFieldInitialized = function (input) {
@@ -914,25 +1150,55 @@
             return;
         }
         const modal = input.closest('.modal');
+        const wrapper = input.closest('[data-calendar-field="true"]');
         const options = modal && modal.id ? { container: `#${modal.id}` } : {};
+        if (wrapper) {
+            options.onChange = function (date) {
+                input.value = date;
+                window.syncCalendarFieldValues(wrapper, 'bs');
+            };
+        }
 
         if (typeof input.nepaliDatePicker === 'function') {
             input.nepaliDatePicker(options);
             input.dataset.calendarInitialized = 'true';
+            setTimeout(function () {
+                window.applyHolidayHighlights($(document));
+            }, 80);
         } else if (typeof input.NepaliDatePicker === 'function') {
             input.NepaliDatePicker(options);
             input.dataset.calendarInitialized = 'true';
+            setTimeout(function () {
+                window.applyHolidayHighlights($(document));
+            }, 80);
         }
     };
 
     $(function () {
         window.initializeCalendarFields($(document));
+        window.initializeCalendarSwitchFields($(document));
+        window.loadHolidayCalendarDates();
     });
 
     $(document).on('click', '[data-calendar-toggle="true"]', function () {
-        const wrapper = this.closest('.date-switcher');
-        const input = wrapper ? wrapper.querySelector('input[name]:not([type="hidden"])') : null;
-        window.toggleCalendarFieldMode(input);
+        window.toggleCalendarFieldMode(this.closest('[data-calendar-field="true"]'));
+    });
+
+    $(document).on('change', 'input[data-ad-input="true"]', function () {
+        window.syncCalendarFieldValues(this.closest('[data-calendar-field="true"]'), 'ad');
+    });
+
+    $(document).on('change', 'input[data-bs-input="true"]', function () {
+        window.syncCalendarFieldValues(this.closest('[data-calendar-field="true"]'), 'bs');
+    });
+
+    const holidayCalendarObserver = new MutationObserver(function () {
+        window.applyHolidayHighlights($(document));
+    });
+
+    holidayCalendarObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
     });
 
     $(document).on('shown.bs.modal', '.modal', function () {
