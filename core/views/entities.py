@@ -39,6 +39,11 @@ def _serialize_form_instance(form, request=None) -> Dict[str, object]:
     for name, field in form.fields.items():
         if hasattr(instance, name):
             value = getattr(instance, name, None)
+            if value in (None, ""):
+                if name in form.initial:
+                    value = form.initial.get(name)
+                elif field.initial not in (None, ""):
+                    value = field.initial
         elif name in form.initial:
             value = form.initial.get(name)
         else:
@@ -192,7 +197,13 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "modal_title_add": f"Add {entity.verbose_name}",
                     "modal_title_edit": f"Edit {entity.verbose_name}",
                     "modal_title_view": f"View {entity.verbose_name}",
-                    "reset_defaults": _serialize_value(entity.reset_defaults, self.request),
+                    "reset_defaults": _serialize_value(
+                        {
+                            **_serialize_form_instance(entity.form_class(), self.request),
+                            **(entity.reset_defaults or {}),
+                        },
+                        self.request,
+                    ),
                     "show_create": entity.show_create,
                     "is_singleton": entity.singleton,
                 }
@@ -258,6 +269,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                             obj.created_by = request.user
                         if hasattr(obj, "updated_by_id"):
                             obj.updated_by = request.user
+                        if entity.pre_save:
+                            entity.pre_save(request, obj)
                         obj.save()
                         if hasattr(form, "save_m2m"):
                             form.save_m2m()
@@ -283,6 +296,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                             return JsonResponse({"success": False, "errors": form.errors}, status=400)
                         if hasattr(obj, "updated_by_id"):
                             obj.updated_by = request.user
+                        if entity.pre_save:
+                            entity.pre_save(request, obj)
                         obj.save()
                         if hasattr(form, "save_m2m"):
                             form.save_m2m()

@@ -28,9 +28,9 @@ register_entity(
             {"name": "organization", "label": "Organization", "type": "select", "required": False, "col": 4, "url_name": "organization_select"},
             {"name": "branch", "label": "Branch", "type": "select", "required": False, "col": 4, "url_name": "branch_select"},
             {"name": "currency", "label": "Currency", "type": "select", "required": False, "col": 4, "url_name": "currency_select"},
+            {"name": "fiscal_year", "label": "Fiscal Year", "type": "select", "required": True, "col": 4, "url_name": "fiscal_year_select"},
             {"name": "name", "label": "Run Name", "type": "text", "required": True, "col": 4, "placeholder": "March 2026 Monthly Payroll"},
-            {"name": "payroll_year", "label": "Payroll Year", "type": "number", "required": True, "col": 2},
-            {"name": "payroll_month", "label": "Payroll Month", "type": "number", "required": True, "col": 2, "attributes": {"min": "1", "max": "12"}},
+            {"name": "payroll_month", "label": "Payroll Month", "type": "static_select", "required": True, "col": 2, "options": PayrollRun._meta.get_field("payroll_month").choices},
             {"name": "period_start", "label": "Period Start", "type": "date", "required": True, "col": 2},
             {"name": "period_end", "label": "Period End", "type": "date", "required": True, "col": 2},
             {"name": "remarks", "label": "Remarks", "type": "textarea", "required": False, "col": 12, "placeholder": "Optional run note, cutoff note, or approval comment."},
@@ -110,11 +110,10 @@ register_entity(
         ],
         datatable_columns=payroll_run_columns,
         reset_defaults={
-            "payroll_year": today.year,
             "payroll_month": today.month,
             "period_start": today.replace(day=1).isoformat(),
             "period_end": today.isoformat(),
         },
-        select_search_fields=["name", "status"],
+        select_search_fields=["name", "status", "fiscal_year__name"],
     )
 )

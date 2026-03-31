@@ -1,4 +1,5 @@
 from django import forms
+from core.models import FiscalYear
 
 from ..models import (
     AttendancePayrollSummary,
@@ -105,8 +106,8 @@ class PayrollRunForm(forms.ModelForm):
             "organization",
             "branch",
             "currency",
+            "fiscal_year",
             "name",
-            "payroll_year",
             "payroll_month",
             "period_start",
             "period_end",
@@ -117,6 +118,15 @@ class PayrollRunForm(forms.ModelForm):
             "period_end": forms.DateInput(attrs={"type": "date"}),
             "remarks": forms.Textarea(attrs={"rows": 2}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk and not self.initial.get("fiscal_year") and not self.data.get("fiscal_year"):
+            current_fiscal_year = FiscalYear.objects.filter(is_current=True).order_by("-start_date", "-id").first()
+            if not current_fiscal_year:
+                current_fiscal_year = FiscalYear.objects.filter(is_active=True).order_by("-start_date", "-id").first()
+            if current_fiscal_year:
+                self.fields["fiscal_year"].initial = current_fiscal_year.pk
 
 
 class PayrollRunEmployeeForm(forms.ModelForm):

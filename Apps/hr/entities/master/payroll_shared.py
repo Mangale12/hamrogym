@@ -196,7 +196,7 @@ employee_salary_assignment_columns = [
 
 payroll_run_columns = [
     {"name": "name", "title": "Payroll Run"},
-    {"name": "payroll_year", "title": "Year"},
+    {"name": "fiscal_year", "title": "Fiscal Year"},
     {"name": "payroll_month", "title": "Month"},
     {"name": "period_start", "title": "Period Start"},
     {"name": "period_end", "title": "Period End"},

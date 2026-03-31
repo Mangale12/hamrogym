@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from core.choices import (
+    MONTH_CHOICES,
     PAYMENT_FREQUENCY_CHOICES,
     PAYROLL_ADJUSTMENT_TYPE_CHOICES,
     PAYROLL_APPROVAL_STATUS_CHOICES,
@@ -293,9 +294,14 @@ class PayrollRun(models.Model):
         null=True,
         blank=True,
     )
+    fiscal_year = models.ForeignKey(
+        "core.FiscalYear",
+        on_delete=models.PROTECT,
+        related_name="payroll_runs",
+    )
     name = models.CharField(max_length=120)
     payroll_year = models.PositiveIntegerField()
-    payroll_month = models.PositiveSmallIntegerField()
+    payroll_month = models.PositiveSmallIntegerField(choices=MONTH_CHOICES)
     period_start = models.DateField()
     period_end = models.DateField()
     status = models.CharField(
@@ -333,13 +339,18 @@ class PayrollRun(models.Model):
         ordering = ["-payroll_year", "-payroll_month", "-id"]
         constraints = [
             models.UniqueConstraint(
-                fields=["organization", "branch", "payroll_year", "payroll_month"],
-                name="unique_payroll_run_scope_period",
+                fields=["organization", "branch", "fiscal_year", "payroll_month"],
+                name="unique_payroll_run_scope_fiscal_year_month",
             ),
         ]
 
     def clean(self):
         errors = {}
+        if self.fiscal_year_id and self.period_start and self.period_end:
+            if self.period_start < self.fiscal_year.start_date or self.period_end > self.fiscal_year.end_date:
+                errors["period_end"] = "Payroll period must fall within the selected fiscal year."
+        if self.period_start:
+            self.payroll_year = self.period_start.year
         if self.branch_id and not self.organization_id:
             errors["organization"] = "Organization is required when branch is selected."
         if self.payroll_month and not 1 <= self.payroll_month <= 12:

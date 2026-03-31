@@ -225,6 +225,9 @@ def _payment_period_factor(payment_frequency: str) -> Decimal:
 def _get_fiscal_year_for_run(payroll_run: PayrollRun):
     from core.models import FiscalYear
 
+    if getattr(payroll_run, "fiscal_year_id", None):
+        return payroll_run.fiscal_year
+
     return (
         FiscalYear.objects.filter(
             start_date__lte=payroll_run.period_end,

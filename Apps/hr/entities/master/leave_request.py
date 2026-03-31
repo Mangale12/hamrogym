@@ -6,6 +6,7 @@ from ...datatables.leave_request_data_table import LeaveRequestDataTableView, LE
 from ...forms.leave_request_form import LeaveRequestForm
 from ...models import LeaveRequest
 from ...services import approve_leave_request, cancel_leave_request, prepare_leave_request, reject_leave_request
+from ...services.leave_workflow import sync_leave_request_values
 
 
 APPROVAL_HISTORY_SECTION = {
@@ -61,9 +62,15 @@ def _load_leave_request_sections(leave_request: LeaveRequest):
     return {"approval_history": rows}
 
 
-def _post_save_leave_request(request, leave_request: LeaveRequest) -> None:
+def _pre_save_leave_request(_request, leave_request: LeaveRequest) -> None:
+    sync_leave_request_values(leave_request)
+    if leave_request.status not in {"approved", "rejected", "cancelled"}:
+        leave_request.status = "pending"
+
+
+def _post_save_leave_request(_request, leave_request: LeaveRequest) -> None:
     prepare_leave_request(leave_request=leave_request)
-    leave_request.save(update_fields=["total_days", "status", "updated_at"])
+    leave_request.save(update_fields=["status", "updated_at"])
 
 
 def _approve_leave_request(request, leave_request: LeaveRequest):
@@ -173,6 +180,7 @@ register_entity(
             "approval_history": APPROVAL_HISTORY_SECTION,
         },
         dynamic_sections_loader=_load_leave_request_sections,
+        pre_save=_pre_save_leave_request,
         post_save=_post_save_leave_request,
         row_actions={
             "approve": _approve_leave_request,

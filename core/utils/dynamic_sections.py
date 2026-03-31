@@ -132,6 +132,12 @@ def build_related_section_saver(config: RelatedDynamicSectionConfig):
                 else:
                     transformer = config.save_transformers.get(field_name)
                     value = transformer(raw_value) if transformer else raw_value
+                if (
+                    value == ""
+                    and getattr(model_field, "null", False)
+                    and not isinstance(model_field, (models.CharField, models.TextField, models.FileField))
+                ):
+                    value = None
                 if isinstance(model_field, models.ForeignKey) and not isinstance(value, models.Model):
                     setattr(item, model_field.attname, value or None)
                 else:

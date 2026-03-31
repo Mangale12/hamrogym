@@ -66,7 +66,7 @@ EMPLOYEE_SALARY_ASSIGNMENT_COLUMNS = [
 PAYROLL_RUN_COLUMNS = [
     ("id", "id"),
     ("name", "name"),
-    ("payroll_year", "payroll_year"),
+    ("fiscal_year", lambda obj: str(obj.fiscal_year)),
     ("payroll_month", "payroll_month"),
     ("period_start", lambda obj, request: encode_date_for_display(obj.period_start, request)),
     ("period_end", lambda obj, request: encode_date_for_display(obj.period_end, request)),
@@ -303,13 +303,13 @@ class PayrollRunDataTableView(BaseDataTableView):
     columns = PAYROLL_RUN_COLUMNS
     searchable_columns = [
         "name",
-        "payroll_year",
+        "fiscal_year__name",
         "payroll_month",
         "status",
         "remarks",
     ]
     orderable_columns = [
-        "payroll_year",
+        "fiscal_year__start_date",
         "payroll_month",
         "period_start",
         "employee_count",

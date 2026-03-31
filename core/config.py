@@ -22,6 +22,7 @@ class EntityConfig:
     dynamic_sections: Optional[Dict[str, Any]] = None
     dynamic_sections_loader: Optional[Callable[[models.Model], Dict[str, Any]]] = None
     dynamic_sections_saver: Optional[Callable[[models.Model, Any], None]] = None
+    pre_save: Optional[Callable[[models.Model, Any], None]] = None
     post_save: Optional[Callable[[models.Model, Any], None]] = None
     row_actions: Dict[str, Callable[[Any, models.Model], Any]] = field(default_factory=dict)
     action_state_field: Optional[str] = None
