@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Apps.hamrogym.apps.HamrogymConfig',
     'Apps.hr.apps.HrConfig',
+    'Apps.assets.apps.AssetsConfig',
     'django_extensions',
     'core.apps.CoreConfig',
 ]

@@ -34,6 +34,7 @@ def _sync_attendance_rows(*, leave_request: LeaveRequest, request=None):
         start_date=leave_request.start_date,
         end_date=leave_request.end_date,
         is_half_day=leave_request.is_half_day,
+        leave_request=leave_request,
     )
     leave_dates = calculation["leave_dates"]
     for leave_date in leave_dates:
@@ -57,6 +58,7 @@ def _revert_attendance_rows(*, leave_request: LeaveRequest):
         start_date=leave_request.start_date,
         end_date=leave_request.end_date,
         is_half_day=leave_request.is_half_day,
+        leave_request=leave_request,
     )
     Attendance.objects.filter(
         employee=leave_request.employee,

@@ -89,7 +89,7 @@ PAYMENT_FREQUENCY_CHOICES = [
     ("weekly", "Weekly"),
 ]
 
-MONTH_CHOICES = [
+AD_MONTH_CHOICES = [
     (1, "January"),
     (2, "February"),
     (3, "March"),
@@ -103,6 +103,27 @@ MONTH_CHOICES = [
     (11, "November"),
     (12, "December"),
 ]
+
+BS_MONTH_CHOICES = [
+    (1, "Baishakh"),
+    (2, "Jestha"),
+    (3, "Ashadh"),
+    (4, "Shrawan"),
+    (5, "Bhadra"),
+    (6, "Ashwin"),
+    (7, "Kartik"),
+    (8, "Mangsir"),
+    (9, "Poush"),
+    (10, "Magh"),
+    (11, "Falgun"),
+    (12, "Chaitra"),
+]
+
+MONTH_CHOICES = AD_MONTH_CHOICES
+
+
+def get_month_choices(calendar_type="AD"):
+    return BS_MONTH_CHOICES if (calendar_type or "").upper() == "BS" else AD_MONTH_CHOICES
 
 WORK_LOCATION_CHOICES = [
     ("office", "Office"),

@@ -1,4 +1,6 @@
 from core.config import EntityConfig
+from core.choices import get_month_choices
+from core.helpers.helper import get_calendar_type
 from core.registry import register_entity
 
 from ...datatables.payroll_data_table import PayrollRunDataTableView
@@ -16,6 +18,10 @@ from .payroll_shared import (
 )
 
 
+def _payroll_month_options(request=None):
+    return get_month_choices(get_calendar_type(request))
+
+
 register_entity(
     EntityConfig(
         name="payroll_run",
@@ -30,7 +36,7 @@ register_entity(
             {"name": "currency", "label": "Currency", "type": "select", "required": False, "col": 4, "url_name": "currency_select"},
             {"name": "fiscal_year", "label": "Fiscal Year", "type": "select", "required": True, "col": 4, "url_name": "fiscal_year_select"},
             {"name": "name", "label": "Run Name", "type": "text", "required": True, "col": 4, "placeholder": "March 2026 Monthly Payroll"},
-            {"name": "payroll_month", "label": "Payroll Month", "type": "static_select", "required": True, "col": 2, "options": PayrollRun._meta.get_field("payroll_month").choices},
+            {"name": "payroll_month", "label": "Payroll Month", "type": "static_select", "required": True, "col": 2, "options": _payroll_month_options},
             {"name": "period_start", "label": "Period Start", "type": "date", "required": True, "col": 2},
             {"name": "period_end", "label": "Period End", "type": "date", "required": True, "col": 2},
             {"name": "remarks", "label": "Remarks", "type": "textarea", "required": False, "col": 12, "placeholder": "Optional run note, cutoff note, or approval comment."},

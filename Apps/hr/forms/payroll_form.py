@@ -1,5 +1,7 @@
 from django import forms
 from core.models import FiscalYear
+from core.choices import get_month_choices
+from core.helpers.helper import ad_to_bs, get_calendar_type
 
 from ..models import (
     AttendancePayrollSummary,
@@ -100,6 +102,17 @@ class EmployeeSalaryAssignmentForm(forms.ModelForm):
 
 
 class PayrollRunForm(forms.ModelForm):
+    def __init__(self, *args, request=None, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+        self.fields["payroll_month"].choices = get_month_choices(get_calendar_type(self.request))
+        if not self.instance.pk and not self.initial.get("fiscal_year") and not self.data.get("fiscal_year"):
+            current_fiscal_year = FiscalYear.objects.filter(is_current=True).order_by("-start_date", "-id").first()
+            if not current_fiscal_year:
+                current_fiscal_year = FiscalYear.objects.filter(is_active=True).order_by("-start_date", "-id").first()
+            if current_fiscal_year:
+                self.fields["fiscal_year"].initial = current_fiscal_year.pk
+
     class Meta:
         model = PayrollRun
         fields = [
@@ -119,14 +132,24 @@ class PayrollRunForm(forms.ModelForm):
             "remarks": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not self.instance.pk and not self.initial.get("fiscal_year") and not self.data.get("fiscal_year"):
-            current_fiscal_year = FiscalYear.objects.filter(is_current=True).order_by("-start_date", "-id").first()
-            if not current_fiscal_year:
-                current_fiscal_year = FiscalYear.objects.filter(is_active=True).order_by("-start_date", "-id").first()
-            if current_fiscal_year:
-                self.fields["fiscal_year"].initial = current_fiscal_year.pk
+    def clean(self):
+        cleaned_data = super().clean()
+        payroll_month = cleaned_data.get("payroll_month")
+        period_start = cleaned_data.get("period_start")
+        period_end = cleaned_data.get("period_end")
+        calendar_type = get_calendar_type(self.request)
+
+        if payroll_month and period_start:
+            start_month = ad_to_bs(period_start).month if calendar_type == "BS" else period_start.month
+            if int(payroll_month) != int(start_month):
+                self.add_error("period_start", "Period start month must match the selected payroll month.")
+
+        if payroll_month and period_end:
+            end_month = ad_to_bs(period_end).month if calendar_type == "BS" else period_end.month
+            if int(payroll_month) != int(end_month):
+                self.add_error("period_end", "Period end month must match the selected payroll month.")
+
+        return cleaned_data
 
 
 class PayrollRunEmployeeForm(forms.ModelForm):
@@ -380,6 +403,7 @@ class PayrollSettingForm(forms.ModelForm):
             "provident_fund_employer_component",
             "ssf_employee_component",
             "ssf_employer_component",
+            "overtime_earning_component",
             "is_active",
             "remarks",
         ]

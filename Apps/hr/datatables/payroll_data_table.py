@@ -225,6 +225,7 @@ PAYROLL_SETTING_COLUMNS = [
     ("overtime_calculation_method", "overtime_calculation_method"),
     ("rounding_method", "rounding_method"),
     ("tax_deduction_component", lambda obj: str(obj.tax_deduction_component) if obj.tax_deduction_component else ""),
+    ("overtime_earning_component", lambda obj: str(obj.overtime_earning_component) if obj.overtime_earning_component else ""),
     ("is_active", "is_active"),
     ("updated_at", lambda obj, request: encode_datetime_for_display(obj.updated_at, request)),
 ]
@@ -513,6 +514,8 @@ class PayrollSettingDataTableView(BaseDataTableView):
         "overtime_calculation_method",
         "tax_deduction_component__code",
         "tax_deduction_component__name",
+        "overtime_earning_component__code",
+        "overtime_earning_component__name",
         "remarks",
     ]
     orderable_columns = ["organization__name", "branch__name", "default_working_days", "is_active", "updated_at"]

@@ -357,12 +357,6 @@ class PayrollRun(models.Model):
             errors["payroll_month"] = "Payroll month must be between 1 and 12."
         if self.period_end and self.period_start and self.period_end < self.period_start:
             errors["period_end"] = "Period end cannot be earlier than period start."
-        if self.period_start and self.payroll_year and self.period_start.year != self.payroll_year:
-            errors["period_start"] = "Period start year must match payroll year."
-        if self.period_end and self.payroll_year and self.period_end.year != self.payroll_year:
-            errors["period_end"] = "Period end year must match payroll year."
-        if self.period_start and self.payroll_month and self.period_start.month != self.payroll_month:
-            errors["period_start"] = "Period start month must match payroll month."
         if errors:
             raise ValidationError(errors)
 
@@ -415,7 +409,17 @@ class PayrollRunEmployee(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.payroll_run} - {self.employee}"
+        try:
+            payroll_run = self.payroll_run
+        except PayrollRun.DoesNotExist:
+            payroll_run = f"Payroll Run #{self.payroll_run_id or 'missing'}"
+
+        try:
+            employee = self.employee
+        except Exception:
+            employee = f"Employee #{self.employee_id or 'missing'}"
+
+        return f"{payroll_run} - {employee}"
 
 
 class PayrollRunComponent(models.Model):
@@ -946,6 +950,13 @@ class PayrollSetting(models.Model):
         blank=True,
         related_name="payroll_settings_ssf_employer_component",
     )
+    overtime_earning_component = models.ForeignKey(
+        "SalaryComponent",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payroll_settings_overtime_component",
+    )
     is_active = models.BooleanField(default=True)
     remarks = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -971,6 +982,7 @@ class PayrollSetting(models.Model):
             ("provident_fund_employer_component", {"employer_contribution"}),
             ("ssf_employee_component", {"deduction"}),
             ("ssf_employer_component", {"employer_contribution"}),
+            ("overtime_earning_component", {"earning"}),
         ]
         for field_name, allowed_types in component_rules:
             component = getattr(self, field_name)

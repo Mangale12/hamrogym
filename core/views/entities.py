@@ -72,6 +72,13 @@ def _load_dynamic_sections_data(entity: EntityConfig, obj, request):
     return loader(obj)
 
 
+def _build_entity_form(entity: EntityConfig, *args, request=None, **kwargs):
+    try:
+        return entity.form_class(*args, request=request, **kwargs)
+    except TypeError:
+        return entity.form_class(*args, **kwargs)
+
+
 def _actions_render(entity: EntityConfig) -> str:
     detail_url = reverse(f"{entity.name}_detail", args=[0]).replace("/0/", "/{id}/")
     update_url = reverse(f"{entity.name}_update", args=[0]).replace("/0/", "/{id}/")
@@ -114,22 +121,28 @@ def _build_select_queryset(entity: EntityConfig, term: str):
     return queryset.filter(queries)
 
 
-def _resolve_field_urls(fields: List[Dict[str, object]]) -> List[Dict[str, object]]:
+def _resolve_field_urls(fields: List[Dict[str, object]], request=None) -> List[Dict[str, object]]:
     resolved = []
     for raw in fields or []:
         field = dict(raw)
         url_name = field.get("url_name")
         if url_name and not field.get("url"):
             field["url"] = reverse(url_name)
+        options = field.get("options")
+        if callable(options):
+            try:
+                field["options"] = options(request)
+            except TypeError:
+                field["options"] = options()
         resolved.append(field)
     return resolved
 
 
-def _resolve_dynamic_sections(sections: Dict[str, object]) -> Dict[str, object]:
+def _resolve_dynamic_sections(sections: Dict[str, object], request=None) -> Dict[str, object]:
     resolved_sections = {}
     for section_name, raw_section in (sections or {}).items():
         section = dict(raw_section)
-        section["fields"] = _resolve_field_urls(section.get("fields", []))
+        section["fields"] = _resolve_field_urls(section.get("fields", []), request)
         resolved_sections[section_name] = section
     return resolved_sections
 
@@ -150,8 +163,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
 
         def get_context_data(self, **kwargs):
             context = super().get_context_data(**kwargs)
-            fields = _resolve_field_urls(entity.fields)
-            dynamic_sections = _resolve_dynamic_sections(entity.dynamic_sections or {})
+            fields = _resolve_field_urls(entity.fields, self.request)
+            dynamic_sections = _resolve_dynamic_sections(entity.dynamic_sections or {}, self.request)
             singleton_object = None
             singleton_form_data = None
             tabs = None
@@ -159,7 +172,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                 resolved_tabs = []
                 for tab in entity.tabs:
                     tab_data = dict(tab)
-                    tab_data["fields"] = _resolve_field_urls(tab_data.get("fields", []))
+                    tab_data["fields"] = _resolve_field_urls(tab_data.get("fields", []), self.request)
                     section_names = tab_data.get("sections") or tab_data.get("section_names") or []
                     if section_names and dynamic_sections:
                         tab_data["sections"] = [
@@ -199,7 +212,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "modal_title_view": f"View {entity.verbose_name}",
                     "reset_defaults": _serialize_value(
                         {
-                            **_serialize_form_instance(entity.form_class(), self.request),
+                            **_serialize_form_instance(_build_entity_form(entity, request=self.request), self.request),
                             **(entity.reset_defaults or {}),
                         },
                         self.request,
@@ -213,7 +226,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                 singleton_object = entity.model.objects.first()
                 if singleton_object:
                     singleton_form_data = _serialize_form_instance(
-                        entity.form_class(instance=singleton_object),
+                        _build_entity_form(entity, instance=singleton_object, request=self.request),
                         self.request,
                     )
                 else:
@@ -246,7 +259,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
     class EntityDetailView(LoginRequiredMixin, View):
         def get(self, request, pk):
             obj = get_object_or_404(entity.model, pk=pk)
-            form = entity.form_class(instance=obj)
+            form = _build_entity_form(entity, instance=obj, request=request)
             data = _serialize_form_instance(form, request)
             data["id"] = obj.pk
             dynamic_sections_data = _load_dynamic_sections_data(entity, obj, request)
@@ -257,7 +270,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
     class EntityCreateView(LoginRequiredMixin, View):
         def post(self, request):
             instance = entity.model.objects.first() if entity.singleton else None
-            form = entity.form_class(request.POST, request.FILES, instance=instance)
+            form = _build_entity_form(entity, request.POST, request.FILES, instance=instance, request=request)
             if form.is_valid():
                 try:
                     with transaction.atomic():
@@ -286,7 +299,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
     class EntityUpdateView(LoginRequiredMixin, View):
         def post(self, request, pk):
             obj = get_object_or_404(entity.model, pk=pk)
-            form = entity.form_class(request.POST, request.FILES, instance=obj)
+            form = _build_entity_form(entity, request.POST, request.FILES, instance=obj, request=request)
             if form.is_valid():
                 try:
                     with transaction.atomic():

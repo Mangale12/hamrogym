@@ -183,6 +183,146 @@ def _append_leave_and_adjustment_rows(*, payroll_run: PayrollRun, assignment: Em
     return component_rows
 
 
+def _append_overtime_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalaryAssignment, component_rows):
+    attendance_summary = AttendancePayrollSummary.objects.filter(
+        payroll_run=payroll_run,
+        employee=assignment.employee,
+    ).first()
+    payroll_setting = _get_payroll_setting(payroll_run)
+    overtime_component = payroll_setting.overtime_earning_component if payroll_setting else None
+
+    if not attendance_summary or not payroll_setting or not overtime_component:
+        return component_rows
+
+    overtime_hours = to_decimal(attendance_summary.overtime_hours)
+    if overtime_hours <= 0:
+        return component_rows
+
+    working_days = Decimal(str((payroll_setting.default_working_days or 0) or 0))
+    if working_days <= 0:
+        working_days = Decimal("30.00")
+
+    try:
+        employee_payroll = assignment.employee.payroll
+    except Exception:
+        employee_payroll = None
+    employee_ot_rate = to_decimal(getattr(employee_payroll, "overtime_rate", None))
+    base_hourly_rate = (to_decimal(assignment.gross_salary) / working_days / Decimal("8.00")).quantize(Decimal("0.0001"))
+
+    overtime_method = payroll_setting.overtime_calculation_method
+    if overtime_method == "fixed_rate":
+        overtime_rate = employee_ot_rate
+    elif overtime_method == "multiplier":
+        multiplier = employee_ot_rate if employee_ot_rate > 0 else Decimal("1.50")
+        overtime_rate = (base_hourly_rate * multiplier).quantize(Decimal("0.0001"))
+    else:
+        overtime_rate = employee_ot_rate if employee_ot_rate > 0 else base_hourly_rate
+
+    if overtime_rate <= 0:
+        return component_rows
+
+    overtime_amount = apply_rounding(
+        overtime_hours * overtime_rate,
+        payroll_setting.rounding_method if payroll_setting else "round_2",
+    )
+    if overtime_amount <= 0:
+        return component_rows
+
+    component_rows.append(
+        {
+            "salary_component": overtime_component,
+            "source_type": "overtime",
+            "sequence": overtime_component.sequence,
+            "quantity": overtime_hours,
+            "rate": overtime_rate,
+            "amount": overtime_amount,
+            "component_type": overtime_component.component_type,
+            "tax_treatment": overtime_component.tax_treatment,
+            "calculation_trace": {
+                "overtime_hours": str(overtime_hours),
+                "overtime_rate": str(overtime_rate),
+                "overtime_method": overtime_method,
+                "base_hourly_rate": str(base_hourly_rate),
+                "employee_overtime_rate": str(employee_ot_rate),
+                "attendance_summary_id": attendance_summary.id,
+            },
+        }
+    )
+
+    return component_rows
+
+
+def _apply_attendance_proration(*, payroll_run: PayrollRun, assignment: EmployeeSalaryAssignment, component_rows):
+    attendance_summary = AttendancePayrollSummary.objects.filter(
+        payroll_run=payroll_run,
+        employee=assignment.employee,
+    ).first()
+    payroll_setting = _get_payroll_setting(payroll_run)
+
+    if not attendance_summary:
+        return component_rows, None
+
+    working_days = Decimal(str((payroll_setting.default_working_days if payroll_setting else 0) or 0))
+    if working_days <= 0:
+        working_days = Decimal("30.00")
+
+    payable_days = to_decimal(attendance_summary.payable_days)
+    if payable_days < 0:
+        payable_days = Decimal("0.00")
+    if payable_days > working_days:
+        payable_days = working_days
+
+    proration_factor = (payable_days / working_days).quantize(Decimal("0.0001"))
+    if proration_factor >= Decimal("1.0000"):
+        return component_rows, {
+            "attendance_summary_id": attendance_summary.id,
+            "working_days": str(working_days),
+            "payable_days": str(payable_days),
+            "proration_factor": str(proration_factor),
+            "prorated_components": [],
+        }
+
+    prorated_components = []
+    for row in component_rows:
+        if row.get("component_type") != "earning":
+            continue
+        if row.get("source_type") not in {"structure", "override"}:
+            continue
+
+        original_amount = to_decimal(row["amount"])
+        prorated_amount = original_amount
+        salary_component = row.get("salary_component")
+        if salary_component and salary_component.affects_net:
+            prorated_amount = original_amount * proration_factor
+            prorated_amount = apply_rounding(
+                prorated_amount,
+                payroll_setting.rounding_method if payroll_setting else "round_2",
+            )
+            row["amount"] = prorated_amount
+
+        if prorated_amount != original_amount:
+            prorated_components.append(
+                {
+                    "component_code": salary_component.code if salary_component else "",
+                    "original_amount": str(original_amount),
+                    "prorated_amount": str(prorated_amount),
+                }
+            )
+
+    return component_rows, {
+        "attendance_summary_id": attendance_summary.id,
+        "working_days": str(working_days),
+        "payable_days": str(payable_days),
+        "proration_factor": str(proration_factor),
+        "prorated_components": prorated_components,
+        "absent_days": str(attendance_summary.absent_days),
+        "half_days": str(attendance_summary.half_days),
+        "leave_days": str(attendance_summary.leave_days),
+        "late_instances": attendance_summary.late_instances,
+        "overtime_hours": str(attendance_summary.overtime_hours),
+    }
+
+
 def _calculate_totals(component_rows):
     gross_earnings = Decimal("0.00")
     total_deductions = Decimal("0.00")
@@ -282,6 +422,20 @@ def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalary
     effective_date = payroll_run.period_end
     statutory_rows = []
     payroll_setting = _get_payroll_setting(payroll_run)
+    attendance_summary = AttendancePayrollSummary.objects.filter(
+        payroll_run=payroll_run,
+        employee=assignment.employee,
+    ).first()
+    working_days = Decimal(str((payroll_setting.default_working_days if payroll_setting else 0) or 0))
+    if working_days <= 0:
+        working_days = Decimal("30.00")
+    payable_days = to_decimal(attendance_summary.payable_days) if attendance_summary else working_days
+    if payable_days < 0:
+        payable_days = Decimal("0.00")
+    if payable_days > working_days:
+        payable_days = working_days
+    attendance_factor = (payable_days / working_days).quantize(Decimal("0.0001")) if working_days else Decimal("1.0000")
+    statutory_base_amount = (to_decimal(assignment.gross_salary) * attendance_factor).quantize(Decimal("0.01"))
 
     provident_fund = (
         ProvidentFund.objects.filter(
@@ -295,10 +449,10 @@ def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalary
     )
     if provident_fund:
         pf_employee_amount = (
-            to_decimal(assignment.gross_salary) * to_decimal(provident_fund.employee_percent) / Decimal("100")
+            statutory_base_amount * to_decimal(provident_fund.employee_percent) / Decimal("100")
         ).quantize(Decimal("0.01"))
         pf_employer_amount = (
-            to_decimal(assignment.gross_salary) * to_decimal(provident_fund.employer_percent) / Decimal("100")
+            statutory_base_amount * to_decimal(provident_fund.employer_percent) / Decimal("100")
         ).quantize(Decimal("0.01"))
         statutory_rows.extend(
             [
@@ -312,6 +466,8 @@ def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalary
                     "calculation_trace": {
                         "statutory_type": "provident_fund_employee",
                         "percent": str(provident_fund.employee_percent),
+                        "base_amount": str(statutory_base_amount),
+                        "attendance_factor": str(attendance_factor),
                     },
                 },
                 {
@@ -324,6 +480,8 @@ def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalary
                     "calculation_trace": {
                         "statutory_type": "provident_fund_employer",
                         "percent": str(provident_fund.employer_percent),
+                        "base_amount": str(statutory_base_amount),
+                        "attendance_factor": str(attendance_factor),
                     },
                 },
             ]
@@ -341,10 +499,10 @@ def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalary
     )
     if ssf_contribution:
         ssf_employee_amount = (
-            to_decimal(assignment.gross_salary) * to_decimal(ssf_contribution.employee_percent) / Decimal("100")
+            statutory_base_amount * to_decimal(ssf_contribution.employee_percent) / Decimal("100")
         ).quantize(Decimal("0.01"))
         ssf_employer_amount = (
-            to_decimal(assignment.gross_salary) * to_decimal(ssf_contribution.employer_percent) / Decimal("100")
+            statutory_base_amount * to_decimal(ssf_contribution.employer_percent) / Decimal("100")
         ).quantize(Decimal("0.01"))
         statutory_rows.extend(
             [
@@ -358,6 +516,8 @@ def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalary
                     "calculation_trace": {
                         "statutory_type": "ssf_employee",
                         "percent": str(ssf_contribution.employee_percent),
+                        "base_amount": str(statutory_base_amount),
+                        "attendance_factor": str(attendance_factor),
                     },
                 },
                 {
@@ -370,6 +530,8 @@ def _build_statutory_rows(*, payroll_run: PayrollRun, assignment: EmployeeSalary
                     "calculation_trace": {
                         "statutory_type": "ssf_employer",
                         "percent": str(ssf_contribution.employer_percent),
+                        "base_amount": str(statutory_base_amount),
+                        "attendance_factor": str(attendance_factor),
                     },
                 },
             ]
@@ -439,7 +601,7 @@ def _apply_income_tax(*, payroll_run: PayrollRun, assignment: EmployeeSalaryAssi
 
 def _build_payslip_number(*, payroll_run: PayrollRun, payroll_employee: PayrollRunEmployee):
     employee_code = payroll_employee.employee.employee_id or payroll_employee.employee_id
-    return f"PS-{payroll_run.payroll_year}-{payroll_run.payroll_month:02d}-{employee_code}"
+    return f"PS-RUN{payroll_run.id}-{payroll_run.payroll_year}-{payroll_run.payroll_month:02d}-{employee_code}"
 
 
 def _create_or_update_payslip(*, payroll_run: PayrollRun, payroll_employee: PayrollRunEmployee):
@@ -463,9 +625,66 @@ def _log_payroll_action(*, payroll_run: PayrollRun, action: str, acting_user=Non
     )
 
 
+def _has_active_payroll_lock(payroll_run: PayrollRun) -> bool:
+    lock_exists = PayrollLock.objects.filter(payroll_run=payroll_run).exists()
+    if not lock_exists:
+        return False
+    if payroll_run.status in {"approved", "locked"}:
+        return True
+    PayrollLock.objects.filter(payroll_run=payroll_run).delete()
+    return False
+
+
+def _merge_component_rows_for_save(component_rows):
+    merged_rows = []
+    indexed_rows = {}
+
+    for row in component_rows:
+        salary_component = row.get("salary_component")
+        if salary_component is None:
+            continue
+
+        key = salary_component.pk
+        existing = indexed_rows.get(key)
+        if existing is None:
+            normalized = dict(row)
+            trace = normalized.get("calculation_trace") or {}
+            normalized["calculation_trace"] = trace if isinstance(trace, dict) else {"value": trace}
+            indexed_rows[key] = normalized
+            merged_rows.append(normalized)
+            continue
+
+        existing["amount"] = to_decimal(existing.get("amount")) + to_decimal(row.get("amount"))
+        existing_quantity = existing.get("quantity")
+        row_quantity = row.get("quantity")
+        if existing_quantity is not None or row_quantity is not None:
+            existing["quantity"] = to_decimal(existing_quantity) + to_decimal(row_quantity)
+        existing_rate = existing.get("rate")
+        if existing_rate in (None, "") and row.get("rate") not in (None, ""):
+            existing["rate"] = row.get("rate")
+        existing["sequence"] = min(existing.get("sequence", 1), row.get("sequence", 1))
+
+        existing_trace = existing.get("calculation_trace") or {}
+        if not isinstance(existing_trace, dict):
+            existing_trace = {"value": existing_trace}
+        existing_sources = existing_trace.setdefault("merged_sources", [])
+        existing_sources.append(
+            {
+                "source_type": row.get("source_type"),
+                "amount": str(row.get("amount")),
+                "quantity": str(row.get("quantity") or ""),
+                "rate": str(row.get("rate") or ""),
+                "trace": row.get("calculation_trace") or {},
+            }
+        )
+        existing["calculation_trace"] = existing_trace
+
+    return merged_rows
+
+
 @transaction.atomic
 def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
-    if payroll_run.status == "locked" or PayrollLock.objects.filter(payroll_run=payroll_run).exists():
+    if payroll_run.status == "locked" or _has_active_payroll_lock(payroll_run):
         raise ValueError("Locked payroll runs cannot be processed.")
     if payroll_run.status not in {"draft", "processed"}:
         raise ValueError("Only draft or processed payroll runs can be recalculated.")
@@ -493,7 +712,17 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
     for assignment in assignments:
         try:
             component_rows = _build_component_rows(assignment)
+            component_rows, attendance_context = _apply_attendance_proration(
+                payroll_run=payroll_run,
+                assignment=assignment,
+                component_rows=component_rows,
+            )
             component_rows = _append_leave_and_adjustment_rows(
+                payroll_run=payroll_run,
+                assignment=assignment,
+                component_rows=component_rows,
+            )
+            component_rows = _append_overtime_rows(
                 payroll_run=payroll_run,
                 assignment=assignment,
                 component_rows=component_rows,
@@ -510,11 +739,6 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
                 component_rows=component_rows,
                 totals=totals,
             )
-            attendance_summary = AttendancePayrollSummary.objects.filter(
-                payroll_run=payroll_run,
-                employee=assignment.employee,
-            ).first()
-
             payroll_employee = PayrollRunEmployee.objects.create(
                 payroll_run=payroll_run,
                 employee=assignment.employee,
@@ -531,10 +755,11 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
                 calculation_summary={
                     "component_count": len(component_rows),
                     "salary_structure_code": assignment.salary_structure.code,
-                    "attendance_summary_id": attendance_summary.id if attendance_summary else None,
+                    "attendance": attendance_context or {},
                 },
             )
 
+            payroll_component_rows = _merge_component_rows_for_save(component_rows)
             PayrollRunComponent.objects.bulk_create(
                 [
                     PayrollRunComponent(
@@ -542,11 +767,12 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
                         salary_component=row["salary_component"],
                         source_type=row["source_type"],
                         sequence=row["sequence"],
+                        quantity=row.get("quantity"),
+                        rate=row.get("rate"),
                         amount=row["amount"],
                         calculation_trace=row["calculation_trace"],
                     )
-                    for row in component_rows
-                    if row["salary_component"] is not None
+                    for row in payroll_component_rows
                 ]
             )
             _create_or_update_payslip(payroll_run=payroll_run, payroll_employee=payroll_employee)
@@ -603,7 +829,7 @@ def process_payroll_run(*, payroll_run: PayrollRun, acting_user):
 
 @transaction.atomic
 def reset_payroll_run(*, payroll_run: PayrollRun):
-    if payroll_run.status == "locked" or PayrollLock.objects.filter(payroll_run=payroll_run).exists():
+    if payroll_run.status == "locked" or _has_active_payroll_lock(payroll_run):
         raise ValueError("Locked payroll runs cannot be reset.")
     if payroll_run.status not in {"processed", "reviewed", "approved"}:
         raise ValueError("Only processed payroll runs can be reset to draft.")
@@ -654,7 +880,7 @@ def reset_payroll_run(*, payroll_run: PayrollRun):
 def approve_payroll_run(*, payroll_run: PayrollRun, acting_user):
     if payroll_run.status not in {"processed", "reviewed"}:
         raise ValueError("Only processed or reviewed payroll runs can be approved.")
-    if PayrollLock.objects.filter(payroll_run=payroll_run).exists() or payroll_run.status == "locked":
+    if payroll_run.status == "locked" or _has_active_payroll_lock(payroll_run):
         raise ValueError("Locked payroll runs cannot be approved.")
 
     last_approval = payroll_run.approvals.order_by("-approval_level", "-id").first()
