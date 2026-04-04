@@ -45,6 +45,24 @@ SIDEBAR_ITEMS = [
                 "url_name": "branch_list",
                 "match": "/core/branches",
             },
+            {
+                "label": "Brand",
+                "icon": "tag",
+                "url_name": "brand_list",
+                "match": "/core/brands",
+            },
+            {
+                "label": "Location Type",
+                "icon": "map",
+                "url_name": "location_type_list",
+                "match": "/core/location-types",
+            },
+            {
+                "label": "Location",
+                "icon": "map-pin",
+                "url_name": "location_list",
+                "match": "/core/locations",
+            },
         ],
     },
     {

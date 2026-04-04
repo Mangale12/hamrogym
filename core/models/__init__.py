@@ -24,3 +24,6 @@ from .approval_workflow import (
     WorkflowStepApprover,
     WorkflowStepCondition,
 )
+from .brand import Brand
+from .location_type import LocationType
+from .location import Location

@@ -1,0 +1,206 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}{{ asset.name }} | Asset Profile{% endblock %}
+{% block page_title %}Asset Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="mb-1">{{ asset.name }}</h3>
+    <div class="text-muted">
+      {% if asset.code %}<span class="me-3">Code: {{ asset.code }}</span>{% endif %}
+      {% if asset.serial_number %}<span class="me-3">Serial: {{ asset.serial_number }}</span>{% endif %}
+      {% if asset.bar_code %}<span>Bar Code: {{ asset.bar_code }}</span>{% endif %}
+    </div>
+  </div>
+  <a href="/core/asset/" class="btn btn-outline-secondary">Back to Assets</a>
+</div>
+
+{% if has_overdue_assignment %}
+<div class="alert alert-warning border-warning-subtle d-flex justify-content-between align-items-center mb-4" role="alert">
+  <div>
+    <strong>Overdue assignment detected.</strong>
+    This asset has at least one active assignment past its expected return date.
+  </div>
+  <button class="btn btn-sm btn-outline-warning" type="button" data-bs-toggle="tab" data-bs-target="#asset-assignments">
+    View History
+  </button>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Current Holder</div>
+        <div class="fw-semibold">{{ asset.current_employee|default:"Unassigned" }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Current Department</div>
+        <div class="fw-semibold">{{ asset.current_department|default:"Not set" }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Current Location</div>
+        <div class="fw-semibold">{{ asset.current_location|default:"Not set" }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Status / Condition</div>
+        <div class="fw-semibold">{{ asset.status|default:"Not set" }}{% if asset.condition %} / {{ asset.condition }}{% endif %}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <ul class="nav nav-tabs mb-3" id="assetProfileTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#asset-overview" type="button">Overview</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#asset-assignments" type="button">Assignment History</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#asset-maintenance" type="button">Maintenance Records</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#asset-documents" type="button">Documents</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="asset-overview">
+        <div class="row g-3">
+          <div class="col-md-6"><strong>Category:</strong> {{ asset.category|default:"-" }}</div>
+          <div class="col-md-6"><strong>Asset Type:</strong> {{ asset.asset_type|default:"-" }}</div>
+          <div class="col-md-6"><strong>Brand:</strong> {{ asset.brand|default:"-" }}</div>
+          <div class="col-md-6"><strong>Model:</strong> {{ asset.model|default:"-" }}</div>
+          <div class="col-md-6"><strong>Vendor:</strong> {{ asset.vendor|default:"-" }}</div>
+          <div class="col-md-6"><strong>Purchase Date:</strong> {{ asset.purchase_date|default:"-" }}</div>
+          <div class="col-md-6"><strong>Purchase Cost:</strong> {{ asset.purchase_cost|default:"-" }}</div>
+          <div class="col-md-6"><strong>Warranty Expiry:</strong> {{ asset.warranty_expiry_date|default:"-" }}</div>
+          <div class="col-md-6"><strong>Useful Life Months:</strong> {{ asset.use_full_life_months|default:"-" }}</div>
+          <div class="col-md-6"><strong>Salvage Value:</strong> {{ asset.salvage_value|default:"-" }}</div>
+          <div class="col-12"><strong>Remarks:</strong> {{ asset.remarks|default:"-" }}</div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="asset-assignments">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Assigned Date</th>
+                <th>Expected Return</th>
+                <th>Return Date</th>
+                <th>Issue Condition</th>
+                <th>Return Condition</th>
+                <th>Status</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in assignment_history %}
+              <tr class="{% if item.is_overdue %}table-warning{% endif %}">
+                <td>{{ item.employee }}</td>
+                <td>{{ item.assigned_date }}</td>
+                <td>
+                  {{ item.expected_return_date|default:"-" }}
+                  {% if item.is_overdue %}
+                  <span class="badge bg-warning text-dark ms-2">Overdue</span>
+                  {% endif %}
+                </td>
+                <td>{{ item.return_date|default:"-" }}</td>
+                <td>{{ item.condition_at_issue|default:"-" }}</td>
+                <td>{{ item.condition_at_return|default:"-" }}</td>
+                <td>{{ item.get_status_display }}</td>
+                <td>{{ item.remarks|default:"-" }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="8" class="text-center text-muted">No assignment history found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="asset-maintenance">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Vendor</th>
+                <th>Performed By</th>
+                <th>Cost</th>
+                <th>Status</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in maintenance_records %}
+              <tr>
+                <td>{{ item.maintenance_date }}</td>
+                <td>{{ item.maintenance_type }}</td>
+                <td>{{ item.vendor|default:"-" }}</td>
+                <td>{{ item.performed_by|default:"-" }}</td>
+                <td>{{ item.cost|default:"-" }}</td>
+                <td>{{ item.get_status_display }}</td>
+                <td>{{ item.remarks|default:"-" }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="7" class="text-center text-muted">No maintenance records found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="asset-documents">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Document Type</th>
+                <th>Uploaded</th>
+                <th>File</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in documents %}
+              <tr>
+                <td>{{ item.document_type|default:"-" }}</td>
+                <td>{{ item.uploaded_at }}</td>
+                <td>
+                  {% if item.file_path %}
+                  <a href="{{ item.file_path.url }}" target="_blank">View File</a>
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-muted">No documents found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

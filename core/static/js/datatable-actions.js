@@ -49,6 +49,7 @@ function renderActionButtons(id, options, row) {
     if (hideOnValues.includes(normalizedStateValue)) {
       return;
     }
+    const hrefUrl = action.href_url ? action.href_url.replace('{id}', id) : '';
     const actionClass = action.class_name || 'btn-outline-secondary';
     const actionUrl = action.action_url ? action.action_url.replace('{id}', id) : '';
     const buttonClass = actionUrl ? (action.button_class || 'entity-post-action-btn') : (action.button_class || 'open-tab-btn');
@@ -60,6 +61,13 @@ function renderActionButtons(id, options, row) {
     const tabKey = action.tab_key || '';
     const iconHtml = iconClass ? `<i class="${iconClass}"></i>` : '';
     const labelHtml = buttonLabel ? `<span class="${iconHtml ? 'ms-1' : ''}">${buttonLabel}</span>` : '';
+    if (hrefUrl) {
+      html += `
+        <a class="btn btn-sm ${actionClass}" href="${hrefUrl}" title="${buttonTitle}">
+          ${iconHtml}${labelHtml}
+        </a>`;
+      return;
+    }
     if (actionUrl) {
       const confirmText = action.confirm_text || '';
       const successMessage = action.success_message || '';

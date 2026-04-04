@@ -9,3 +9,6 @@ from . import user  # noqa: F401
 from . import erp_entity  # noqa: F401
 from . import approval_entities  # noqa: F401
 from . import approval_workflow  # noqa: F401
+from . import brand  # noqa: F401
+from . import location_type  # noqa: F401
+from . import location  # noqa: F401

@@ -24,6 +24,7 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('Apps.hamrogym.urls')),
     path('hr/', include('Apps.hr.urls')),
+    path('core/', include('Apps.assets.urls')),
     path('core/', include('core.urls')),
 ]
 
