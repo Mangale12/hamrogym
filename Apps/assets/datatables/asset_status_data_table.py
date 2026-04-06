@@ -26,3 +26,8 @@ class AssetStatusDataTableView(BaseDataTableView):
         "is_active",
         "remarks",
     ]
+
+    def serialize_row(self, obj):
+        row = super().serialize_row(obj)
+        row["is_system"] = obj.is_system
+        return row

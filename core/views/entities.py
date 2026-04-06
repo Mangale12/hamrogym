@@ -340,17 +340,35 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
             class EntityActionView(LoginRequiredMixin, View):
                 def post(self, request, pk):
                     obj = get_object_or_404(entity.model, pk=pk)
-                    result = _handler(request, obj)
-                    if isinstance(result, dict):
-                        payload = {"success": True}
-                        payload.update(result)
-                        return JsonResponse(payload)
-                    return JsonResponse(
-                        {
-                            "success": True,
-                            "message": result or f"{entity.verbose_name} {_action_name} successful.",
-                        }
-                    )
+                    try:
+                        result = _handler(request, obj)
+                        if isinstance(result, dict):
+                            payload = {"success": True}
+                            payload.update(result)
+                            return JsonResponse(payload)
+                        return JsonResponse(
+                            {
+                                "success": True,
+                                "message": result or f"{entity.verbose_name} {_action_name} successful.",
+                            }
+                        )
+                    except ValidationError as exc:
+                        if hasattr(exc, "message_dict"):
+                            errors = exc.message_dict
+                            message = " ".join(
+                                " ".join(messages) if isinstance(messages, list) else str(messages)
+                                for messages in errors.values()
+                            ).strip() or f"{entity.verbose_name} {_action_name} failed."
+                            return JsonResponse(
+                                {"success": False, "message": message, "errors": errors},
+                                status=400,
+                            )
+                        messages = exc.messages if hasattr(exc, "messages") else [str(exc)]
+                        message = " ".join(str(item) for item in messages if item).strip()
+                        return JsonResponse(
+                            {"success": False, "message": message or f"{entity.verbose_name} {_action_name} failed."},
+                            status=400,
+                        )
 
             return EntityActionView
 

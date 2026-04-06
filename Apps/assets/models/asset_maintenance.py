@@ -17,6 +17,13 @@ class AssetMaintenanceRecord(models.Model):
         on_delete=models.CASCADE,
         related_name="maintenance_records",
     )
+    incident = models.OneToOneField(
+        "AssetIncident",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_record",
+    )
     maintenance_date = models.DateField()
     maintenance_type = models.CharField(max_length=100)
     vendor = models.ForeignKey(

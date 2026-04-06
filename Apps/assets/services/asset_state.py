@@ -58,3 +58,30 @@ def sync_asset_state(asset) -> None:
         asset.status = next_status
 
     asset.save(update_fields=["current_employee", "current_department", "status", "updated_at"])
+
+
+def sync_asset_status_from_incident(incident) -> None:
+    asset = incident.asset
+    incident_code = _normalize(getattr(incident.incident_type, "code", "") or "")
+
+    status_map = {
+        "lost": ["lost"],
+        "missing": ["missing", "lost"],
+        "stolen": ["stolen", "lost"],
+        "disposed": ["disposed"],
+        "scrapped": ["scrapped", "disposed"],
+        "damaged": ["under_maintenance", "maintenance", "damaged"],
+        "breakdown": ["under_maintenance", "maintenance"],
+    }
+    codes = status_map.get(incident_code, [])
+    next_status = _resolve_asset_status(asset=asset, codes=codes)
+
+    destructive_codes = {"lost", "missing", "stolen", "disposed", "scrapped"}
+    if incident_code in destructive_codes:
+        asset.current_employee = None
+        asset.current_department = None
+
+    if next_status is not None:
+        asset.status = next_status
+
+    asset.save(update_fields=["current_employee", "current_department", "status", "updated_at"])

@@ -24,6 +24,8 @@ register_entity(
             for key, _accessor in ASSET_STATUS_COLUMNS
             if key != "id"
         ],
+        action_state_field="is_system",
+        hide_delete_on_values=["true"],
         reset_defaults={"is_active": True},
     )
 )

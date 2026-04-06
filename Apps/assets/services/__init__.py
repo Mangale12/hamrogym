@@ -1,1 +1,2 @@
 from .asset_state import sync_asset_state
+from .asset_state import sync_asset_status_from_incident

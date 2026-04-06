@@ -40,6 +40,7 @@ class AssetProfileView(LoginRequiredMixin, TemplateView):
                 and item.expected_return_date < today
             )
         maintenance_records = asset.maintenance_records.select_related(
+            "incident__incident_type",
             "vendor",
             "performed_by",
         ).all()

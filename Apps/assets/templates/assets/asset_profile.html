@@ -144,6 +144,7 @@
               <tr>
                 <th>Date</th>
                 <th>Type</th>
+                <th>Incident</th>
                 <th>Vendor</th>
                 <th>Performed By</th>
                 <th>Cost</th>
@@ -156,6 +157,13 @@
               <tr>
                 <td>{{ item.maintenance_date }}</td>
                 <td>{{ item.maintenance_type }}</td>
+                <td>
+                  {% if item.incident %}
+                  {{ item.incident.incident_type }} on {{ item.incident.incident_date }}
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
                 <td>{{ item.vendor|default:"-" }}</td>
                 <td>{{ item.performed_by|default:"-" }}</td>
                 <td>{{ item.cost|default:"-" }}</td>
@@ -163,7 +171,7 @@
                 <td>{{ item.remarks|default:"-" }}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="7" class="text-center text-muted">No maintenance records found.</td></tr>
+              <tr><td colspan="8" class="text-center text-muted">No maintenance records found.</td></tr>
               {% endfor %}
             </tbody>
           </table>

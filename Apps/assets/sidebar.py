@@ -51,6 +51,18 @@ SIDEBAR_ITEMS = [
                 "url_name": "asset_type_list",
                 "match": "/core/asset-types",
             },
+            {
+                "label": "Asset Incident Type",
+                "icon": "user-check",
+                "url_name": "asset_incident_type_list",
+                "match": "/core/asset-incident-types",
+            },
+            {
+                "label": "Asset Incident",
+                "icon": "user-check",
+                "url_name": "asset_incident_list",
+                "match": "/core/asset-incidents",
+            },
         ],
     },
 ]

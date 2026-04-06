@@ -1,11 +1,12 @@
 from django.db import models
 
 
-class AssetStatus(models.Model):
+class AssetIncidentType(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    code = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    is_system = models.BooleanField(default=False)
-    is_final = models.BooleanField(default=False)
+    code = models.CharField(max_length=100, unique=True)
+    require_approval = models.BooleanField(default=False)
+    auto_create_maintenance = models.BooleanField(default=False)
+    financial_impact = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     remarks = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -10,3 +10,5 @@ from .asset_maintenance import AssetMaintenanceRecord
 from .asset_status import AssetStatus
 from .asset_vendor import AssetVendor
 from .asset_type import AssetType
+from .asset_incident_type import AssetIncidentType
+from .asset_incident import AssetIncident

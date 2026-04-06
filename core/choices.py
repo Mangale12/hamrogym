@@ -385,3 +385,14 @@ SALARY_COMPONENT_CALCULATION_TYPE_CHOICES = [
     ("percentage", "Percentage"),
     ("formula", "Formula"),
 ]
+
+
+ASSET_INCIDENT_STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("reported", "Reported"),
+        ("under_review", "Under Review"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+        ("resolved", "Resolved"),
+        ("closed", "Closed"),
+    ]

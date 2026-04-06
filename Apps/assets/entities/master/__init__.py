@@ -6,3 +6,5 @@ from . import asset_status  # noqa: F401
 from . import asset_vendor  # noqa: F401
 from . import asset  # noqa: F401
 from . import asset_type  # noqa: F401
+from . import asset_incident_type  # noqa: F401
+from . import asset_incident  # noqa: F401
