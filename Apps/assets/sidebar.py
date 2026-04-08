@@ -1,6 +1,6 @@
 SIDEBAR_ITEMS = [
     {
-        "label": "Workforce",
+        "label": "Assets",
         "icon": "users",
         "children": [
             {
@@ -20,6 +20,18 @@ SIDEBAR_ITEMS = [
                 "icon": "user-check",
                 "url_name": "asset_assignment_list",
                 "match": "/core/asset-assignments",
+            },
+            {
+                "label": "Asset Transfer",
+                "icon": "user-check",
+                "url_name": "asset_transfer_list",
+                "match": "/core/asset-transfers",
+            },
+            {
+                "label": "Asset Maintenance",
+                "icon": "user-check",
+                "url_name": "asset_maintenance_list",
+                "match": "/core/asset-maintenance",
             },
             {
                 "label": "Asset Location",

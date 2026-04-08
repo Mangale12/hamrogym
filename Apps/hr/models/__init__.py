@@ -1,5 +1,7 @@
 from .department import Department
 from .designation import Designation
+from .team_role import TeamRole
+from .team import Team, TeamMember
 from .employee import Employee
 from .employee_access import EmployeeAccess
 from .employee_address import EmployeeAddress

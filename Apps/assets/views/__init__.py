@@ -44,6 +44,14 @@ class AssetProfileView(LoginRequiredMixin, TemplateView):
             "vendor",
             "performed_by",
         ).all()
+        transfer_history = asset.transfers.select_related(
+            "from_location",
+            "to_location",
+            "from_department",
+            "to_department",
+            "transferred_by",
+            "received_by",
+        ).all()
         documents = asset.assetdocument_set.all()
 
         context.update(
@@ -51,6 +59,7 @@ class AssetProfileView(LoginRequiredMixin, TemplateView):
                 "asset": asset,
                 "assignment_history": assignment_history,
                 "maintenance_records": maintenance_records,
+                "transfer_history": transfer_history,
                 "documents": documents,
                 "active_assignment": next(
                     (item for item in assignment_history if item.status == "active" and not item.return_date),

@@ -21,15 +21,38 @@
               </a>
               <ul class="collapse nav flex-column ms-3 {% if item.is_active %}show{% endif %}" id="sidebar-group-{{ forloop.counter }}">
                 {% for child in item.children %}
-                  <li class="nav-item">
-                    <a class="nav-link {% if child.is_active %}active{% endif %} {% if child.disabled %}disabled{% endif %}" href="{{ child.url }}">
-                      <i data-feather="{{ child.icon|default:'circle' }}"></i>
-                      {{ child.label }}
-                      {% if child.badge %}
-                        <span class="badge bg-danger">{{ child.badge }}</span>
+                  {% with child_has_children=child.children|length %}
+                    <li class="nav-item">
+                      {% if child_has_children %}
+                        <a class="nav-link {% if child.is_active %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#sidebar-subgroup-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" aria-expanded="{% if child.is_active %}true{% else %}false{% endif %}" aria-controls="sidebar-subgroup-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                          <i data-feather="{{ child.icon|default:'circle' }}"></i>
+                          {{ child.label }}
+                          <i class="float-end" data-feather="chevron-down"></i>
+                        </a>
+                        <ul class="collapse nav flex-column ms-3 {% if child.is_active %}show{% endif %}" id="sidebar-subgroup-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                          {% for grandchild in child.children %}
+                            <li class="nav-item">
+                              <a class="nav-link {% if grandchild.is_active %}active{% endif %} {% if grandchild.disabled %}disabled{% endif %}" href="{{ grandchild.url }}">
+                                <i data-feather="{{ grandchild.icon|default:'circle' }}"></i>
+                                {{ grandchild.label }}
+                                {% if grandchild.badge %}
+                                  <span class="badge bg-danger">{{ grandchild.badge }}</span>
+                                {% endif %}
+                              </a>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <a class="nav-link {% if child.is_active %}active{% endif %} {% if child.disabled %}disabled{% endif %}" href="{{ child.url }}">
+                          <i data-feather="{{ child.icon|default:'circle' }}"></i>
+                          {{ child.label }}
+                          {% if child.badge %}
+                            <span class="badge bg-danger">{{ child.badge }}</span>
+                          {% endif %}
+                        </a>
                       {% endif %}
-                    </a>
-                  </li>
+                    </li>
+                  {% endwith %}
                 {% endfor %}
               </ul>
             {% else %}

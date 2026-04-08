@@ -1,3 +1,4 @@
+from core.mixins import ERPBaseModel
 from .fiscal_year import FiscalYear
 from .organization_settings import OrganizationSettings
 from .country import Country

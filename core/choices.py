@@ -396,3 +396,13 @@ ASSET_INCIDENT_STATUS_CHOICES = [
         ("resolved", "Resolved"),
         ("closed", "Closed"),
     ]
+
+
+TEAM_TYPE_CHOICES = [
+    ("internal", "Internal"),
+    ("external", "External"),
+    ("project", "Project"),
+    ("temporary", "Temporary"),
+    ("contract", "Contract"),
+    ("permanent", "Permanent"),
+]

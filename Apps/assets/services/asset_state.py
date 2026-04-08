@@ -26,9 +26,17 @@ def sync_asset_state(asset) -> None:
         .order_by("-assigned_date", "-id")
         .first()
     )
+    latest_transfer = (
+        asset.transfers.select_related("to_location", "to_department")
+        .order_by("-transfer_date", "-id")
+        .first()
+    )
     has_open_maintenance = asset.maintenance_records.filter(
         ~Q(status="completed")
     ).exists()
+
+    if latest_transfer and latest_transfer.to_location_id:
+        asset.current_location = latest_transfer.to_location
 
     if active_assignment:
         employee = active_assignment.employee
@@ -36,7 +44,10 @@ def sync_asset_state(asset) -> None:
         asset.current_department = employee.department
     else:
         asset.current_employee = None
-        asset.current_department = None
+        if latest_transfer and latest_transfer.to_department_id:
+            asset.current_department = latest_transfer.to_department
+        else:
+            asset.current_department = None
 
     if has_open_maintenance:
         next_status = _resolve_asset_status(

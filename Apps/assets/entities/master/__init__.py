@@ -2,7 +2,9 @@ from . import asset_category  # noqa: F401
 from . import asset_assignment  # noqa: F401
 from . import asset_condition  # noqa: F401
 from . import asset_location  # noqa: F401
+from . import asset_maintenance  # noqa: F401
 from . import asset_status  # noqa: F401
+from . import asset_transfer  # noqa: F401
 from . import asset_vendor  # noqa: F401
 from . import asset  # noqa: F401
 from . import asset_type  # noqa: F401

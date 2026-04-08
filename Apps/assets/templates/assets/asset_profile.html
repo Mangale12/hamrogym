@@ -76,6 +76,9 @@
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#asset-maintenance" type="button">Maintenance Records</button>
       </li>
       <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#asset-transfers" type="button">Transfer History</button>
+      </li>
+      <li class="nav-item" role="presentation">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#asset-documents" type="button">Documents</button>
       </li>
     </ul>
@@ -172,6 +175,41 @@
               </tr>
               {% empty %}
               <tr><td colspan="8" class="text-center text-muted">No maintenance records found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="asset-transfers">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>From Location</th>
+                <th>To Location</th>
+                <th>From Department</th>
+                <th>To Department</th>
+                <th>Transferred By</th>
+                <th>Received By</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in transfer_history %}
+              <tr>
+                <td>{{ item.transfer_date }}</td>
+                <td>{{ item.from_location|default:"-" }}</td>
+                <td>{{ item.to_location|default:"-" }}</td>
+                <td>{{ item.from_department|default:"-" }}</td>
+                <td>{{ item.to_department|default:"-" }}</td>
+                <td>{{ item.transferred_by|default:"-" }}</td>
+                <td>{{ item.received_by|default:"-" }}</td>
+                <td>{{ item.remarks|default:"-" }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="8" class="text-center text-muted">No transfer history found.</td></tr>
               {% endfor %}
             </tbody>
           </table>

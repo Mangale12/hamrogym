@@ -1,4 +1,4 @@
-from core.models import FiscalYear
+from core.models import Branch, FiscalYear
 from core.helpers.helper import get_calendar_type, get_organization_settings
 
 
@@ -6,6 +6,11 @@ FISCAL_YEAR_SESSION_KEYS = (
     "fiscal_year_id",
     "active_fiscal_year_id",
     "current_fiscal_year_id",
+)
+BRANCH_SESSION_KEYS = (
+    "branch_id",
+    "active_branch_id",
+    "current_branch_id",
 )
 
 
@@ -32,6 +37,19 @@ def get_current_fiscal_year_id(request):
 
     active_fiscal_year = FiscalYear.objects.filter(is_active=True).order_by("-start_date", "-id").first()
     return active_fiscal_year.pk if active_fiscal_year else None
+
+
+def get_current_branch_id(request):
+    branch_id = get_session_int(request, BRANCH_SESSION_KEYS)
+    if branch_id:
+        return branch_id
+
+    active_branch = Branch.objects.filter(is_active=True).order_by("organization__name", "name", "id").first()
+    if active_branch:
+        return active_branch.pk
+
+    branch = Branch.objects.order_by("organization__name", "name", "id").first()
+    return branch.pk if branch else None
 
 
 def organization_context(request):

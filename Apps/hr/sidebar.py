@@ -22,6 +22,18 @@ SIDEBAR_ITEMS = [
                 "match": "/core/designations",
             },
             {
+                "label": "Team Roles",
+                "icon": "shield",
+                "url_name": "team_role_list",
+                "match": "/core/team-roles",
+            },
+            {
+                "label": "Teams",
+                "icon": "git-branch",
+                "url_name": "team_list",
+                "match": "/core/teams",
+            },
+            {
                 "label": "Employment Types",
                 "icon": "users",
                 "url_name": "employeement_type_list",
@@ -38,7 +50,7 @@ SIDEBAR_ITEMS = [
                 "icon": "repeat",
                 "url_name": "employee_shift_list",
                 "match": "/core/employee-shifts",
-            },
+            }
         ],
     },
     {

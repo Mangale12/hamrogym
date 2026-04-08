@@ -18,7 +18,7 @@ from django.views.generic import TemplateView
 
 from core.config import EntityConfig
 from core.helpers.helper import encode_date_for_display
-from core.helpers.context import get_current_fiscal_year_id
+from core.helpers.context import get_current_branch_id, get_current_fiscal_year_id
 
 
 def _serialize_value(value, request=None):
@@ -155,6 +155,13 @@ def _assign_context_defaults(request, obj, form) -> None:
         else:
             error_field = "fiscal_year" if "fiscal_year" in form.fields else None
             form.add_error(error_field, "Active fiscal year not found in session.")
+    if hasattr(obj, "branch_id") and not getattr(obj, "branch_id", None):
+        branch_id = get_current_branch_id(request)
+        if branch_id:
+            obj.branch_id = branch_id
+        else:
+            error_field = "branch" if "branch" in form.fields else None
+            form.add_error(error_field, "Active branch not found in session.")
 
 
 def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:

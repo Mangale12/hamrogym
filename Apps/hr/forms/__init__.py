@@ -2,6 +2,8 @@ from .job_requisition_form import JobRequisitionForm
 from .attendance_form import AttendanceAdjustmentForm, AttendanceDashboardForm
 from .department_form import DepartmentForm
 from .designation_form import DesignationForm
+from .team_role_form import TeamRoleForm
+from .team_form import TeamForm
 from .employee_form import EmployeeForm
 from .hire_form import HireForm
 from .job_offer_form import JobOfferForm, JobOfferAttachmentForm
