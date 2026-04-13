@@ -38,6 +38,7 @@ class EntityConfig:
     show_create: bool = True
     show_view: bool = True
     singleton: bool = False
+    datatable_options: Dict[str, Any] = field(default_factory=dict)
 
     @property
     def url_base(self) -> str:

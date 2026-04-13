@@ -4,7 +4,13 @@ from ..models import TaskStatus
 
 TASK_STATUS_COLUMNS = [
     ("id", "id"),
-    # TODO: add columns
+    ("name", "name"),
+    ("code", "code"),
+    ("badge_color", "badge_color"),
+    ("sequence", "sequence"),
+    ("is_default", "is_default"),
+    ("is_closed", "is_closed"),
+    ("is_cancelled", "is_cancelled"),
 ]
 
 
@@ -12,8 +18,16 @@ class TaskStatusDataTableView(BaseDataTableView):
     model = TaskStatus
     columns = TASK_STATUS_COLUMNS
     searchable_columns = [
-        # TODO: add searchable fields
+        "name",
+        "code",
+        "badge_color",
     ]
     orderable_columns = [
-        # TODO: add orderable fields
+        "name",
+        "code",
+        "badge_color",
+        "sequence",
+        "is_default",
+        "is_closed",
+        "is_cancelled",
     ]

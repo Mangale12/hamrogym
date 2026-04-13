@@ -7,5 +7,11 @@ class TaskStatusForm(forms.ModelForm):
     class Meta:
         model = TaskStatus
         fields = [
-            # TODO: add fields
+            "name",
+            "code",
+            "badge_color",
+            "sequence",
+            "is_default",
+            "is_closed",
+            "is_cancelled",
         ]

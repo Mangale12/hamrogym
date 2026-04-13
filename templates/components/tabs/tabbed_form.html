@@ -32,11 +32,13 @@
           {% include "components/dynamic_section/table.html" with section=section.section section_name=section.name %}
         {% endfor %}
       {% endif %}
-      <div class="d-flex justify-content-end mt-3">
-        <button type="button" class="btn btn-sm btn-primary tab-save-btn" data-tab="{{ tab.key }}">
-          Save {{ tab.label }}
-        </button>
-      </div>
+      {% if tab.show_save|default:True %}
+        <div class="d-flex justify-content-end mt-3">
+          <button type="button" class="btn btn-sm btn-primary tab-save-btn" data-tab="{{ tab.key }}">
+            Save {{ tab.label }}
+          </button>
+        </div>
+      {% endif %}
     </div>
   {% endfor %}
 </div>

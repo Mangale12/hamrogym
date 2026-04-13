@@ -8,7 +8,7 @@ from typing import Dict, List, Type
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -37,7 +37,21 @@ def _serialize_form_instance(form, request=None) -> Dict[str, object]:
     data = {}
     instance = form.instance
     for name, field in form.fields.items():
-        if hasattr(instance, name):
+        model_field = None
+        if instance is not None:
+            try:
+                model_field = instance._meta.get_field(name)
+            except Exception:
+                model_field = None
+
+        if model_field is not None and getattr(model_field, "many_to_many", False):
+            if instance and instance.pk:
+                value = list(getattr(instance, name).values_list("pk", flat=True))
+            else:
+                value = form.initial.get(name, field.initial)
+                if value in (None, ""):
+                    value = []
+        elif hasattr(instance, name):
             value = getattr(instance, name, None)
             if value in (None, ""):
                 if name in form.initial:
@@ -204,6 +218,12 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "dynamic_sections": dynamic_sections,
                     "dynamic_section_entries": list(dynamic_sections.items()),
                     "datatable_url": reverse(f"{entity.name}_datatable"),
+                    "datatable_options": entity.datatable_options or {},
+                    "datatable_wrapper_class": (entity.datatable_options or {}).get("wrapper_class", ""),
+                    "datatable_table_class": (entity.datatable_options or {}).get(
+                        "table_class",
+                        "table table-striped table-bordered datatable",
+                    ),
                     "create_url": reverse(f"{entity.name}_create"),
                     "update_url_template": reverse(f"{entity.name}_update", args=[0]).replace(
                         "/0/", "/{id}/"

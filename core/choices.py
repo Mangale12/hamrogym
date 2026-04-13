@@ -158,6 +158,17 @@ PRIORITY_CHOICES = [
     ("high", "High"),
 ]
 
+BADGE_COLOR_CHOICES = [
+    ("primary", "Primary"),
+    ("secondary", "Secondary"),
+    ("success", "Success"),
+    ("danger", "Danger"),
+    ("warning", "Warning"),
+    ("info", "Info"),
+    ("light", "Light"),
+    ("dark", "Dark"),
+]
+
 
 SCREENING_QUESTION_TYPE_CHOICES = [
     ("multiple_choice", "Multiple Choice"),

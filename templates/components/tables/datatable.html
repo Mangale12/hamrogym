@@ -1,14 +1,21 @@
 {# Apps/datatables/templates/datatables/base.html #}
 {% load static %}
 
-<div class="datatable-container">
+<div class="datatable-container {{ wrapper_class|default:datatable_wrapper_class|default:'' }}">
     <style>
         #{{ table_id|default:'dataTable' }} tbody tr.datatable-overdue-row > td {
             background-color: #fff3cd !important;
         }
     </style>
+    {% if datatable_options %}
+      {% with table_id_final=table_id|default:"dataTable" %}
+        {% with options_id="datatable-options-"|add:table_id_final %}
+          {{ datatable_options|json_script:options_id }}
+        {% endwith %}
+      {% endwith %}
+    {% endif %}
     <table id="{{ table_id|default:'dataTable' }}"
-           class="table table-striped table-bordered datatable"
+           class="{{ table_class|default:datatable_table_class }}"
            style="width:100%">
         <thead>
             <tr>
@@ -29,13 +36,25 @@
 {% block datatable_scripts %}
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
 
 <script>
 $(document).ready(function() {
+    const optionsEl = document.getElementById('datatable-options-{{ table_id|default:"dataTable" }}');
+    const options = optionsEl ? JSON.parse(optionsEl.textContent) : {};
+
     const tableInstance = $('#{{ table_id|default:"dataTable" }}').DataTable({
         processing: true,
-        serverSide: true,
+        serverSide: options.server_side !== undefined ? options.server_side : true,
         ajax: {
             url: "{{ ajax_url }}",
             cache: false
@@ -67,7 +86,21 @@ $(document).ready(function() {
                 $(row).addClass('datatable-overdue-row');
             }
         },
-        pageLength: {{ page_length|default:10 }},
+        pageLength: options.page_length !== undefined ? options.page_length : {{ page_length|default:10 }},
+        lengthMenu: options.length_menu || [10, 25, 50, 100],
+        scrollX: options.scroll_x !== undefined ? options.scroll_x : false,
+        scrollY: options.scroll_y || null,
+        scrollCollapse: options.scroll_collapse !== undefined ? options.scroll_collapse : false,
+        responsive: options.responsive !== undefined ? options.responsive : false,
+        stateSave: options.state_save !== undefined ? options.state_save : false,
+        paging: options.paging !== undefined ? options.paging : true,
+        searching: options.searching !== undefined ? options.searching : true,
+        ordering: options.ordering !== undefined ? options.ordering : true,
+        info: options.info !== undefined ? options.info : true,
+        autoWidth: options.auto_width !== undefined ? options.auto_width : true,
+        dom: options.dom || 'Bfrtip',
+        order: options.order || undefined,
+        buttons: options.buttons || ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
         language: {
             processing: "Loading...",
             search: "Search:",

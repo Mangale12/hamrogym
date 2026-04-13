@@ -1,6 +1,21 @@
 from django.urls import path
 
 from core.registry import get_entities
+from Apps.task.views import (
+    ChecklistTemplateItemsView,
+    TaskBillingGenerateView,
+    TaskBillingStatusUpdateView,
+    TaskCommentAddView,
+    TaskCommentUpdateView,
+    TaskChecklistAddView,
+    TaskChecklistUpdateView,
+    TaskDetailPageView,
+    TaskKanbanStatusUpdateView,
+    TaskMemberAddView,
+    TaskBoardView,
+    TaskTimeLogApprovalView,
+    TaskTimeLogAddView,
+)
 from core.views.entities import build_entity_views
 from core.views.calendar_switch import CalendarSwitchView
 
@@ -8,6 +23,63 @@ urlpatterns = []
 
 urlpatterns.append(
     path("calendar/switch/", CalendarSwitchView.as_view(), name="calendar_switch")
+)
+urlpatterns.append(
+    path(
+        "tasks/checklist-template-items/",
+        ChecklistTemplateItemsView.as_view(),
+        name="task_checklist_template_items",
+    )
+)
+urlpatterns.append(
+    path("tasks/<int:pk>/view/", TaskDetailPageView.as_view(), name="task_view")
+)
+urlpatterns.append(path("tasks/board/", TaskBoardView.as_view(), name="task_board"))
+urlpatterns.append(
+    path("tasks/board/update-status/", TaskKanbanStatusUpdateView.as_view(), name="task_kanban_update_status")
+)
+urlpatterns.append(
+    path("tasks/<int:pk>/checklist/add/", TaskChecklistAddView.as_view(), name="task_checklist_add")
+)
+urlpatterns.append(
+    path(
+        "tasks/<int:pk>/checklist/<int:item_id>/update/",
+        TaskChecklistUpdateView.as_view(),
+        name="task_checklist_update",
+    )
+)
+urlpatterns.append(
+    path("tasks/<int:pk>/members/add/", TaskMemberAddView.as_view(), name="task_member_add")
+)
+urlpatterns.append(
+    path("tasks/<int:pk>/comments/add/", TaskCommentAddView.as_view(), name="task_comment_add")
+)
+urlpatterns.append(
+    path(
+        "tasks/<int:pk>/comments/<int:comment_id>/update/",
+        TaskCommentUpdateView.as_view(),
+        name="task_comment_update",
+    )
+)
+urlpatterns.append(
+    path("tasks/<int:pk>/timelogs/add/", TaskTimeLogAddView.as_view(), name="task_timelog_add")
+)
+urlpatterns.append(
+    path(
+        "tasks/<int:pk>/timelogs/<int:log_id>/approve/",
+        TaskTimeLogApprovalView.as_view(),
+        name="task_timelog_approve",
+    )
+)
+urlpatterns.append(
+    path("tasks/<int:pk>/billings/generate/", TaskBillingGenerateView.as_view(), name="task_billing_generate")
+)
+urlpatterns.append(
+    path(
+        "tasks/<int:pk>/billings/<int:billing_id>/status/",
+        TaskBillingStatusUpdateView.as_view(),
+        name="task_billing_status_update",
+    )
 )
 
 for entity in get_entities():

@@ -1,0 +1,653 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Task Detail | HamroGym{% endblock %}
+{% block page_title %}Task Detail{% endblock %}
+
+{% block content %}
+<div id="task-detail-root" data-task-url="{% url 'task_view' task.id %}">
+<div id="task-detail-alert" class="d-none"></div>
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-0">{{ task.code }} {{ task.title }}</h5>
+      <small class="text-muted">Status: {{ task.status }} | Priority: {{ task.get_priority_display }} | Severity: {{ task.get_severity_display }}</small>
+    </div>
+    <a href="/core/tasks/" class="btn btn-sm btn-outline-secondary">Back to Tasks</a>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6"><strong>Project:</strong> {{ task.project|default:"-" }}</div>
+      <div class="col-md-6"><strong>Epic:</strong> {{ task.epic|default:"-" }}</div>
+      <div class="col-md-6"><strong>Module:</strong> {{ task.module|default:"-" }}</div>
+      <div class="col-md-6"><strong>Type:</strong> {{ task.task_type|default:"-" }}</div>
+      <div class="col-md-6"><strong>Assigned To:</strong> {{ task.assignee|default:"-" }}</div>
+      <div class="col-md-6"><strong>Team:</strong> {{ task.team|default:"-" }}</div>
+      <div class="col-md-6"><strong>Start Date:</strong> {{ task.start_date|default:"-" }}</div>
+      <div class="col-md-6"><strong>Due Date:</strong> {{ task.due_date|default:"-" }}</div>
+      <div class="col-md-6"><strong>Billable:</strong> {{ task.is_billable|yesno:"Yes,No" }}</div>
+      <div class="col-md-6"><strong>Billing Status:</strong> {{ task.get_billing_status_display }}</div>
+      <div class="col-md-6"><strong>Billable To:</strong> {{ task.get_billable_to_display|default:"-" }}</div>
+      <div class="col-md-6"><strong>Bill To:</strong> {{ task.billing_company_name|default:"-" }}</div>
+      <div class="col-md-6"><strong>Billable Department:</strong> {{ task.billable_department|default:"-" }}</div>
+      <div class="col-md-6"><strong>Currency:</strong> {{ task.currency.code|default:"-" }}</div>
+      <div class="col-md-6"><strong>Billing Type:</strong> {% if task.is_billable %}{{ task.get_billing_type_display }}{% else %}-{% endif %}</div>
+      <div class="col-md-6"><strong>Rate Per Hour:</strong> {% if task.is_billable %}{{ task.rate_per_hour }}{% else %}-{% endif %}</div>
+      <div class="col-md-6"><strong>Fixed Amount:</strong> {% if task.is_billable %}{{ task.fixed_amount }}{% else %}-{% endif %}</div>
+      <div class="col-md-6"><strong>Billing Amount:</strong> {% if task.is_billable %}{{ task.billing_amount }}{% else %}-{% endif %}</div>
+      <div class="col-md-6"><strong>Invoice Ref:</strong> {{ task.invoice_reference|default:"-" }}</div>
+      <div class="col-12">
+        <strong>Description:</strong>
+        <div class="mt-2">{{ task.description|default:"-" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-body">
+    <ul class="nav nav-tabs" id="taskTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">Overview</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="checklist-tab" data-bs-toggle="tab" data-bs-target="#checklist" type="button" role="tab">Checklist</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button" role="tab">Members</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="attachments-tab" data-bs-toggle="tab" data-bs-target="#attachments" type="button" role="tab">Attachments</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab">Comments</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="timelog-tab" data-bs-toggle="tab" data-bs-target="#timelog" type="button" role="tab">Time Logs</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button" role="tab">Billing</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab">Activity</button>
+      </li>
+    </ul>
+
+    <div class="tab-content pt-3">
+      <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-md-6"><strong>Project:</strong> {{ task.project|default:"-" }}</div>
+          <div class="col-md-6"><strong>Epic:</strong> {{ task.epic|default:"-" }}</div>
+          <div class="col-md-6"><strong>Module:</strong> {{ task.module|default:"-" }}</div>
+          <div class="col-md-6"><strong>Type:</strong> {{ task.task_type|default:"-" }}</div>
+          <div class="col-md-6"><strong>Assigned To:</strong> {{ task.assignee|default:"-" }}</div>
+          <div class="col-md-6"><strong>Team:</strong> {{ task.team|default:"-" }}</div>
+          <div class="col-md-6"><strong>Start Date:</strong> {{ task.start_date|default:"-" }}</div>
+          <div class="col-md-6"><strong>Due Date:</strong> {{ task.due_date|default:"-" }}</div>
+          <div class="col-md-6"><strong>Billable:</strong> {{ task.is_billable|yesno:"Yes,No" }}</div>
+          <div class="col-md-6"><strong>Billing Status:</strong> {{ task.get_billing_status_display }}</div>
+          <div class="col-md-6"><strong>Billable To:</strong> {{ task.get_billable_to_display|default:"-" }}</div>
+          <div class="col-md-6"><strong>Bill To:</strong> {{ task.billing_company_name|default:"-" }}</div>
+          <div class="col-md-6"><strong>Billable Department:</strong> {{ task.billable_department|default:"-" }}</div>
+          <div class="col-md-6"><strong>Currency:</strong> {{ task.currency.code|default:"-" }}</div>
+          <div class="col-md-6"><strong>Billing Type:</strong> {% if task.is_billable %}{{ task.get_billing_type_display }}{% else %}-{% endif %}</div>
+          <div class="col-md-6"><strong>Rate Per Hour:</strong> {% if task.is_billable %}{{ task.rate_per_hour }}{% else %}-{% endif %}</div>
+          <div class="col-md-6"><strong>Fixed Amount:</strong> {% if task.is_billable %}{{ task.fixed_amount }}{% else %}-{% endif %}</div>
+          <div class="col-md-6"><strong>Billing Amount:</strong> {% if task.is_billable %}{{ task.billing_amount }}{% else %}-{% endif %}</div>
+          <div class="col-md-6"><strong>Invoice Ref:</strong> {{ task.invoice_reference|default:"-" }}</div>
+          <div class="col-12">
+            <strong>Description:</strong>
+            <div class="mt-2">{{ task.description|default:"-" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="checklist" role="tabpanel">
+        <form class="task-ajax-form row g-2 mb-3" method="post" action="{% url 'task_checklist_add' task.id %}" data-task-tab="checklist">
+          {% csrf_token %}
+          <div class="col-md-6">
+            <input type="text" class="form-control" name="name" placeholder="Checklist item" required>
+          </div>
+          <div class="col-md-2">
+            <input type="number" class="form-control" name="order" placeholder="Order">
+          </div>
+          <div class="col-md-3">
+            <input type="text" class="form-control" name="remarks" placeholder="Remarks">
+          </div>
+          <div class="col-md-1 d-grid">
+            <button class="btn btn-primary" type="submit">Add</button>
+          </div>
+        </form>
+
+        <ul class="list-group">
+          {% for item in task.checklist_items.all %}
+          <li class="list-group-item">
+            <form class="task-ajax-form row g-2 align-items-center" method="post" action="{% url 'task_checklist_update' task.id item.id %}" data-task-tab="checklist">
+              {% csrf_token %}
+              <div class="col-md-5">
+                <input type="text" class="form-control" name="name" value="{{ item.name }}">
+              </div>
+              <div class="col-md-2">
+                <input type="number" class="form-control" name="order" value="{{ item.order }}">
+              </div>
+              <div class="col-md-3">
+                <input type="text" class="form-control" name="remarks" value="{{ item.remarks }}">
+              </div>
+              <div class="col-md-1 form-check text-center">
+                <input class="form-check-input" type="checkbox" name="is_completed" {% if item.is_completed %}checked{% endif %}>
+              </div>
+              <div class="col-md-1 d-grid">
+                <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+              </div>
+            </form>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">No checklist items.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="tab-pane fade" id="members" role="tabpanel">
+        <form class="task-ajax-form row g-2 mb-3" method="post" action="{% url 'task_member_add' task.id %}" data-task-tab="members">
+          {% csrf_token %}
+          <div class="col-md-6">
+            <select class="form-select" name="user" data-url="{% url 'user_select' %}" required></select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" name="role">
+              {% for val, label in role_choices %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 d-grid">
+            <button class="btn btn-primary" type="submit">Add</button>
+          </div>
+        </form>
+        <ul class="list-group">
+          {% for member in task.members.all %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ member.user }}</span>
+            <span class="badge bg-secondary">{{ member.get_role_display|default:member.role }}</span>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">No members.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="tab-pane fade" id="attachments" role="tabpanel">
+        <ul class="list-group">
+          {% for att in task.attachments.all %}
+          <li class="list-group-item">
+            <a href="{{ att.file.url }}">{{ att.file_name|default:att.file.name }}</a>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">No attachments.</li>
+          {% endfor %}
+        </ul>
+        <div class="alert alert-info mt-3">Attachments are managed from the task modal for now.</div>
+      </div>
+
+      <div class="tab-pane fade" id="comments" role="tabpanel">
+        <form class="task-ajax-form card card-body mb-3" method="post" action="{% url 'task_comment_add' task.id %}" data-task-tab="comments">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">New Comment</label>
+              <textarea class="form-control" name="content" rows="3" placeholder="Write your comment here..." required></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Attachment</label>
+              <select class="form-select" name="attachment">
+                <option value="">No attachment</option>
+                {% for att in task.attachments.all %}
+                <option value="{{ att.id }}">{{ att.file_name|default:att.file.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <button class="btn btn-primary" type="submit">Add Comment</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="d-grid gap-3">
+          {% for comment in root_comments %}
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <strong>{{ comment.user }}</strong>
+                  <div class="text-muted small">{{ comment.created_at }}</div>
+                </div>
+                {% if comment.parent_comment %}
+                <span class="badge bg-secondary">Reply</span>
+                {% endif %}
+              </div>
+
+              <div class="mb-2">{{ comment.content|linebreaksbr }}</div>
+
+              {% if comment.attachment %}
+              <div class="mb-3">
+                <a href="{{ comment.attachment.file.url }}" target="_blank">{{ comment.attachment.file_name|default:comment.attachment.file.name }}</a>
+              </div>
+              {% endif %}
+
+              {% if comment.user_id == request.user.id %}
+              <form class="task-ajax-form row g-2 mb-3" method="post" action="{% url 'task_comment_update' task.id comment.id %}" data-task-tab="comments">
+                {% csrf_token %}
+                <div class="col-12">
+                  <textarea class="form-control" name="content" rows="2" required>{{ comment.content }}</textarea>
+                </div>
+                <div class="col-md-6">
+                  <select class="form-select" name="attachment">
+                    <option value="">No attachment</option>
+                    {% for att in task.attachments.all %}
+                    <option value="{{ att.id }}" {% if comment.attachment_id == att.id %}selected{% endif %}>{{ att.file_name|default:att.file.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                  <button class="btn btn-outline-primary btn-sm" type="submit">Update Comment</button>
+                </div>
+              </form>
+              {% endif %}
+
+              <form class="task-ajax-form row g-2" method="post" action="{% url 'task_comment_add' task.id %}" data-task-tab="comments">
+                {% csrf_token %}
+                <input type="hidden" name="parent_comment" value="{{ comment.id }}">
+                <div class="col-12">
+                  <textarea class="form-control" name="content" rows="2" placeholder="Reply to this comment..." required></textarea>
+                </div>
+                <div class="col-md-6">
+                  <select class="form-select" name="attachment">
+                    <option value="">No attachment</option>
+                    {% for att in task.attachments.all %}
+                    <option value="{{ att.id }}">{{ att.file_name|default:att.file.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                  <button class="btn btn-outline-secondary btn-sm" type="submit">Reply</button>
+                </div>
+              </form>
+
+              {% if comment.replies.all %}
+              <div class="border-top mt-3 pt-3">
+                {% for reply in comment.replies.all %}
+                <div class="bg-light rounded p-3 mb-2">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                      <strong>{{ reply.user }}</strong>
+                      <div class="text-muted small">{{ reply.created_at }}</div>
+                    </div>
+                    <span class="badge bg-secondary">Reply</span>
+                  </div>
+
+                  <div class="mb-2">{{ reply.content|linebreaksbr }}</div>
+
+                  {% if reply.attachment %}
+                  <div class="mb-2">
+                    <a href="{{ reply.attachment.file.url }}" target="_blank">{{ reply.attachment.file_name|default:reply.attachment.file.name }}</a>
+                  </div>
+                  {% endif %}
+
+                  {% if reply.user_id == request.user.id %}
+                  <form class="task-ajax-form row g-2" method="post" action="{% url 'task_comment_update' task.id reply.id %}" data-task-tab="comments">
+                    {% csrf_token %}
+                    <div class="col-12">
+                      <textarea class="form-control" name="content" rows="2" required>{{ reply.content }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                      <select class="form-select" name="attachment">
+                        <option value="">No attachment</option>
+                        {% for att in task.attachments.all %}
+                        <option value="{{ att.id }}" {% if reply.attachment_id == att.id %}selected{% endif %}>{{ att.file_name|default:att.file.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                      <button class="btn btn-outline-primary btn-sm" type="submit">Update Reply</button>
+                    </div>
+                  </form>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="alert alert-light border text-muted mb-0">No comments yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="timelog" role="tabpanel">
+        <form class="task-ajax-form row g-2 mb-3" method="post" action="{% url 'task_timelog_add' task.id %}" data-task-tab="timelog">
+          {% csrf_token %}
+          <div class="col-md-3">
+            <select class="form-select" name="user" data-url="{% url 'user_select' %}" required></select>
+          </div>
+          <div class="col-md-3">
+            <input type="datetime-local" class="form-control" name="started_at" required>
+          </div>
+          <div class="col-md-3">
+            <input type="datetime-local" class="form-control" name="stopped_at" required>
+          </div>
+          <div class="col-md-3">
+            <input type="number" step="0.25" class="form-control" name="duration_hours" placeholder="Hours">
+          </div>
+          <div class="col-md-3 form-check d-flex align-items-center ps-4">
+            <input class="form-check-input me-2" type="checkbox" name="is_billable" id="timelog_billable" {% if task.is_billable %}checked{% endif %}>
+            <label class="form-check-label" for="timelog_billable">Billable Time</label>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" name="rate_type">
+              {% for value, label in time_log_rate_type_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <input type="number" step="0.01" min="0" class="form-control" name="hourly_rate" placeholder="Rate snapshot">
+          </div>
+          <div class="col-md-3 d-grid">
+            <button class="btn btn-primary" type="submit">Add</button>
+          </div>
+          <div class="col-12">
+            <input type="text" class="form-control" name="description" placeholder="Description">
+          </div>
+        </form>
+        <ul class="list-group">
+          {% for log in task.time_logs.all %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+              <div>
+                <div><strong>{{ log.user }}</strong> on {{ log.work_date|default:log.started_at|date:"Y-m-d" }}</div>
+                <div class="text-muted small">{{ log.start_time|default:log.started_at|time:"H:i" }} to {{ log.end_time|default:log.stopped_at|time:"H:i" }}</div>
+                <div class="small mt-1">
+                  Hours: {{ log.hours_spent }} |
+                  Billable: {{ log.is_billable|yesno:"Yes,No" }} |
+                  Rate: {{ log.hourly_rate }} |
+                  Amount: {{ log.amount }} |
+                  Status: {{ log.get_approval_status_display }}
+                </div>
+                {% if log.task_billing %}
+                <div class="small text-success">Included in billing #{{ log.task_billing.id }}</div>
+                {% endif %}
+              </div>
+              <form class="task-ajax-form row g-2 align-items-end" method="post" action="{% url 'task_timelog_approve' task.id log.id %}" data-task-tab="timelog">
+                {% csrf_token %}
+                <div class="col-auto">
+                  <input type="number" step="0.01" min="0" class="form-control form-control-sm" name="approved_hours" value="{{ log.approved_hours|default:log.hours_spent }}">
+                </div>
+                <div class="col-auto">
+                  <select class="form-select form-select-sm" name="approval_status">
+                    {% for value, label in time_log_approval_choices %}
+                    <option value="{{ value }}" {% if log.approval_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <button class="btn btn-outline-primary btn-sm" type="submit">Update</button>
+                </div>
+              </form>
+            </div>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">No time logs.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="tab-pane fade" id="billing" role="tabpanel">
+        <form class="task-ajax-form mb-3" method="post" action="{% url 'task_billing_generate' task.id %}" data-task-tab="billing">
+          {% csrf_token %}
+          <button class="btn btn-primary" type="submit">Generate Billing From Approved Logs</button>
+        </form>
+        <ul class="list-group">
+          {% for billing in task.billings.all %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+              <div>
+                <div><strong>Billing #{{ billing.id }}</strong> {% if billing.user %}for {{ billing.user }}{% endif %}</div>
+                <div class="small text-muted">
+                  Type: {{ billing.get_billing_type_display }} |
+                  Hours: {{ billing.total_hours }} |
+                  Rate: {{ billing.rate }} |
+                  Amount: {{ billing.total_amount }}{% if billing.currency %} {{ billing.currency.code }}{% endif %}
+                </div>
+                <div class="small">
+                  Status: {{ billing.get_status_display }}
+                  {% if billing.approved_by %}
+                  | Approved By: {{ billing.approved_by }}
+                  {% endif %}
+                  {% if billing.approved_at %}
+                  | Approved At: {{ billing.approved_at }}
+                  {% endif %}
+                </div>
+              </div>
+              <form class="task-ajax-form row g-2 align-items-end" method="post" action="{% url 'task_billing_status_update' task.id billing.id %}" data-task-tab="billing">
+                {% csrf_token %}
+                <div class="col-auto">
+                  <select class="form-select form-select-sm" name="status">
+                    {% for value, label in task_billing_status_choices %}
+                    <option value="{{ value }}" {% if billing.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <button class="btn btn-outline-primary btn-sm" type="submit">Update</button>
+                </div>
+              </form>
+            </div>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">No billing records generated yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="tab-pane fade" id="activity" role="tabpanel">
+        <ul class="list-group">
+          {% for activity in task.activities.all %}
+          <li class="list-group-item">
+            {{ activity.user }} — {{ activity.action }} ({{ activity.created_at }})
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">No activity yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  $(document).ready(function () {
+    function getCookie(name) {
+      const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='));
+      return cookieValue ? decodeURIComponent(cookieValue.split('=')[1]) : '';
+    }
+
+    function initializeSelects(scope) {
+      if (window.initializeModalSelect2) {
+        window.initializeModalSelect2($(scope || document));
+      }
+    }
+
+    function showTaskAlert(root, type, message) {
+      const alertEl = root.querySelector('#task-detail-alert');
+      if (!alertEl) {
+        return;
+      }
+      if (!message) {
+        alertEl.className = 'd-none';
+        alertEl.innerHTML = '';
+        return;
+      }
+      alertEl.className = `alert alert-${type} mb-3`;
+      alertEl.textContent = message;
+    }
+
+    function clearFormErrors(form) {
+      const existing = form.querySelector('.task-form-errors');
+      if (existing) {
+        existing.remove();
+      }
+      form.querySelectorAll('.is-invalid').forEach(function (field) {
+        field.classList.remove('is-invalid');
+      });
+    }
+
+    function showFormErrors(form, errors) {
+      const messages = [];
+      Object.entries(errors || {}).forEach(function ([fieldName, fieldErrors]) {
+        const normalizedErrors = Array.isArray(fieldErrors) ? fieldErrors : [fieldErrors];
+        messages.push(...normalizedErrors);
+        if (fieldName === '__all__') {
+          return;
+        }
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+          field.classList.add('is-invalid');
+        }
+      });
+
+      if (!messages.length) {
+        return;
+      }
+
+      const errorBox = document.createElement('div');
+      errorBox.className = 'task-form-errors alert alert-danger py-2';
+      errorBox.innerHTML = messages.map(function (message) {
+        return `<div>${message}</div>`;
+      }).join('');
+      form.prepend(errorBox);
+    }
+
+    function activateTaskTab(tabId) {
+      if (!window.bootstrap || !tabId) {
+        return;
+      }
+      const hash = `#${tabId}`;
+      const trigger = document.querySelector(`[data-bs-target="${hash}"]`);
+      if (trigger) {
+        bootstrap.Tab.getOrCreateInstance(trigger).show();
+      }
+    }
+
+    function bindTabHistory(root) {
+      root.querySelectorAll('#taskTabs [data-bs-toggle="tab"]').forEach(function (tabTrigger) {
+        if (tabTrigger.dataset.taskTabBound === 'true') {
+          return;
+        }
+        tabTrigger.dataset.taskTabBound = 'true';
+        tabTrigger.addEventListener('shown.bs.tab', function (event) {
+          const target = event.target.getAttribute('data-bs-target');
+          if (target) {
+            window.history.replaceState(null, '', target);
+          }
+        });
+      });
+    }
+
+    async function refreshTaskDetail(root, tabId, message, alertType) {
+      const response = await fetch(root.dataset.taskUrl, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const nextRoot = doc.querySelector('#task-detail-root');
+      if (!nextRoot) {
+        window.location.reload();
+        return;
+      }
+
+      root.replaceWith(nextRoot);
+      initializeTaskDetail(nextRoot);
+      if (tabId) {
+        activateTaskTab(tabId);
+      }
+      if (message) {
+        showTaskAlert(nextRoot, alertType || 'success', message);
+      }
+    }
+
+    function initializeTaskDetail(root) {
+      if (!root) {
+        return;
+      }
+
+      initializeSelects(root);
+      bindTabHistory(root);
+
+      const hash = window.location.hash;
+      if (hash) {
+        const trigger = root.querySelector(`[data-bs-target="${hash}"]`);
+        if (trigger) {
+          bootstrap.Tab.getOrCreateInstance(trigger).show();
+        }
+      }
+
+      root.querySelectorAll('form.task-ajax-form').forEach(function (form) {
+        if (form.dataset.ajaxBound === 'true') {
+          return;
+        }
+        form.dataset.ajaxBound = 'true';
+
+        form.addEventListener('submit', async function (event) {
+          event.preventDefault();
+          clearFormErrors(form);
+          showTaskAlert(root, 'success', '');
+
+          const submitButton = form.querySelector('[type="submit"]');
+          if (submitButton) {
+            submitButton.disabled = true;
+          }
+
+          try {
+            const response = await fetch(form.action, {
+              method: 'POST',
+              body: new FormData(form),
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+              }
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+              showFormErrors(form, data.errors || {});
+              showTaskAlert(root, 'danger', data.message || 'Unable to save changes.');
+              return;
+            }
+
+            await refreshTaskDetail(
+              root,
+              data.tab_id || form.dataset.taskTab,
+              data.message || 'Saved successfully.',
+              'success'
+            );
+          } catch (error) {
+            showTaskAlert(root, 'danger', 'Something went wrong while saving. Please try again.');
+          } finally {
+            if (submitButton) {
+              submitButton.disabled = false;
+            }
+          }
+        });
+      });
+    }
+
+    initializeTaskDetail(document.getElementById('task-detail-root'));
+  });
+</script>
+{% endblock %}

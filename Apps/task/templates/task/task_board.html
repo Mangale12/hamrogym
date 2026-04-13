@@ -1,0 +1,158 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Task Board | HamroGym{% endblock %}
+{% block page_title %}Task Board{% endblock %}
+
+{% block content %}
+<style>
+  .kanban-wrapper {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .kanban-board {
+    display: flex;
+    gap: 16px;
+    min-height: 70vh;
+  }
+  .kanban-column {
+    min-width: 300px;
+    max-width: 320px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+  .kanban-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid #dee2e6;
+    background: #ffffff;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+  }
+  .kanban-body {
+    padding: 12px;
+    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+  }
+  .kanban-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: grab;
+  }
+  .kanban-card.dragging {
+    opacity: 0.6;
+  }
+  .kanban-card small {
+    color: #6c757d;
+  }
+  .kanban-drop {
+    border: 2px dashed #0d6efd;
+    background: rgba(13, 110, 253, 0.05);
+  }
+</style>
+
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Task Board</h5>
+    <a href="/core/tasks/" class="btn btn-sm btn-outline-secondary">Back to Tasks</a>
+  </div>
+  <div class="card-body">
+    <div class="kanban-wrapper">
+      <div class="kanban-board" id="kanbanBoard">
+        {% for column in columns %}
+        <div class="kanban-column" data-status-id="{{ column.status.id }}">
+          <div class="kanban-header">
+            <span>{{ column.status.name }}</span>
+            <span class="badge bg-secondary">{{ column.tasks|length }}</span>
+          </div>
+          <div class="kanban-body" data-status-id="{{ column.status.id }}">
+            {% for task in column.tasks %}
+            <div class="kanban-card" draggable="true" data-task-id="{{ task.id }}">
+              <div class="fw-semibold">{{ task.title }}</div>
+              <small>{{ task.code }}</small>
+              <div class="mt-1">
+                {% if task.assignee %}
+                <span class="badge bg-light text-dark">{{ task.assignee }}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% empty %}
+            <div class="text-muted small">No tasks.</div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  const board = document.getElementById('kanbanBoard');
+  let dragging = null;
+
+  function getCsrfToken() {
+    const match = document.cookie.match(/csrftoken=([^;]+)/);
+    return match ? match[1] : '';
+  }
+
+  board.addEventListener('dragstart', (event) => {
+    const card = event.target.closest('.kanban-card');
+    if (!card) return;
+    dragging = card;
+    card.classList.add('dragging');
+  });
+
+  board.addEventListener('dragend', () => {
+    if (dragging) {
+      dragging.classList.remove('dragging');
+      dragging = null;
+    }
+  });
+
+  board.addEventListener('dragover', (event) => {
+    const column = event.target.closest('.kanban-body');
+    if (!column) return;
+    event.preventDefault();
+    column.classList.add('kanban-drop');
+  });
+
+  board.addEventListener('dragleave', (event) => {
+    const column = event.target.closest('.kanban-body');
+    if (column) {
+      column.classList.remove('kanban-drop');
+    }
+  });
+
+  board.addEventListener('drop', (event) => {
+    const column = event.target.closest('.kanban-body');
+    if (!column || !dragging) return;
+    event.preventDefault();
+    column.classList.remove('kanban-drop');
+    column.appendChild(dragging);
+
+    const statusId = column.getAttribute('data-status-id');
+    const taskId = dragging.getAttribute('data-task-id');
+    fetch('{% url "task_kanban_update_status" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCsrfToken(),
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      body: new URLSearchParams({ task_id: taskId, status_id: statusId }).toString()
+    }).catch(() => {});
+  });
+</script>
+{% endblock %}

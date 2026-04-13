@@ -63,6 +63,43 @@ $(document).ready(function() {
       $modal.find('.modal-title').text('{{ modal_title_add }}');
     }
   });
+
+  if ('{{ entity_name }}' === 'task') {
+    const $modal = $('#{{ modal_id }}');
+    const checklistItemsUrl = '{% url "task_checklist_template_items" %}';
+
+    function refreshChecklistFromTemplate(templateId) {
+      const $form = $modal.find('form');
+      if (!window.renderDynamicSections || !$form.length) return;
+      if (!templateId) {
+        window.renderDynamicSections($form, { task_checklist: [] });
+        return;
+      }
+      $.get(checklistItemsUrl, { template_id: templateId })
+        .done(function (res) {
+          if (res && res.items) {
+            window.renderDynamicSections($form, { task_checklist: res.items });
+          }
+        });
+    }
+
+    $modal.on('change', 'select[name="checklist_template"]', function () {
+      refreshChecklistFromTemplate($(this).val());
+    });
+
+    $modal.on('shown.bs.modal', function () {
+      const $form = $modal.find('form');
+      const $template = $form.find('select[name="checklist_template"]');
+      const templateId = $template.val();
+      if (!templateId) return;
+      const $rows = $form.find('.dynamic-section[data-section="task_checklist"] tbody.dynamic-rows tr.dynamic-row');
+      if ($rows.length === 0 || ($rows.length === 1 && $rows.find('input, textarea').filter(function () {
+        return $(this).val();
+      }).length === 0)) {
+        refreshChecklistFromTemplate(templateId);
+      }
+    });
+  }
 });
 </script>
 {% endblock %}
