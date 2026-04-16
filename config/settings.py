@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'core.apps.CoreConfig',
     'Apps.task.apps.TaskConfig',
+    'Apps.billing.apps.BillingConfig',
+    'Apps.account.apps.AccountConfig',
 ]
 
 MIDDLEWARE = [

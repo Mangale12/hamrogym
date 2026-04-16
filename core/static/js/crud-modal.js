@@ -23,6 +23,7 @@
   function clearFieldErrors($form) {
     $form.find('.is-invalid').removeClass('is-invalid');
     $form.find('.field-error').remove();
+    $form.find('[data-richtext-shell="true"]').removeClass('is-invalid');
   }
 
   function showFieldErrors($form, errors) {
@@ -34,7 +35,15 @@
       if ($field.length) {
         $field.addClass('is-invalid');
         const $error = $('<div class="invalid-feedback d-block field-error"></div>').text(messages);
-        $field.after($error);
+        const $richTextShell = $field.is('textarea[data-richtext="true"]')
+          ? $field.nextAll('[data-richtext-shell="true"]').first()
+          : $();
+        if ($richTextShell.length) {
+          $richTextShell.addClass('is-invalid');
+          $richTextShell.after($error);
+        } else {
+          $field.after($error);
+        }
       }
     });
   }
@@ -127,6 +136,9 @@
           if (window.initializeModalSelect2) {
             window.initializeModalSelect2($form);
           }
+          if (window.syncRichTextEditors) {
+            window.syncRichTextEditors($form);
+          }
           syncFieldVisibility($form, idFieldName);
           syncTabsWithRecordState($form.closest('.modal'), $form, idFieldName);
         }
@@ -166,7 +178,7 @@
   function setViewMode($modal, $form, isViewMode) {
     $modal.data('view-mode', !!isViewMode);
 
-    $form.find('input, textarea, select, button').each(function () {
+      $form.find('input, textarea, select, button').each(function () {
       const $field = $(this);
       if (
         $field.hasClass('btn-close') ||
@@ -193,8 +205,11 @@
       if ($field.hasClass('select2-hidden-accessible')) {
         $field.trigger('change.select2');
       }
-    });
-  }
+      });
+      if (window.refreshRichTextEditors) {
+        window.refreshRichTextEditors($form);
+      }
+    }
 
   function loadRecordIntoModal($modal, $form, detailUrl, title, idFieldName, config, targetTabKey, isViewMode) {
     if (title) $modal.find('.modal-title').text(title);
@@ -218,6 +233,9 @@
           hydrateSelect2($form);
           if (window.initializeModalSelect2) {
             window.initializeModalSelect2($form);
+          }
+          if (window.syncRichTextEditors) {
+            window.syncRichTextEditors($form);
           }
           syncFieldVisibility($form, idFieldName);
           syncTabsWithRecordState($modal, $form, idFieldName);
@@ -263,6 +281,9 @@
       if (config.afterReset) config.afterReset();
       if (window.resetDynamicSections) {
         window.resetDynamicSections($form);
+      }
+      if (window.syncRichTextEditors) {
+        window.syncRichTextEditors($form);
       }
       clearFieldErrors($form);
       syncFieldVisibility($form, idFieldName);
@@ -324,11 +345,15 @@
               showAlert('success', `${config.entityName} deleted successfully.`);
             }
           })
-          .fail(function () {
+          .fail(function (xhr) {
+            let message = `Failed to delete ${config.entityName}.`;
+            if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+              message = xhr.responseJSON.message;
+            }
             if (window.Swal) {
-              Swal.fire('Failed', `Failed to delete ${config.entityName}.`, 'error');
+              Swal.fire('Failed', message, 'error');
             } else {
-              showAlert('danger', `Failed to delete ${config.entityName}.`);
+              showAlert('danger', message);
             }
           });
       };

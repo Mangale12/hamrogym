@@ -3,6 +3,7 @@ from . import asset_assignment  # noqa: F401
 from . import asset_condition  # noqa: F401
 from . import asset_location  # noqa: F401
 from . import asset_maintenance  # noqa: F401
+from . import depreciation_register  # noqa: F401
 from . import asset_status  # noqa: F401
 from . import asset_transfer  # noqa: F401
 from . import asset_vendor  # noqa: F401

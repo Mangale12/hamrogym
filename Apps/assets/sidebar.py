@@ -64,6 +64,12 @@ SIDEBAR_ITEMS = [
                 "match": "/core/asset-types",
             },
             {
+                "label": "Depreciation Register",
+                "icon": "user-check",
+                "url_name": "asset_depreciation_register_list",
+                "match": "/core/asset-depreciation-registers",
+            },
+            {
                 "label": "Asset Incident Type",
                 "icon": "user-check",
                 "url_name": "asset_incident_type_list",

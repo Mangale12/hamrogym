@@ -1,5 +1,6 @@
 from .asset_assignment_form import AssetAssignmentForm
 from .asset_condition_form import AssetConditionForm
+from .depreciation_register_form import AssetDepreciationRegisterForm
 from .asset_form import AssetForm
 from .asset_maintenance_form import AssetMaintenanceRecordForm
 from .asset_status_form import AssetStatusForm

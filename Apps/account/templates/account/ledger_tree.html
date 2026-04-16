@@ -1,0 +1,390 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}{{ entity_label }} Tree | HamroGym{% endblock %}
+{% block page_title %}{{ entity_label }} Tree{% endblock %}
+
+{% block extra_css %}
+<style>
+  .account-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .account-summary-card {
+    border: 1px solid var(--line-color);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--shadow-soft);
+    padding: 1rem 1.1rem;
+  }
+
+  .account-summary-card .label {
+    color: var(--text-soft);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .account-summary-card .value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary-color);
+  }
+
+  .account-tree-card {
+    border: 1px solid var(--line-color);
+    border-radius: 24px;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+  }
+
+  .account-tree-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .account-tree-toolbar .toolbar-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .account-tree-root,
+  .account-tree-children {
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+  }
+
+  .account-tree-children {
+    margin-left: 1.5rem;
+    padding-left: 1rem;
+    border-left: 1px dashed rgba(15, 23, 42, 0.16);
+  }
+
+  .account-tree-node + .account-tree-node {
+    margin-top: 0.75rem;
+  }
+
+  .account-tree-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    padding: 0.85rem 1rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92));
+  }
+
+  .group-node {
+    background: linear-gradient(180deg, rgba(245, 247, 250, 0.98), rgba(237, 242, 247, 0.94));
+  }
+
+  .ledger-node.is-selected,
+  .account-tree-row.is-selected {
+    border-color: rgba(14, 165, 233, 0.45);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+  }
+
+  .account-tree-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .account-toggle,
+  .account-toggle-placeholder {
+    width: 1.75rem;
+    min-width: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color);
+    text-decoration: none;
+    padding: 0;
+    margin-top: 0.1rem;
+  }
+
+  .account-toggle[aria-expanded="false"] i {
+    transform: rotate(-90deg);
+  }
+
+  .account-toggle i {
+    transition: transform 0.2s ease;
+  }
+
+  .account-toggle-placeholder {
+    color: rgba(15, 23, 42, 0.28);
+    font-size: 0.5rem;
+  }
+
+  .account-tree-content {
+    min-width: 0;
+  }
+
+  .account-tree-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+  }
+
+  .account-code {
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.08);
+    color: var(--primary-color);
+  }
+
+  .account-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--primary-color);
+  }
+
+  .account-tree-meta {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .account-tree-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .selected-ledger-panel {
+    border: 1px dashed rgba(14, 165, 233, 0.4);
+    border-radius: 18px;
+    padding: 0.9rem 1rem;
+    background: rgba(14, 165, 233, 0.06);
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 991px) {
+    .account-tree-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .account-tree-actions {
+      justify-content: flex-start;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+
+{% include "components/modals/modal.html" with modal_id=modal_id form_id=form_id title=modal_title_add fields=fields %}
+
+<div class="account-summary-grid">
+  <div class="account-summary-card">
+    <div class="label">Total Ledgers</div>
+    <div class="value">{{ summary.total_ledgers }}</div>
+  </div>
+  <div class="account-summary-card">
+    <div class="label">Account Groups</div>
+    <div class="value">{{ summary.groups }}</div>
+  </div>
+  <div class="account-summary-card">
+    <div class="label">Active Ledgers</div>
+    <div class="value">{{ summary.active }}</div>
+  </div>
+  <div class="account-summary-card">
+    <div class="label">Depreciation Ledgers</div>
+    <div class="value">{{ summary.depreciation }}</div>
+  </div>
+</div>
+
+<div class="card account-tree-card">
+  <div class="card-header">
+    <div class="account-tree-toolbar">
+      <div>
+        <h5 class="mb-1">{{ entity_label }} Tree</h5>
+        <p class="text-muted mb-0">Search, select, and maintain ledgers anywhere under the account tree.</p>
+      </div>
+      <div class="toolbar-actions">
+        <input type="text" class="form-control" id="ledgerTreeSearch" placeholder="Search ledger or account path..." style="min-width: 260px;">
+        <button type="button" class="btn btn-outline-secondary" id="expandAllLedgers">
+          <i class="fas fa-expand-alt"></i> Expand All
+        </button>
+        <button type="button" class="btn btn-outline-secondary" id="collapseAllLedgers">
+          <i class="fas fa-compress-alt"></i> Collapse All
+        </button>
+        <button type="button" class="btn btn-primary ledger-add-root-btn" data-bs-toggle="modal" data-bs-target="#{{ modal_id }}">
+          <i class="fas fa-plus"></i> Add Ledger
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="selected-ledger-panel" id="selectedLedgerPanel">
+      <strong>Selected Ledger:</strong>
+      <span id="selectedLedgerText">None selected</span>
+    </div>
+
+    {% if tree_roots %}
+      <ul class="account-tree-root" id="ledgerTreeRoot">
+        {% for node in tree_roots %}
+          {% include "account/partials/ledger_tree_node.html" with node=node modal_id=modal_id modal_title_edit=modal_title_edit %}
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-center py-5 text-muted">
+        No ledger records found yet.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ reset_defaults|json_script:"ledger-reset-defaults" }}
+<script>
+$(document).ready(function() {
+  const $modal = $('#{{ modal_id }}');
+  const $form = $('#{{ form_id }}');
+  const modalEl = document.getElementById('{{ modal_id }}');
+  const resetDefaults = (() => {
+    const el = document.getElementById('ledger-reset-defaults');
+    return el ? JSON.parse(el.textContent) : {};
+  })();
+
+  const treeAdapter = {
+    ajax: {
+      reload: function() {
+        window.location.reload();
+      }
+    }
+  };
+
+  function applyDefaults() {
+    Object.entries(resetDefaults).forEach(([name, value]) => {
+      const $field = $form.find(`[name="${name}"]`);
+      if (!$field.length) return;
+      if ($field.is(':checkbox')) {
+        $field.prop('checked', !!value);
+      } else {
+        $field.val(value == null ? '' : value).trigger('change');
+      }
+    });
+    $form.find('[name="id"]').val('');
+    $form.find('[name="parent"]').val('').trigger('change');
+    $form.find('[name="code"]').val('');
+    $modal.find('.modal-title').text('{{ modal_title_add }}');
+  }
+
+  function openCreateForParent(data) {
+    applyDefaults();
+    if (data && data.id) {
+      const $parent = $form.find('[name="parent"]');
+      if ($parent.find(`option[value="${data.id}"]`).length === 0) {
+        const option = new Option(`${data.code} - ${data.fullPath}`, data.id, true, true);
+        $parent.append(option);
+      }
+      $parent.val(String(data.id)).trigger('change');
+      $form.find('[name="account_type"]').val(data.accountType).trigger('change');
+      $form.find('[name="report_level"]').val((parseInt(data.level, 10) || 0) + 1);
+      $modal.find('.modal-title').text(`Add Ledger under ${data.code}`);
+    }
+
+    if (modalEl && window.bootstrap) {
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    }
+  }
+
+  initCrudModal({
+    modalId: '{{ modal_id }}',
+    formId: '{{ form_id }}',
+    table: treeAdapter,
+    createUrl: '{{ create_url }}',
+    updateUrlTemplate: '{{ update_url_template }}',
+    detailUrlTemplate: '{{ detail_url_template }}',
+    deleteUrlTemplate: '{{ delete_url_template }}',
+    idFieldName: 'id',
+    entityName: '{{ entity_label }}',
+    clearSearchOnCreate: false,
+    afterReset: applyDefaults
+  });
+
+  applyDefaults();
+
+  $(document).on('click', '.ledger-add-root-btn', function() {
+    applyDefaults();
+  });
+
+  $(document).on('click', '.ledger-add-child-btn', function() {
+    openCreateForParent({
+      id: $(this).data('id'),
+      code: $(this).data('code'),
+      fullPath: $(this).data('full-path'),
+      accountType: $(this).data('account-type'),
+      level: $(this).data('level')
+    });
+  });
+
+  $(document).on('click', '.ledger-select-btn', function() {
+    $('.account-tree-row').removeClass('is-selected');
+    $(this).closest('.account-tree-row').addClass('is-selected');
+    $('#selectedLedgerText').text(`${$(this).data('code')} - ${$(this).data('full-path')}`);
+  });
+
+  $('#expandAllLedgers').on('click', function() {
+    $('.account-tree-children.collapse').collapse('show');
+  });
+
+  $('#collapseAllLedgers').on('click', function() {
+    $('.account-tree-children.collapse').collapse('hide');
+  });
+
+  $('#ledgerTreeSearch').on('input', function() {
+    const term = ($(this).val() || '').trim().toLowerCase();
+
+    function applySearch($node) {
+      const text = ($node.data('ledger-search') || '').toString().toLowerCase();
+      let matched = !term || text.includes(term);
+
+      const $children = $node.children('.account-tree-children').children('.account-tree-node');
+      let childMatched = false;
+
+      $children.each(function() {
+        if (applySearch($(this))) {
+          childMatched = true;
+        }
+      });
+
+      const visible = matched || childMatched;
+      $node.toggle(visible);
+
+      const $collapse = $node.children('.account-tree-children');
+      if ($collapse.length && term && (childMatched || matched)) {
+        $collapse.collapse('show');
+      }
+
+      return visible;
+    }
+
+    $('#ledgerTreeRoot').children('.account-tree-node').each(function() {
+      applySearch($(this));
+    });
+  });
+});
+</script>
+{% endblock %}

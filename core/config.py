@@ -29,6 +29,7 @@ class EntityConfig:
     hide_edit_on_values: List[Any] = field(default_factory=list)
     hide_delete_on_values: List[Any] = field(default_factory=list)
     select_search_fields: Optional[List[str]] = None
+    select_queryset_builder: Optional[Callable[..., Any]] = None
     select_label_field: Optional[str] = None
     select_label_func: Optional[Callable[[models.Model], str]] = None
     select_page_size: int = 20

@@ -8,6 +8,8 @@ ASSET_CATEGORY_COLUMNS = [
     ("is_active", "is_active"),
     ("parent", "parent"),
     ("depreciation_applicable", "depreciation_applicable"),
+    ("depreciation_method", "depreciation_method"),
+    ("default_useful_life_months", "default_useful_life_months"),
     ("remarks", "remarks"),
 ]
 
@@ -19,11 +21,13 @@ class AssetCategoryDataTableView(BaseDataTableView):
         # TODO: add searchable fields
         "name",
         "parent",
+        "depreciation_method",
         "remarks",
     ]
     orderable_columns = [
-        # TODO: add orderable fields
         "name",
         "parent",
+        "depreciation_method",
+        "default_useful_life_months",
         "remarks",
     ]

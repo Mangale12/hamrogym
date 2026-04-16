@@ -1,0 +1,78 @@
+<div class="ledger-book-section mb-4">
+  <div class="ledger-book-header">
+    <h5 class="mb-1">{{ section.account_label }}</h5>
+    <small class="text-muted">{{ section.transaction_count }} transaction{{ section.transaction_count|pluralize }}</small>
+  </div>
+  <div class="card-body">
+    <div class="ledger-book-summary">
+      <div class="ledger-book-summary-card">
+        <div class="text-muted small">Opening Balance</div>
+        <div class="fw-semibold ledger-book-balance">{{ section.opening_balance_display }}</div>
+      </div>
+      <div class="ledger-book-summary-card">
+        <div class="text-muted small">Total Debit</div>
+        <div class="fw-semibold ledger-book-balance">{{ section.total_debit|floatformat:2 }}</div>
+      </div>
+      <div class="ledger-book-summary-card">
+        <div class="text-muted small">Total Credit</div>
+        <div class="fw-semibold ledger-book-balance">{{ section.total_credit|floatformat:2 }}</div>
+      </div>
+      <div class="ledger-book-summary-card">
+        <div class="text-muted small">Closing Balance</div>
+        <div class="fw-semibold ledger-book-balance">{{ section.closing_balance_display }}</div>
+      </div>
+    </div>
+
+    <div class="table-responsive mt-3">
+      <table class="table table-striped ledger-book-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Entry No</th>
+            <th>Voucher</th>
+            <th>Reference</th>
+            <th>Description</th>
+            <th>Counterpart</th>
+            <th class="text-end">Debit</th>
+            <th class="text-end">Credit</th>
+            <th>Running Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="8" class="fw-semibold">Opening Balance</td>
+            <td class="fw-semibold">{{ section.opening_balance_display }}</td>
+          </tr>
+          {% for row in section.rows %}
+            <tr>
+              <td>{{ row.posting_date }}</td>
+              <td>{{ row.entry_no }}</td>
+              <td>{{ row.voucher_type }}</td>
+              <td>{{ row.reference_no|default:"-" }}</td>
+              <td>
+                {{ row.description|default:row.narration|default:"-" }}
+                {% if row.is_reversal %}
+                  <span class="badge text-bg-danger ms-1">Reversal</span>
+                {% endif %}
+              </td>
+              <td>{{ row.counterpart|default:"-" }}</td>
+              <td class="text-end">{{ row.debit_amount|floatformat:2 }}</td>
+              <td class="text-end">{{ row.credit_amount|floatformat:2 }}</td>
+              <td>{{ row.running_balance_display }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9" class="text-center text-muted py-4">No transaction lines in this period.</td>
+            </tr>
+          {% endfor %}
+          <tr class="fw-semibold">
+            <td colspan="6">Period Totals</td>
+            <td class="text-end">{{ section.total_debit|floatformat:2 }}</td>
+            <td class="text-end">{{ section.total_credit|floatformat:2 }}</td>
+            <td>{{ section.closing_balance_display }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

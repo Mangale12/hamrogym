@@ -1,0 +1,163 @@
+{% extends "layouts/app.html" %}
+{% load report_tags %}
+
+{% block title %}{{ report_title }} | HamroGym{% endblock %}
+{% block page_title %}{{ report_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .report-action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .report-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 152px;
+    min-height: 40px;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+
+  .report-action-print {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+  }
+
+  .report-action-excel {
+    background: linear-gradient(135deg, #ecfdf3 0%, #dcfce7 100%);
+    border-color: #86efac;
+    color: #166534;
+  }
+
+  .report-action-word {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+
+  .daybook-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .daybook-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.48rem 0.85rem;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  .daybook-entry {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+  }
+
+  .daybook-entry-header {
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+
+  .daybook-lines-table th {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    background: #f8fafc;
+  }
+
+  .daybook-lines-table td,
+  .daybook-lines-table th {
+    vertical-align: middle;
+    border-color: #eef2f7;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div id="report-filters-container">
+      {% include "components/report/report_filters_panel.html" %}
+    </div>
+  </div>
+
+  <div id="report-results-container">
+    {% include "account/partials/day_book_report_results.html" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function initDayBookReportUi() {
+  if (window.initializeModalSelect2) {
+    window.initializeModalSelect2($('#report-filters-container'));
+  }
+
+  $(document).off('click.dayBookPrint').on('click.dayBookPrint', '[data-report-print="true"]', function() {
+    window.print();
+  });
+
+  $(document).off('submit.dayBookAjax').on('submit.dayBookAjax', '[data-report-form="true"]', function(e) {
+    const nativeEvent = e.originalEvent;
+    const submitter = nativeEvent && nativeEvent.submitter ? nativeEvent.submitter : null;
+    const $submitter = submitter ? $(submitter) : $();
+    const actionName = ($submitter.attr('name') || '').trim();
+    const isAjaxAction = actionName === 'generate' || $submitter.data('reportAjax') === true;
+
+    if (!isAjaxAction) {
+      return;
+    }
+
+    e.preventDefault();
+    const $form = $(this);
+
+    $.ajax({
+      url: $form.attr('action') || window.location.pathname,
+      method: 'GET',
+      data: $form.serialize(),
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    }).done(function(res) {
+      if (res.form_html !== undefined) {
+        $('#report-filters-container').html(res.form_html);
+      }
+      if (res.results_html !== undefined) {
+        $('#report-results-container').html(res.results_html);
+      }
+      if (window.initializeModalSelect2) {
+        window.initializeModalSelect2($('#report-filters-container'));
+      }
+      initDayBookReportUi();
+    });
+  });
+}
+
+$(document).ready(function() {
+  initDayBookReportUi();
+});
+</script>
+{% endblock %}

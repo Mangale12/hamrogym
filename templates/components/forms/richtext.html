@@ -1,0 +1,33 @@
+{% if not no_wrapper %}
+<div class="mb-3 {{ wrapper_class|default:'' }}">
+{% endif %}
+  <label class="form-label">
+    {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
+  </label>
+
+  <textarea
+    name="{{ name }}"
+    {% if id %}id="{{ id }}"{% endif %}
+    class="form-control richtext-source {{ class|default:'' }}"
+    placeholder="{{ placeholder|default:'' }}"
+    data-richtext="true"
+    data-richtext-profile="{{ profile|default:'full' }}"
+    {% if rows %}rows="{{ rows }}"{% endif %}
+    {% if style %}style="{{ style }}"{% endif %}
+    {% if required %}required{% endif %}
+    {% if attributes %}
+      {% for key, value in attributes.items %}
+        {{ key }}="{{ value }}"
+      {% endfor %}
+    {% endif %}
+  >{{ value|default:'' }}</textarea>
+
+  {% if help %}
+    <small class="text-muted">{{ help }}</small>
+  {% endif %}
+  {% if errors %}
+    <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
+  {% endif %}
+{% if not no_wrapper %}
+</div>
+{% endif %}

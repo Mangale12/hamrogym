@@ -1,0 +1,453 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}{{ entity_label }} | HamroGym{% endblock %}
+{% block page_title %}{{ entity_label }}{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1">
+  <div class="modal-dialog modal-fullscreen">
+    <form id="{{ form_id }}" class="modal-content" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="id">
+      <input type="hidden" name="_active_tab" value="">
+
+      <div class="modal-header">
+        <h5 class="modal-title">{{ modal_title_add }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+              <div class="row">
+                {% include "components/forms/fields_grid.html" with fields=fields modal_id=modal_id %}
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-0">Journal Lines</h5>
+                <small class="text-muted">Choose a root account first, then select only ledgers under that branch of the chart.</small>
+              </div>
+              <button type="button" class="btn btn-primary add-row add-journal-line-btn">Add Line</button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table align-middle journal-lines-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width: 180px;">Root Account</th>
+                      <th style="min-width: 260px;">Ledger</th>
+                      <th style="min-width: 160px;">Description</th>
+                      <th style="min-width: 130px;">Entry Side</th>
+                      <th style="min-width: 140px;">Amount</th>
+                      <th style="min-width: 140px;">Partner Type</th>
+                      <th style="min-width: 120px;">Partner ID</th>
+                      <th style="min-width: 140px;">Cost Center</th>
+                      <th style="width: 70px;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="journalLinesBody"></tbody>
+                </table>
+              </div>
+
+              <div class="row g-3 mt-2 align-items-end">
+                <div class="col-md-4">
+                  <div class="border rounded-3 p-3 bg-light">
+                    <div class="small text-muted text-uppercase">Total Debit</div>
+                    <input type="number" step="0.01" name="total_debit" class="form-control form-control-lg mt-2" readonly>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="border rounded-3 p-3 bg-light">
+                    <div class="small text-muted text-uppercase">Total Credit</div>
+                    <input type="number" step="0.01" name="total_credit" class="form-control form-control-lg mt-2" readonly>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="border rounded-3 p-3 bg-light">
+                    <div class="small text-muted text-uppercase">Balance Status</div>
+                    <div id="journalBalanceStatus" class="fs-6 fw-semibold mt-2 text-success">Balanced</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-lg btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-lg btn-primary save-all-btn">Save All</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between">
+    <h5>{{ entity_label }}</h5>
+    {% if show_create %}
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{ modal_id }}">
+      <i data-feather="plus"></i> Add {{ entity_label }}
+    </button>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% include "components/tables/datatable.html" with table_id=table_id ajax_url=datatable_url columns=datatable_columns table_var=table_id %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if reset_defaults %}
+{{ reset_defaults|json_script:"reset-defaults" }}
+{% endif %}
+<script>
+$(document).ready(function() {
+  const table = window['{{ table_id }}'] || $('#{{ table_id }}').DataTable();
+  const $modal = $('#{{ modal_id }}');
+  const $form = $('#{{ form_id }}');
+  const $linesBody = $('#journalLinesBody');
+  const rootAccountUrl = '{% url "journal_root_account_select" %}';
+  const ledgerAccountUrl = '{% url "journal_ledger_account_select" %}';
+  const resetDefaults = (() => {
+    const el = document.getElementById('reset-defaults');
+    return el ? JSON.parse(el.textContent) : {};
+  })();
+  const statusChoices = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'posted', label: 'Posted' },
+    { value: 'cancelled', label: 'Cancelled' },
+  ];
+  const sideChoices = [
+    { value: 'debit', label: 'Debit' },
+    { value: 'credit', label: 'Credit' },
+  ];
+  const partnerTypeChoices = [
+    { value: '', label: 'Select Partner Type' },
+    { value: 'customer', label: 'Customer' },
+    { value: 'vendor', label: 'Vendor' },
+  ];
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function buildOptions(options, selectedValue, emptyLabel) {
+    let html = emptyLabel ? `<option value="">${escapeHtml(emptyLabel)}</option>` : '';
+    options.forEach((option) => {
+      const selected = String(selectedValue || '') === String(option.value) ? ' selected' : '';
+      html += `<option value="${escapeHtml(option.value)}"${selected}>${escapeHtml(option.label)}</option>`;
+    });
+    return html;
+  }
+
+  function lineRowHtml(index, row) {
+    const data = row || {};
+    return `
+      <tr class="journal-line-row">
+        <td>
+          <input type="hidden" name="journal_lines[${index}][id]" value="${escapeHtml(data.id || '')}">
+          <input type="hidden" name="journal_lines[${index}][sort_order]" value="${index + 1}" class="journal-sort-order">
+          <select
+            name="journal_lines[${index}][root_account]"
+            class="form-select journal-root-account-select"
+            data-endpoint="${rootAccountUrl}"
+            data-selected-value="${escapeHtml(data.root_account || '')}">
+          </select>
+        </td>
+        <td>
+          <select
+            name="journal_lines[${index}][account]"
+            class="form-select journal-ledger-account-select"
+            data-endpoint="${ledgerAccountUrl}"
+            data-selected-value="${escapeHtml(data.account || '')}">
+          </select>
+        </td>
+        <td>
+          <input type="text" name="journal_lines[${index}][description]" class="form-control" value="${escapeHtml(data.description || '')}">
+        </td>
+        <td>
+          <select name="journal_lines[${index}][entry_side]" class="form-select journal-entry-side-select">
+            ${buildOptions(sideChoices, data.entry_side || 'debit', '')}
+          </select>
+        </td>
+        <td>
+          <input type="number" step="0.01" min="0" name="journal_lines[${index}][amount]" class="form-control journal-line-amount" value="${escapeHtml(data.amount || '')}">
+        </td>
+        <td>
+          <select name="journal_lines[${index}][partner_type]" class="form-select">
+            ${buildOptions(partnerTypeChoices.filter((item) => item.value), data.partner_type || '', 'Select Partner Type')}
+          </select>
+        </td>
+        <td>
+          <input type="number" min="0" name="journal_lines[${index}][partner_id]" class="form-control" value="${escapeHtml(data.partner_id || '')}">
+        </td>
+        <td>
+          <input type="text" name="journal_lines[${index}][cost_center]" class="form-control" value="${escapeHtml(data.cost_center || '')}">
+        </td>
+        <td>
+          <button type="button" class="btn btn-sm btn-outline-danger remove-row remove-journal-line-btn">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }
+
+  function hydrateSelect($select, url, values) {
+    const normalized = (Array.isArray(values) ? values : [values]).filter(Boolean).map((item) => String(item));
+    if (!normalized.length) {
+      return $.Deferred().resolve().promise();
+    }
+
+    return $.get(url, { ids: normalized.join(',') }).done(function(res) {
+      const results = res && res.results ? res.results : [];
+      results.forEach((item) => {
+        if (!$select.find(`option[value="${item.id}"]`).length) {
+          const option = new Option(item.text, item.id, true, true);
+          $select.append(option);
+        }
+      });
+      $select.val($select.prop('multiple') ? normalized : normalized[0]).trigger('change');
+    });
+  }
+
+  function initializeRootSelect($row) {
+    const $select = $row.find('.journal-root-account-select');
+    if ($select.data('select2')) {
+      return $.Deferred().resolve().promise();
+    }
+
+    $select.select2({
+      theme: 'bootstrap-5',
+      width: '100%',
+      placeholder: 'Select Root Account',
+      allowClear: true,
+      dropdownParent: $modal,
+      ajax: {
+        url: rootAccountUrl,
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            q: params.term,
+            page: params.page || 1,
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.results || [],
+            pagination: {
+              more: !!(data.pagination && data.pagination.more),
+            },
+          };
+        },
+      },
+    });
+
+    const selectedValue = $select.attr('data-selected-value');
+    if (selectedValue) {
+      return hydrateSelect($select, rootAccountUrl, selectedValue).always(function() {
+        $select.removeAttr('data-selected-value');
+      });
+    }
+    return $.Deferred().resolve().promise();
+  }
+
+  function initializeLedgerSelect($row) {
+    const $select = $row.find('.journal-ledger-account-select');
+    const $rootSelect = $row.find('.journal-root-account-select');
+    const rootId = $rootSelect.val();
+
+    if ($select.data('select2')) {
+      $select.select2('destroy');
+    }
+
+    $select.empty();
+    $select.prop('disabled', !rootId);
+
+    $select.select2({
+      theme: 'bootstrap-5',
+      width: '100%',
+      placeholder: rootId ? 'Select Ledger Account' : 'Select Root Account First',
+      allowClear: true,
+      dropdownParent: $modal,
+      ajax: {
+        url: ledgerAccountUrl,
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            q: params.term,
+            page: params.page || 1,
+            root_id: rootId || '',
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.results || [],
+            pagination: {
+              more: !!(data.pagination && data.pagination.more),
+            },
+          };
+        },
+      },
+    });
+
+    const selectedValue = $select.attr('data-selected-value');
+    if (selectedValue) {
+      hydrateSelect($select, ledgerAccountUrl, selectedValue).always(function() {
+        $select.removeAttr('data-selected-value');
+      });
+    }
+  }
+
+  function initializeJournalRow($row) {
+    initializeRootSelect($row).always(function() {
+      initializeLedgerSelect($row);
+    });
+  }
+
+  function refreshLineIndexes() {
+    $linesBody.find('tr.journal-line-row').each(function(index) {
+      $(this).find('input, select, textarea').each(function() {
+        const $field = $(this);
+        const name = $field.attr('name');
+        if (!name) {
+          return;
+        }
+        $field.attr('name', name.replace(/journal_lines\[\d+\]/, `journal_lines[${index}]`));
+      });
+      $(this).find('.journal-sort-order').val(index + 1);
+    });
+  }
+
+  function updateTotals() {
+    let totalDebit = 0;
+    let totalCredit = 0;
+
+    $linesBody.find('tr.journal-line-row').each(function() {
+      const side = ($(this).find('.journal-entry-side-select').val() || '').trim();
+      const amount = parseFloat($(this).find('.journal-line-amount').val() || '0') || 0;
+      if (side === 'debit') {
+        totalDebit += amount;
+      } else if (side === 'credit') {
+        totalCredit += amount;
+      }
+    });
+
+    $form.find('[name="total_debit"]').val(totalDebit.toFixed(2));
+    $form.find('[name="total_credit"]').val(totalCredit.toFixed(2));
+
+    const $status = $('#journalBalanceStatus');
+    if (totalDebit > 0 && totalDebit === totalCredit) {
+      $status.text('Balanced').removeClass('text-danger text-warning').addClass('text-success');
+    } else if (totalDebit === 0 && totalCredit === 0) {
+      $status.text('Waiting for lines').removeClass('text-danger text-success').addClass('text-warning');
+    } else {
+      $status.text(`Imbalance: ${(totalDebit - totalCredit).toFixed(2)}`).removeClass('text-success text-warning').addClass('text-danger');
+    }
+  }
+
+  function renderJournalLines(rows) {
+    const entries = Array.isArray(rows) && rows.length ? rows : [{}];
+    $linesBody.html(entries.map((row, index) => lineRowHtml(index, row)).join(''));
+    $linesBody.find('tr.journal-line-row').each(function() {
+      initializeJournalRow($(this));
+    });
+    refreshLineIndexes();
+    updateTotals();
+  }
+
+  function addJournalLine(row) {
+    const index = $linesBody.find('tr.journal-line-row').length;
+    $linesBody.append(lineRowHtml(index, row || {}));
+    const $row = $linesBody.find('tr.journal-line-row').last();
+    initializeJournalRow($row);
+    refreshLineIndexes();
+    updateTotals();
+  }
+
+  initCrudModal({
+    modalId: '{{ modal_id }}',
+    formId: '{{ form_id }}',
+    table: table,
+    createUrl: '{{ create_url }}',
+    updateUrlTemplate: '{{ update_url_template }}',
+    detailUrlTemplate: '{{ detail_url_template }}',
+    deleteUrlTemplate: '{{ delete_url_template }}',
+    idFieldName: 'id',
+    entityName: '{{ entity_label }}',
+    afterReset: function() {
+      Object.entries(resetDefaults).forEach(([name, value]) => {
+        const $field = $form.find(`[name="${name}"]`);
+        if (!$field.length) {
+          return;
+        }
+        if ($field.is(':checkbox')) {
+          $field.prop('checked', !!value);
+        } else {
+          $field.val(value == null ? '' : value);
+        }
+      });
+      renderJournalLines([]);
+      if (window.initializeModalSelect2) {
+        window.initializeModalSelect2($form);
+      }
+      $modal.find('.modal-title').text('{{ modal_title_add }}');
+    },
+    afterLoad: function($modal, $form, data) {
+      const lines = (data && data.__dynamic_sections__ && data.__dynamic_sections__.journal_lines) || [];
+      renderJournalLines(lines);
+    }
+  });
+
+  $modal.on('shown.bs.modal', function() {
+    if (window.initializeModalSelect2) {
+      window.initializeModalSelect2($form);
+    }
+    if (!$linesBody.find('tr.journal-line-row').length) {
+      renderJournalLines([]);
+    }
+  });
+
+  $(document).on('click', '.add-journal-line-btn', function() {
+    addJournalLine({});
+  });
+
+  $(document).on('click', '.remove-journal-line-btn', function() {
+    $(this).closest('tr.journal-line-row').remove();
+    if (!$linesBody.find('tr.journal-line-row').length) {
+      addJournalLine({});
+    } else {
+      refreshLineIndexes();
+      updateTotals();
+    }
+  });
+
+  $(document).on('change', '.journal-root-account-select', function() {
+    const $row = $(this).closest('tr.journal-line-row');
+    const $ledger = $row.find('.journal-ledger-account-select');
+    $ledger.val('').attr('data-selected-value', '');
+    initializeLedgerSelect($row);
+  });
+
+  $(document).on('input change', '.journal-entry-side-select, .journal-line-amount', function() {
+    updateTotals();
+  });
+});
+</script>
+{% endblock %}

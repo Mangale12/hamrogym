@@ -1,0 +1,47 @@
+<div class="cash-flow-panel">
+  <div class="cash-flow-panel-header">
+    <h5>{{ section.label }}</h5>
+    <small>Classified from counterpart ledger activity.</small>
+  </div>
+  <div class="table-responsive">
+    <table class="table cash-flow-table">
+      <thead>
+        <tr>
+          <th style="width: 110px;">Code</th>
+          <th>Account Head</th>
+          <th class="text-end" style="width: 170px;">Cash Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in section.rows %}
+          <tr class="cash-flow-row">
+            <td>{{ row.code|default:"-" }}</td>
+            <td>
+              <div class="cash-flow-account">
+                <span class="cash-flow-account-name">{{ row.name }}</span>
+                {% if row.full_path and row.full_path != row.name %}
+                  <small>{{ row.full_path }}</small>
+                {% endif %}
+              </div>
+            </td>
+            <td class="cash-flow-amount {% if row.amount < 0 %}is-negative{% else %}is-positive{% endif %}">
+              {{ row.amount|floatformat:2 }}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3" class="text-center text-muted py-4">No classified cash movements found for this section.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="cash-flow-total">
+          <td colspan="2">Net {{ section.label }}</td>
+          <td class="cash-flow-amount {% if section.total < 0 %}is-negative{% endif %}">
+            {{ section.total|floatformat:2 }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

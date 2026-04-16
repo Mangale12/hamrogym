@@ -1,5 +1,7 @@
 from django import forms
 
+from core.forms.widgets import RichTextWidget
+
 from ..models import ProjectEpic, Task, TaskBillableTo, TaskBillingStatus, TaskBillingType
 
 
@@ -11,6 +13,14 @@ class TaskForm(forms.ModelForm):
         if "code" in self.fields:
             self.fields["code"].required = False
             self.fields["code"].widget.attrs["readonly"] = True
+
+        if "description" in self.fields:
+            self.fields["description"].widget = RichTextWidget(
+                attrs={
+                    "rows": 12,
+                    "placeholder": "Write the task scope, delivery notes, and any important context...",
+                }
+            )
 
         project_id = None
         if self.is_bound:

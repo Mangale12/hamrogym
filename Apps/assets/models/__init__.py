@@ -5,6 +5,7 @@ from .asset import Asset, AssetDocument
 from .asset_assignment import AssetAssignment
 from .asset_category import AssetCategory
 from .asset_condition import AssetCondition
+from .depreciation import AssetDepreciationRegister
 from .asset_location import AssetLocation
 from .asset_maintenance import AssetMaintenanceRecord
 from .asset_transfer import AssetTransfer

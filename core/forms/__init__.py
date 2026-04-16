@@ -9,3 +9,4 @@ from .user_form import UserForm
 from .brand_form import BrandForm
 from .location_type_form import LocationTypeForm
 from .location_form import LocationForm
+from .widgets import RichTextWidget

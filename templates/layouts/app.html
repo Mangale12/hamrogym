@@ -21,6 +21,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
     <link rel="stylesheet" href="{% static 'core/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/richtext.css' %}">
     
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -37,6 +38,7 @@
     <!-- Custom AJAX CRUD Scripts -->
     <script type="text/javascript" src="{% static 'js/datatable-actions.js' %}"></script>
     <script src="{% static 'js/crud-modal.js' %}"></script>
+    <script src="{% static 'js/richtext.js' %}"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -806,6 +808,7 @@
             const url = $select.data('url');
             const fieldName = $select.data('field-name') || '';
             const $modal = $select.closest('.modal');
+            const isTreeSelect = String($select.data('treeSelect') || '') === 'true';
 
             if (!url) {
                 return;
@@ -818,6 +821,27 @@
                     placeholder: fieldName ? `Select ${fieldName}` : 'Select option',
                     allowClear: !($select.prop('required')),
                     dropdownParent: $modal.length ? $modal : undefined,
+                    templateResult: function (item) {
+                        if (!isTreeSelect || item.loading) {
+                            return item.text;
+                        }
+                        const depth = parseInt(item.depth || 0, 10) || 0;
+                        const label = item.text || '';
+                        const path = item.path || '';
+                        const indent = '&nbsp;'.repeat(depth * 6);
+                        return $(
+                            `<div class="tree-select-option">` +
+                                `<span class="tree-option-label">${indent}${label}</span>` +
+                                (path ? `<small class="d-block text-muted">${path}</small>` : '') +
+                            `</div>`
+                        );
+                    },
+                    templateSelection: function (item) {
+                        return item.text || '';
+                    },
+                    escapeMarkup: function (markup) {
+                        return markup;
+                    },
                     ajax: {
                         url: url,
                         dataType: 'json',

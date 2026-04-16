@@ -1,0 +1,108 @@
+<li class="account-tree-node" data-ledger-search="{{ node.code }} {{ node.name }} {{ node.full_path }} {{ node.account_type }} {{ node.report_type }} {{ node.ledger_info.pan_no|default:'' }} {{ node.ledger_info.vat_no|default:'' }}">
+  <div class="account-tree-row level-{{ node.report_level }} {% if node.is_ledger %}ledger-node{% else %}group-node{% endif %}">
+    <div class="account-tree-main">
+      {% if node.child_nodes %}
+        <button
+          class="btn btn-sm btn-link account-toggle"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#ledger-children-{{ node.id }}"
+          aria-expanded="true"
+          aria-controls="ledger-children-{{ node.id }}">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      {% else %}
+        <span class="account-toggle-placeholder">
+          <i class="fas fa-circle"></i>
+        </span>
+      {% endif %}
+
+      <div class="account-tree-content">
+        <div class="account-tree-heading">
+          <span class="account-code">{{ node.code }}</span>
+          <span class="account-name">{{ node.name }}</span>
+        </div>
+        <div class="account-tree-meta">
+          <span class="badge text-bg-light">Level {{ node.report_level }}</span>
+          <span class="badge {% if node.account_type == 'asset' %}text-bg-primary{% elif node.account_type == 'liability' %}text-bg-warning{% elif node.account_type == 'equity' %}text-bg-secondary{% elif node.account_type == 'income' %}text-bg-success{% else %}text-bg-danger{% endif %}">
+            {{ node.get_account_type_display }}
+          </span>
+          {% if node.is_ledger %}
+            <span class="badge text-bg-success">Ledger</span>
+            {% if node.ledger_info %}
+              {% if node.ledger_info.pan_no %}
+                <span class="badge text-bg-dark">PAN {{ node.ledger_info.pan_no }}</span>
+              {% endif %}
+              {% if node.ledger_info.vat_no %}
+                <span class="badge text-bg-dark">VAT {{ node.ledger_info.vat_no }}</span>
+              {% endif %}
+            {% endif %}
+          {% else %}
+            <span class="badge text-bg-info">Group</span>
+          {% endif %}
+          {% if node.is_depreciation %}
+            <span class="badge text-bg-warning">Depreciation</span>
+          {% endif %}
+          {% if not node.is_active %}
+            <span class="badge text-bg-secondary">Inactive</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="account-tree-actions">
+      {% if not node.is_ledger %}
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-success ledger-add-child-btn"
+          data-id="{{ node.id }}"
+          data-name="{{ node.name }}"
+          data-full-path="{{ node.full_path }}"
+          data-code="{{ node.code }}"
+          data-account-type="{{ node.account_type }}"
+          data-level="{{ node.report_level }}">
+          <i class="fas fa-plus"></i>
+          Add Ledger
+        </button>
+      {% else %}
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-info ledger-select-btn"
+          data-id="{{ node.id }}"
+          data-code="{{ node.code }}"
+          data-name="{{ node.name }}"
+          data-full-path="{{ node.full_path }}">
+          <i class="fas fa-check"></i>
+          Select
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary edit-btn"
+          data-id="{{ node.id }}"
+          data-detail-url="{{ node.detail_url }}"
+          data-bs-toggle="modal"
+          data-bs-target="#{{ modal_id }}"
+          data-title="{{ modal_title_edit }}">
+          <i class="fas fa-edit"></i>
+          Edit
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-danger delete-btn"
+          data-id="{{ node.id }}"
+          data-delete-url="{{ node.delete_url }}">
+          <i class="fas fa-trash"></i>
+          Delete
+        </button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if node.child_nodes %}
+    <ul class="account-tree-children collapse show" id="ledger-children-{{ node.id }}">
+      {% for node in node.child_nodes %}
+        {% include "account/partials/ledger_tree_node.html" with node=node modal_id=modal_id modal_title_edit=modal_title_edit %}
+      {% endfor %}
+    </ul>
+  {% endif %}
+</li>

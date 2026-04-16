@@ -1,0 +1,316 @@
+{% extends "layouts/app.html" %}
+{% load report_tags %}
+
+{% block title %}{{ report_title }} | HamroGym{% endblock %}
+{% block page_title %}{{ report_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .report-action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .report-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 152px;
+    min-height: 40px;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+  }
+
+  .report-action-btn:hover,
+  .report-action-btn:focus {
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  .report-action-print {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+  }
+
+  .report-action-excel {
+    background: linear-gradient(135deg, #ecfdf3 0%, #dcfce7 100%);
+    border-color: #86efac;
+    color: #166534;
+    box-shadow: 0 10px 22px rgba(22, 101, 52, 0.08);
+  }
+
+  .report-action-word {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #93c5fd;
+    color: #1d4ed8;
+    box-shadow: 0 10px 22px rgba(29, 78, 216, 0.08);
+  }
+
+  .cash-flow-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 1.25rem;
+  }
+
+  .cash-flow-stack {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .cash-flow-panel {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  }
+
+  .cash-flow-panel-header {
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+
+  .cash-flow-panel-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .cash-flow-panel-header small {
+    color: #64748b;
+  }
+
+  .cash-flow-table {
+    margin-bottom: 0;
+  }
+
+  .cash-flow-table th {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .cash-flow-table td,
+  .cash-flow-table th {
+    padding: 0.8rem 1rem;
+    vertical-align: middle;
+    border-color: #eef2f7;
+  }
+
+  .cash-flow-account {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .cash-flow-account-name {
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  .cash-flow-account small {
+    color: #64748b;
+  }
+
+  .cash-flow-amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    white-space: nowrap;
+    color: #0f172a;
+  }
+
+  .cash-flow-amount.is-positive {
+    color: #166534;
+  }
+
+  .cash-flow-amount.is-negative {
+    color: #b91c1c;
+  }
+
+  .cash-flow-total {
+    background: #0f172a;
+    color: #fff;
+  }
+
+  .cash-flow-total td {
+    font-weight: 700;
+    border-color: #0f172a;
+  }
+
+  .cash-flow-total .cash-flow-amount.is-negative {
+    color: #fee2e2;
+  }
+
+  .cash-flow-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .cash-flow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.48rem 0.85rem;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  .cash-flow-status {
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+
+  .cash-flow-status.is-balanced {
+    background: linear-gradient(135deg, #ecfdf3 0%, #f0fdf4 100%);
+    border-color: #86efac;
+  }
+
+  .cash-flow-status.is-warning {
+    background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
+    border-color: #fdba74;
+  }
+
+  @media (max-width: 991px) {
+    .cash-flow-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media print {
+    .topbar,
+    .sidebar,
+    .report-filter-panel,
+    .report-action-bar,
+    .btn {
+      display: none !important;
+    }
+
+    .main-content {
+      margin-left: 0 !important;
+      padding: 0 !important;
+    }
+
+    .card,
+    .card-header,
+    .card-body,
+    .cash-flow-panel {
+      box-shadow: none !important;
+      background: #fff !important;
+    }
+
+    .cash-flow-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      gap: 0.75rem !important;
+    }
+
+    .cash-flow-panel {
+      border-radius: 0 !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    .cash-flow-table th,
+    .cash-flow-table td {
+      padding: 0.45rem 0.55rem !important;
+      font-size: 11px !important;
+    }
+
+    .report-summary-cards .border.rounded {
+      border-color: #cbd5e1 !important;
+    }
+
+    @page {
+      size: {{ print_settings.page_size|default:"A4" }} {{ print_settings.orientation|default:"portrait" }};
+      margin: {{ print_settings.margin|default:"12mm" }};
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div id="report-filters-container">
+      {% include "components/report/report_filters_panel.html" %}
+    </div>
+  </div>
+
+  <div id="report-results-container">
+    {% include "account/partials/cash_flow_report_results.html" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function initCashFlowReportUi() {
+  if (window.initializeModalSelect2) {
+    window.initializeModalSelect2($('#report-filters-container'));
+  }
+
+  $(document).off('click.cashFlowPrint').on('click.cashFlowPrint', '[data-report-print="true"]', function() {
+    window.print();
+  });
+
+  $(document).off('submit.cashFlowAjax').on('submit.cashFlowAjax', '[data-report-form="true"]', function(e) {
+    const nativeEvent = e.originalEvent;
+    const submitter = nativeEvent && nativeEvent.submitter ? nativeEvent.submitter : null;
+    const $submitter = submitter ? $(submitter) : $();
+    const actionName = ($submitter.attr('name') || '').trim();
+    const isAjaxAction = actionName === 'generate' || $submitter.data('reportAjax') === true;
+
+    if (!isAjaxAction) {
+      return;
+    }
+
+    e.preventDefault();
+    const $form = $(this);
+
+    $.ajax({
+      url: $form.attr('action') || window.location.pathname,
+      method: 'GET',
+      data: $form.serialize(),
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    }).done(function(res) {
+      if (res.form_html !== undefined) {
+        $('#report-filters-container').html(res.form_html);
+      }
+      if (res.results_html !== undefined) {
+        $('#report-results-container').html(res.results_html);
+      }
+      if (window.initializeModalSelect2) {
+        window.initializeModalSelect2($('#report-filters-container'));
+      }
+      initCashFlowReportUi();
+    });
+  });
+}
+
+$(document).ready(function() {
+  initCashFlowReportUi();
+});
+</script>
+{% endblock %}

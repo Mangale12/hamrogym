@@ -1,9 +1,15 @@
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
 from Apps.assets.models.asset import AssetDocument
 from core.config import EntityConfig
+from core.helpers.context import get_current_branch_id, get_current_fiscal_year_id
 from core.registry import register_entity
+from core.models import Branch, FiscalYear
 from ...datatables.asset_data_table import AssetDataTableView, ASSET_COLUMNS
 from ...forms.asset_form import AssetForm
 from ...models import Asset
+from ...services import generate_asset_depreciation_schedule
 from core.utils.dynamic_sections import (
     RelatedDynamicSectionConfig,
     build_related_section_loader,
@@ -50,6 +56,32 @@ ASSET_DOCUMENT_RELATION = RelatedDynamicSectionConfig(
 
 ASSET_DOCUMENT_RELATION_LOADER = build_related_section_loader(ASSET_DOCUMENT_RELATION)
 ASSET_DOCUMENT_RELATION_SAVER = build_related_section_saver(ASSET_DOCUMENT_RELATION)
+
+
+def _generate_depreciation_schedule(request, asset: Asset):
+    branch_id = get_current_branch_id(request)
+    fiscal_year_id = get_current_fiscal_year_id(request)
+
+    branch = Branch.objects.select_related("organization").filter(pk=branch_id).first() if branch_id else None
+    fiscal_year = FiscalYear.objects.filter(pk=fiscal_year_id).first() if fiscal_year_id else None
+    if not branch:
+        raise ValidationError("Active branch is required in session to generate depreciation schedule.")
+    if not fiscal_year:
+        raise ValidationError("Active fiscal year is required in session to generate depreciation schedule.")
+
+    result = generate_asset_depreciation_schedule(
+        asset,
+        organization=branch.organization,
+        branch=branch,
+        fiscal_year=fiscal_year,
+        through_date=fiscal_year.end_date if fiscal_year else timezone.localdate(),
+    )
+    return {
+        "message": (
+            f"Depreciation schedule generated for {asset.name}. "
+            f"Created: {result['created']}, Updated: {result['updated']}, Skipped posted: {result['skipped']}."
+        )
+    }
 
 register_entity(
     EntityConfig(
@@ -121,6 +153,13 @@ register_entity(
                 "col": 6,
             },
             {
+                "name": "depreciation_start_date",
+                "label": "Depreciation Start Date",
+                "type": "date",
+                "required": False,
+                "col": 6,
+            },
+            {
                 "name": "current_location",
                 "label": "Current Location",
                 "type": "select",
@@ -174,6 +213,9 @@ register_entity(
             if key != "id"
         ],
         reset_defaults={"is_active": True},
+        row_actions={
+            "generate_depreciation_schedule": _generate_depreciation_schedule,
+        },
         select_search_fields=[
             "name",
             "code",
@@ -190,6 +232,14 @@ register_entity(
                 "icon_class": "fas fa-eye",
                 "class_name": "btn-outline-info",
                 "href_url": "/core/asset/{id}/profile/",
+            },
+            {
+                "action_name": "generate_depreciation_schedule",
+                "title": "Generate Depreciation",
+                "icon_class": "fas fa-calendar-plus",
+                "class_name": "btn-outline-primary",
+                "confirm_text": "Generate or refresh missing depreciation schedule lines for this asset up to the active fiscal year end?",
+                "success_message": "Depreciation schedule generated successfully.",
             },
         ],
         show_view=False,

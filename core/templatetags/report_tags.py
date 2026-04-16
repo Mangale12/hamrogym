@@ -80,7 +80,8 @@ def render_report_field(context, form, field_config):
         errors = [str(error) for error in bound_field.errors]
 
     options = config.get("options") or []
-    if bound_field is not None and hasattr(bound_field.field, "choices"):
+    data_url = config.get("url") or config.get("data_url")
+    if bound_field is not None and hasattr(bound_field.field, "choices") and not data_url:
         options = list(bound_field.field.choices)
     normalized_options = []
     empty_label = config.get("empty_label")
@@ -175,7 +176,7 @@ def render_report_field(context, form, field_config):
         "prefix": config.get("prefix"),
         "suffix": config.get("suffix"),
         "data_field_name": config.get("data_field_name") or field_name,
-        "data_url": config.get("url") or config.get("data_url"),
+        "data_url": data_url,
     }
 
 

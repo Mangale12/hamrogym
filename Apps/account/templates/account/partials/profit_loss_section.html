@@ -1,0 +1,49 @@
+<div class="profit-loss-panel">
+  <div class="profit-loss-panel-header">
+    <h5>{{ section.label }}</h5>
+    <small>Structured by chart hierarchy.</small>
+  </div>
+  <div class="table-responsive">
+    <table class="table profit-loss-table">
+      <thead>
+        <tr>
+          <th style="width: 110px;">Code</th>
+          <th>Account Head</th>
+          <th class="text-end" style="width: 170px;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in section.rows %}
+          <tr class="profit-loss-row {% if row.is_group %}is-group{% endif %}">
+            <td>{{ row.code|default:"-" }}</td>
+            <td>
+              <span class="profit-loss-account-name" style="padding-left: {{ row.indent_px }}px;">
+                {% if row.is_group %}
+                  <span class="profit-loss-tag">Group</span>
+                {% else %}
+                  <span class="profit-loss-tag">Ledger</span>
+                {% endif %}
+                <span>{{ row.name }}</span>
+              </span>
+            </td>
+            <td class="profit-loss-amount {% if row.is_negative %}is-negative{% endif %}">
+              {{ row.amount|floatformat:2 }}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3" class="text-center text-muted py-4">No balances found for this section.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="profit-loss-total">
+          <td colspan="2">Total {{ section.label }}</td>
+          <td class="profit-loss-amount {% if section.total < 0 %}is-negative{% endif %}">
+            {{ section.total|floatformat:2 }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

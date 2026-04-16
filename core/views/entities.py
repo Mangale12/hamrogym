@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.db import models, transaction
+from django.db.models.deletion import ProtectedError, RestrictedError
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -125,8 +126,18 @@ def _actions_render(entity: EntityConfig) -> str:
     )
 
 
-def _build_select_queryset(entity: EntityConfig, term: str):
-    queryset = entity.model.objects.all()
+def _build_select_queryset(entity: EntityConfig, term: str, request=None):
+    if entity.select_queryset_builder:
+        builder = entity.select_queryset_builder
+        try:
+            queryset = builder(request=request, term=term)
+        except TypeError:
+            try:
+                queryset = builder(term=term)
+            except TypeError:
+                queryset = builder()
+    else:
+        queryset = entity.model.objects.all()
     if not term:
         return queryset
     queries = Q()
@@ -358,8 +369,29 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     status=405,
                 )
             obj = get_object_or_404(entity.model, pk=pk)
-            obj.delete()
-            return JsonResponse({"success": True})
+            try:
+                obj.delete()
+                return JsonResponse({"success": True})
+            except ValidationError as exc:
+                if hasattr(exc, "message_dict"):
+                    message = " ".join(
+                        " ".join(messages) if isinstance(messages, list) else str(messages)
+                        for messages in exc.message_dict.values()
+                    ).strip()
+                    return JsonResponse(
+                        {"success": False, "message": message or "Delete failed.", "errors": exc.message_dict},
+                        status=400,
+                    )
+                messages = exc.messages if hasattr(exc, "messages") else [str(exc)]
+                return JsonResponse(
+                    {"success": False, "message": " ".join(str(item) for item in messages if item).strip() or "Delete failed."},
+                    status=400,
+                )
+            except (ProtectedError, RestrictedError):
+                return JsonResponse(
+                    {"success": False, "message": f"{entity.verbose_name} cannot be deleted because it is referenced by other records."},
+                    status=400,
+                )
 
     action_views = {}
     for action_name, handler in (entity.row_actions or {}).items():
@@ -424,7 +456,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                 ]
                 return JsonResponse({"results": results, "pagination": {"more": False}})
 
-            queryset = _build_select_queryset(entity, term).order_by(entity.get_select_order_by())
+            queryset = _build_select_queryset(entity, term, request).order_by(entity.get_select_order_by())
             start = (page - 1) * page_size
             items = list(queryset[start : start + page_size + 1])
             more = len(items) > page_size

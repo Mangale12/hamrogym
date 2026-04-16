@@ -417,3 +417,11 @@ TEAM_TYPE_CHOICES = [
     ("contract", "Contract"),
     ("permanent", "Permanent"),
 ]
+
+
+BILLING_TYPE_CHOICES = (
+    ("customer", "Customer"),
+    ("vendor", "Vendor"),
+    ("internal", "Internal"),
+    ("partner", "Partner"),
+)

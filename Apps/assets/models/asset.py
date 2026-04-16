@@ -17,6 +17,7 @@ class Asset(models.Model):
     warranty_expiry_date = models.DateField(null=True, blank=True)
     use_full_life_months = models.IntegerField(null=True, blank=True)
     salvage_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    depreciation_start_date = models.DateField(null=True, blank=True)
     current_location = models.ForeignKey("core.Location", null=True, blank=True, on_delete=models.CASCADE)
     current_department = models.ForeignKey("hr.Department", null=True, blank=True, on_delete=models.CASCADE)
     current_employee = models.ForeignKey(

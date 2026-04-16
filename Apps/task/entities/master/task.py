@@ -241,7 +241,14 @@ register_entity(
                     {"name": "team", "label": "Team", "type": "select", "required": False, "col": 6, "url_name": "team_select"},
                     {"name": "parent_task", "label": "Parent Task", "type": "select", "required": False, "col": 6, "url_name": "task_select"},
                     {"name": "labels", "label": "Labels", "type": "select", "required": False, "col": 12, "url_name": "task_label_select", "multiple": True},
-                    {"name": "description", "label": "Description", "type": "textarea", "required": False, "col": 12},
+                    {
+                        "name": "description",
+                        "label": "Description",
+                        "type": "richtext",
+                        "required": False,
+                        "col": 12,
+                        "placeholder": "Write the task scope, steps, links, and delivery notes...",
+                    },
                 ],
             },
             {

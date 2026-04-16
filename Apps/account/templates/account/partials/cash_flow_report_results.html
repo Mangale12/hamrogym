@@ -1,0 +1,131 @@
+{% load report_tags %}
+{% if report_data %}
+  <div class="col-12">
+    <div class="row g-3 report-summary-cards">
+      {% for card in summary_cards %}
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="border rounded p-3 bg-light h-100">
+            <div class="text-muted small">{{ card.label }}</div>
+            <div class="fs-4 fw-semibold">{{ card.value|floatformat:2 }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card report-output-area">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h5 class="mb-1">{{ report_data.report_title }}</h5>
+          <small class="text-muted">Generated at {{ report_data.generated_at|date:"Y-m-d H:i" }}</small>
+        </div>
+        <div class="d-flex gap-2 report-action-bar">
+          {% for action in report_actions %}
+            {% render_report_action action report_data export_query %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="cash-flow-meta">
+          <span class="cash-flow-badge">{{ report_data.date_from }} to {{ report_data.date_to }}</span>
+          <span class="cash-flow-badge">{{ report_data.method }}</span>
+          {% if report_data.organization %}
+            <span class="cash-flow-badge">{{ report_data.organization }}</span>
+          {% endif %}
+          {% if report_data.branch %}
+            <span class="cash-flow-badge">{{ report_data.branch }}</span>
+          {% endif %}
+          {% if report_data.fiscal_year %}
+            <span class="cash-flow-badge">{{ report_data.fiscal_year }}</span>
+          {% endif %}
+          {% if report_data.profit_loss_url %}
+            <a href="{{ report_data.profit_loss_url }}" class="cash-flow-badge text-decoration-none">Open Profit &amp; Loss</a>
+          {% endif %}
+          {% if report_data.balance_sheet_url %}
+            <a href="{{ report_data.balance_sheet_url }}" class="cash-flow-badge text-decoration-none">Open Balance Sheet</a>
+          {% endif %}
+        </div>
+
+        <div class="cash-flow-status {% if report_data.summary.reconciliation_gap == 0 %}is-balanced{% else %}is-warning{% endif %} mb-3">
+          <div class="fw-semibold">
+            {% if report_data.summary.reconciliation_gap == 0 %}
+              Cash flow reconciles to the movement in cash and cash equivalents.
+            {% else %}
+              Cash flow classification gap detected: {{ report_data.summary.reconciliation_gap|floatformat:2 }}.
+            {% endif %}
+          </div>
+          <div class="small text-muted mt-1">
+            Opening Cash: {{ report_data.summary.opening_cash|floatformat:2 }} |
+            Net Change: {{ report_data.summary.net_change_in_cash|floatformat:2 }} |
+            Closing Cash: {{ report_data.summary.closing_cash|floatformat:2 }} |
+            Internal transfers between cash and bank ledgers are excluded.
+          </div>
+        </div>
+
+        <div class="cash-flow-grid">
+          <div class="cash-flow-stack">
+            {% include "account/partials/cash_flow_section.html" with section=report_data.operating_section %}
+          </div>
+          <div class="cash-flow-stack">
+            {% include "account/partials/cash_flow_section.html" with section=report_data.investing_section %}
+            {% include "account/partials/cash_flow_section.html" with section=report_data.financing_section %}
+          </div>
+        </div>
+
+        <div class="cash-flow-panel mt-4">
+          <div class="cash-flow-panel-header">
+            <h5>Cash &amp; Cash Equivalents</h5>
+            <small>{{ report_data.summary.cash_accounts_detected }} ledger(s) detected for cash and bank balances.</small>
+          </div>
+          <div class="table-responsive">
+            <table class="table cash-flow-table">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">Code</th>
+                  <th>Cash Ledger</th>
+                  <th class="text-end" style="width: 150px;">Opening</th>
+                  <th class="text-end" style="width: 150px;">Inflow</th>
+                  <th class="text-end" style="width: 150px;">Outflow</th>
+                  <th class="text-end" style="width: 150px;">Closing</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in report_data.cash_accounts %}
+                  <tr class="cash-flow-row">
+                    <td>{{ row.code|default:"-" }}</td>
+                    <td>
+                      <div class="cash-flow-account">
+                        <span class="cash-flow-account-name">{{ row.name }}</span>
+                        {% if row.full_path and row.full_path != row.name %}
+                          <small>{{ row.full_path }}</small>
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td class="cash-flow-amount">{{ row.opening_balance|floatformat:2 }}</td>
+                    <td class="cash-flow-amount is-positive">{{ row.inflow|floatformat:2 }}</td>
+                    <td class="cash-flow-amount is-negative">{{ row.outflow|floatformat:2 }}</td>
+                    <td class="cash-flow-amount {% if row.is_negative_closing %}is-negative{% endif %}">{{ row.closing_balance|floatformat:2 }}</td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No cash or bank ledgers matched the current chart setup.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr class="cash-flow-total">
+                  <td colspan="2">Total Cash &amp; Cash Equivalents</td>
+                  <td class="cash-flow-amount">{{ report_data.summary.opening_cash|floatformat:2 }}</td>
+                  <td class="cash-flow-amount is-positive">{{ report_data.summary.cash_inflow|floatformat:2 }}</td>
+                  <td class="cash-flow-amount is-negative">{{ report_data.summary.cash_outflow|floatformat:2 }}</td>
+                  <td class="cash-flow-amount {% if report_data.summary.closing_cash < 0 %}is-negative{% endif %}">{{ report_data.summary.closing_cash|floatformat:2 }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
