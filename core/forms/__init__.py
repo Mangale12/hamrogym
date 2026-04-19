@@ -9,4 +9,7 @@ from .user_form import UserForm
 from .brand_form import BrandForm
 from .location_type_form import LocationTypeForm
 from .location_form import LocationForm
+from .party_role_form import PartyRoleForm
+from .party_type_form import PartyTypeForm
+from .party_form import PartyForm
 from .widgets import RichTextWidget

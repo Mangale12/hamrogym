@@ -63,6 +63,24 @@ SIDEBAR_ITEMS = [
                 "url_name": "location_list",
                 "match": "/core/locations",
             },
+            {
+                "label": "Party Type",
+                "icon": "map-pin",
+                "url_name": "party_type_list",
+                "match": "/core/party-types",
+            },
+            {
+                "label": "Party Role",
+                "icon": "users",
+                "url_name": "party_role_list",
+                "match": "/core/party-roles",
+            },
+            {
+                "label": "Party",
+                "icon": "users",
+                "url_name": "party_list",
+                "match": "/core/parties",
+            }
         ],
     },
     {

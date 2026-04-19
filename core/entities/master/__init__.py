@@ -12,3 +12,6 @@ from . import approval_workflow  # noqa: F401
 from . import brand  # noqa: F401
 from . import location_type  # noqa: F401
 from . import location  # noqa: F401
+from . import party_type  # noqa: F401
+from . import party_role  # noqa: F401
+from . import party  # noqa: F401
