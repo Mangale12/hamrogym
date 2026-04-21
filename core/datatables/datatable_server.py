@@ -1,4 +1,4 @@
-# Apps/datatables/datatable_server.py
+# Nepanest/datatables/datatable_server.py
 from django.http import JsonResponse
 from django.db.models import Q, F
 from django.core.paginator import Paginator

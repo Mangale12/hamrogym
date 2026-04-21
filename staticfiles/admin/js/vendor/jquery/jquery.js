@@ -1306,7 +1306,7 @@ function setDocument( node ) {
 			rbuggyQSA.push( ":checked" );
 		}
 
-		// Support: Windows 8 Native Apps
+		// Support: Windows 8 Native Nepanest
 		// The type and name attributes are restricted during .innerHTML assignment
 		input = document.createElement( "input" );
 		input.setAttribute( "type", "hidden" );
@@ -4648,7 +4648,7 @@ var rscriptType = ( /^$|^module$|\/(?:java|ecma)script/i );
 
 	// Support: Android 4.0 - 4.3 only
 	// Check state lost if the name is set (trac-11217)
-	// Support: Windows Web Apps (WWA)
+	// Support: Windows Web Nepanest (WWA)
 	// `name` and `type` must use .setAttribute for WWA (trac-14901)
 	input.setAttribute( "type", "radio" );
 	input.setAttribute( "checked", "checked" );

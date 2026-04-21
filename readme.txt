@@ -40,16 +40,16 @@ python3 manage.py generate_entity hr project Project --group master --create-mod
 
 It creates:
 
-1. `Apps/hr/entities/master/project.py`
-2. `Apps/hr/datatables/project_data_table.py`
-3. `Apps/hr/forms/project_form.py`
-4. `Apps/hr/models/project.py` if `--create-model` is used
+1. `Nepanest/hr/entities/master/project.py`
+2. `Nepanest/hr/datatables/project_data_table.py`
+3. `Nepanest/hr/forms/project_form.py`
+4. `Nepanest/hr/models/project.py` if `--create-model` is used
 
 It also updates:
 
-1. `Apps/hr/entities/__init__.py`
-2. `Apps/hr/entities/master/__init__.py`
-3. `Apps/hr/models/__init__.py` if model was generated inside `models/`
+1. `Nepanest/hr/entities/__init__.py`
+2. `Nepanest/hr/entities/master/__init__.py`
+3. `Nepanest/hr/models/__init__.py` if model was generated inside `models/`
 
 
 3. AFTER GENERATE, WHERE TO CHANGE
@@ -58,7 +58,7 @@ It also updates:
 
 File:
 
-`Apps/hr/models/project.py`
+`Nepanest/hr/models/project.py`
 
 Change here:
 
@@ -96,7 +96,7 @@ python3 manage.py migrate
 
 File:
 
-`Apps/hr/forms/project_form.py`
+`Nepanest/hr/forms/project_form.py`
 
 Change here:
 
@@ -121,7 +121,7 @@ If `fiscal_year` is auto-filled from session, do not include it in form fields.
 
 File:
 
-`Apps/hr/datatables/project_data_table.py`
+`Nepanest/hr/datatables/project_data_table.py`
 
 Change here:
 
@@ -145,7 +145,7 @@ PROJECT_COLUMNS = [
 
 File:
 
-`Apps/hr/entities/master/project.py`
+`Nepanest/hr/entities/master/project.py`
 
 Change here:
 
@@ -190,7 +190,7 @@ register_entity(
 
 If needed, check:
 
-`Apps/hr/models/__init__.py`
+`Nepanest/hr/models/__init__.py`
 
 Add:
 
@@ -203,8 +203,8 @@ from .project import Project
 
 Check:
 
-1. `Apps/hr/entities/__init__.py`
-2. `Apps/hr/entities/master/__init__.py`
+1. `Nepanest/hr/entities/__init__.py`
+2. `Nepanest/hr/entities/master/__init__.py`
 
 Make sure generated import exists.
 
@@ -215,7 +215,7 @@ If you want it in sidebar, add it in app sidebar file.
 
 Example:
 
-`Apps/hr/sidebar.py`
+`Nepanest/hr/sidebar.py`
 
 Add item like:
 
@@ -234,7 +234,7 @@ This project uses generic entity views.
 
 Usually you need a view wrapper file like:
 
-`Apps/hr/views/project.py`
+`Nepanest/hr/views/project.py`
 
 Pattern:
 
@@ -267,14 +267,14 @@ Check existing pattern in:
 
 For a new entity, check these files:
 
-1. `Apps/<app>/models/<entity>.py`
-2. `Apps/<app>/models/__init__.py`
-3. `Apps/<app>/forms/<entity>_form.py`
-4. `Apps/<app>/datatables/<entity>_data_table.py`
-5. `Apps/<app>/entities/master/<entity>.py`
-6. `Apps/<app>/entities/master/__init__.py`
-7. `Apps/<app>/views/<entity>.py`
-8. `Apps/<app>/sidebar.py`
+1. `Nepanest/<app>/models/<entity>.py`
+2. `Nepanest/<app>/models/__init__.py`
+3. `Nepanest/<app>/forms/<entity>_form.py`
+4. `Nepanest/<app>/datatables/<entity>_data_table.py`
+5. `Nepanest/<app>/entities/master/<entity>.py`
+6. `Nepanest/<app>/entities/master/__init__.py`
+7. `Nepanest/<app>/views/<entity>.py`
+8. `Nepanest/<app>/sidebar.py`
 9. app urls or `config/urls.py`
 
 
@@ -299,12 +299,12 @@ python3 manage.py generate_entity hr project Project --group master --create-mod
 
 Then edit:
 
-1. `Apps/hr/models/project.py`
-2. `Apps/hr/forms/project_form.py`
-3. `Apps/hr/datatables/project_data_table.py`
-4. `Apps/hr/entities/master/project.py`
-5. `Apps/hr/views/project.py`
-6. `Apps/hr/sidebar.py`
+1. `Nepanest/hr/models/project.py`
+2. `Nepanest/hr/forms/project_form.py`
+3. `Nepanest/hr/datatables/project_data_table.py`
+4. `Nepanest/hr/entities/master/project.py`
+5. `Nepanest/hr/views/project.py`
+6. `Nepanest/hr/sidebar.py`
 
 Then run:
 

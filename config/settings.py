@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from importlib.util import find_spec
 from pathlib import Path
 import os
 
@@ -38,15 +39,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'Apps.hamrogym.apps.HamrogymConfig',
-    'Apps.hr.apps.HrConfig',
-    'Apps.assets.apps.AssetsConfig',
-    'django_extensions',
+    'Nepanest.hamrogym.apps.HamrogymConfig',
+    'Nepanest.hr.apps.HrConfig',
+    'Nepanest.assets.apps.AssetsConfig',
+    'Nepanest.finance.apps.FinanceConfig',
     'core.apps.CoreConfig',
-    'Apps.task.apps.TaskConfig',
-    'Apps.billing.apps.BillingConfig',
-    'Apps.account.apps.AccountConfig',
+    'Nepanest.task.apps.TaskConfig',
+    'Nepanest.billing.apps.BillingConfig',
+    'Nepanest.account.apps.AccountConfig',
 ]
+
+if find_spec("django_extensions"):
+    INSTALLED_APPS.append("django_extensions")
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

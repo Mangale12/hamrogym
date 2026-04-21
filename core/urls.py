@@ -1,7 +1,7 @@
 from django.urls import path
 
 from core.registry import get_entities
-from Apps.task.views import (
+from Nepanest.task.views import (
     ChecklistTemplateItemsView,
     TaskBillingGenerateView,
     TaskBillingStatusUpdateView,

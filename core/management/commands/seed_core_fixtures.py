@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
-from django.core.management.base import BaseCommand
+
 from django.apps import apps
+from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     help = "Seed all ErpEntity records from JSON in core/fixtures dynamically"
