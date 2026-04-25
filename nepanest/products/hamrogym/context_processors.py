@@ -1,69 +1,17 @@
-from django.urls import NoReverseMatch, reverse
-
-
 def sidebar_items(request):
-    items = [
-        {
-            "label": "Dashboard",
-            "icon": "home",
-            "url_name": "dashboard",
-            "match": "/",
-        },
-        {
-            "label": "Users",
-            "icon": "users",
-            "url": "#",
-        },
-        {
-            "label": "Members",
-            "icon": "user",
-            "url": "#",
-        },
-        {
-            "label": "Trainers",
-            "icon": "briefcase",
-            "url": "#",
-        },
-        {
-            "label": "Attendance",
-            "icon": "calendar",
-            "url": "#",
-        },
-        {
-            "label": "Payments",
-            "icon": "credit-card",
-            "url": "#",
-        },
-        {
-            "label": "Reports",
-            "icon": "bar-chart-2",
-            "url": "#",
-        },
-        {
-            "label": "Settings",
-            "icon": "settings",
-            "url": "#",
-        },
-    ]
+    return {"sidebar_items": []}
 
-    path = request.path or "/"
 
-    for item in items:
-        url = item.get("url")
-        url_name = item.get("url_name")
-        if (not url or url == "#") and url_name:
-            try:
-                url = reverse(url_name)
-            except NoReverseMatch:
-                url = "#"
-        item["url"] = url
+def base_layout_template(request):
+    host = ""
+    if request:
+        host = (request.get_host() or "").split(":", 1)[0].lower()
 
-        match = item.get("match") or url
-        if match in (None, "", "#"):
-            item["is_active"] = False
-        elif match == "/":
-            item["is_active"] = path == "/"
-        else:
-            item["is_active"] = path.startswith(match.rstrip("/"))
+    urlconf = getattr(request, "urlconf", "") or ""
+    is_nepanest = host == "nepanest.local" or urlconf == "config.urlconfs.nepanest"
 
-    return {"sidebar_items": items}
+    return {
+        "base_layout_template": (
+            "layouts/shared_app.html" if is_nepanest else "hamrogym/layouts/app.html"
+        )
+    }

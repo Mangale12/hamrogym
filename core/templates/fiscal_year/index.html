@@ -24,7 +24,7 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-  const table = window.fiscalYearTable || $('#fiscalYearTable').DataTable();
+  const table = window.fiscalYearTable;
 
   initCrudModal({
     modalId: 'fiscalYearModal',

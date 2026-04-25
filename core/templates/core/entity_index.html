@@ -32,7 +32,7 @@
 {% endif %}
 <script>
 $(document).ready(function() {
-  const table = window['{{ table_id }}'] || $('#{{ table_id }}').DataTable();
+  const table = window['{{ table_id }}'];
 
   const resetDefaults = (() => {
     const el = document.getElementById('reset-defaults');

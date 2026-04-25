@@ -1,123 +1,102 @@
-{# nepanest/datatables/templates/datatables/base.html #}
 {% load static %}
 
-<div class="datatable-container {{ wrapper_class|default:datatable_wrapper_class|default:'' }}">
+{% with table_id_final=table_id|default:"dataTable" %}
+<div class="datatable-container ag-grid-shell {{ wrapper_class|default:datatable_wrapper_class|default:'' }}">
     <style>
-        #{{ table_id|default:'dataTable' }} tbody tr.datatable-overdue-row > td {
-            background-color: #fff3cd !important;
+        .ag-grid-shell {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .ag-grid-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .ag-grid-toolbar .input-group {
+            max-width: 340px;
+        }
+
+        .ag-grid-meta {
+            color: #667085;
+            font-size: 0.85rem;
+        }
+
+        .ag-grid-panel {
+            border: 1px solid #e4e7ec;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+        }
+
+        #{{ table_id_final }} {
+            width: 100%;
+            min-height: 520px;
+        }
+
+        #{{ table_id_final }} .ag-row.datatable-overdue-row .ag-cell {
+            background-color: #fff3cd;
         }
     </style>
+
     {% if datatable_options %}
-      {% with table_id_final=table_id|default:"dataTable" %}
         {% with options_id="datatable-options-"|add:table_id_final %}
-          {{ datatable_options|json_script:options_id }}
+            {{ datatable_options|json_script:options_id }}
         {% endwith %}
-      {% endwith %}
     {% endif %}
-    <table id="{{ table_id|default:'dataTable' }}"
-           class="{{ table_class|default:datatable_table_class }}"
-           style="width:100%">
-        <thead>
-            <tr>
-                {% if show_sno != False %}
-                <th>S. No.</th>
-                {% endif %}
-                {% for column in columns %}
-                <th>{{ column.title|default:column.name }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {# Data will be loaded via AJAX #}
-        </tbody>
-    </table>
+    {% with columns_id="ag-grid-columns-"|add:table_id_final %}
+        {{ columns|json_script:columns_id }}
+    {% endwith %}
+
+    <div class="ag-grid-toolbar">
+        <div class="input-group">
+            <span class="input-group-text"><i data-feather="search"></i></span>
+            <input
+                type="search"
+                class="form-control"
+                id="ag-grid-search-{{ table_id_final }}"
+                placeholder="Search records">
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-secondary" id="ag-grid-refresh-{{ table_id_final }}">
+                <i data-feather="rotate-cw"></i>
+                Refresh
+            </button>
+            <span class="ag-grid-meta" id="ag-grid-status-{{ table_id_final }}">Loading grid...</span>
+        </div>
+    </div>
+
+    <div class="ag-grid-panel">
+        <div id="{{ table_id_final }}" class="ag-theme-quartz"></div>
+    </div>
 </div>
 
-{% block datatable_scripts %}
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
-
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@35.2.1/dist/ag-grid-community.min.js"></script>
+<script src="{% static 'js/ag-grid-table.js' %}"></script>
 <script>
-$(document).ready(function() {
-    const optionsEl = document.getElementById('datatable-options-{{ table_id|default:"dataTable" }}');
+document.addEventListener('DOMContentLoaded', function() {
+    const columns = JSON.parse(
+        document.getElementById('ag-grid-columns-{{ table_id_final }}').textContent
+    );
+    const optionsEl = document.getElementById('datatable-options-{{ table_id_final }}');
     const options = optionsEl ? JSON.parse(optionsEl.textContent) : {};
 
-    const tableInstance = $('#{{ table_id|default:"dataTable" }}').DataTable({
-        processing: true,
-        serverSide: options.server_side !== undefined ? options.server_side : true,
-        ajax: {
-            url: "{{ ajax_url }}",
-            cache: false
-        },
-        columns: [
-            {% if show_sno != False %}
-            {
-                data: "__sno__",
-                title: "S. No.",
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
-                }
-            },
-            {% endif %}
-            {% for column in columns %}
-            {
-                data: "{{ column.name }}",
-                title: "{{ column.title|default:column.name }}",
-                {% if column.orderable is False %}orderable: false,{% endif %}
-                {% if column.searchable is False %}searchable: false,{% endif %}
-                {% if column.render %}render: {{ column.render|safe }},{% endif %}
-            },
-            {% endfor %}
-        ],
-        createdRow: function(row, data) {
-            if (data && data.is_overdue) {
-                $(row).addClass('datatable-overdue-row');
-            }
-        },
-        pageLength: options.page_length !== undefined ? options.page_length : {{ page_length|default:10 }},
-        lengthMenu: options.length_menu || [10, 25, 50, 100],
-        scrollX: options.scroll_x !== undefined ? options.scroll_x : false,
-        scrollY: options.scroll_y || null,
-        scrollCollapse: options.scroll_collapse !== undefined ? options.scroll_collapse : false,
-        responsive: options.responsive !== undefined ? options.responsive : false,
-        stateSave: options.state_save !== undefined ? options.state_save : false,
-        paging: options.paging !== undefined ? options.paging : true,
-        searching: options.searching !== undefined ? options.searching : true,
-        ordering: options.ordering !== undefined ? options.ordering : true,
-        info: options.info !== undefined ? options.info : true,
-        autoWidth: options.auto_width !== undefined ? options.auto_width : true,
-        dom: options.dom || 'Bfrtip',
-        order: options.order || undefined,
-        buttons: options.buttons || ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
-        language: {
-            processing: "Loading...",
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        }
+    const tableInstance = window.initAgGridTable({
+        tableId: '{{ table_id_final }}',
+        ajaxUrl: '{{ ajax_url }}',
+        columns: columns,
+        options: options,
+        pageLength: options.page_length !== undefined ? options.page_length : {{ page_length|default:25 }},
+        showSno: {% if show_sno != False %}true{% else %}false{% endif %}
     });
 
     {% if table_var %}
-    window.{{ table_var }} = tableInstance;
+    window['{{ table_var }}'] = tableInstance;
     {% endif %}
 });
 </script>
-{% endblock %}
+{% endwith %}

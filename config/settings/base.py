@@ -23,6 +23,24 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+HOST_URLCONF_MAP = {
+    "127.0.0.1": "config.urls",
+    "localhost": "config.urls",
+    "hamrogym.local": "config.urls",
+    "hamrogym.nepanest.local": "config.urls",
+    "nepanest.local": "config.urlconfs.nepanest",
+}
+
+PRODUCT_SUBDOMAIN_BASE_DOMAIN = os.environ.get(
+    "DJANGO_PRODUCT_SUBDOMAIN_BASE_DOMAIN",
+    "nepanest.local",
+).strip().lower()
+
+PRODUCT_SUBDOMAIN_URLCONFS = {
+    "hamrogym": "config.urls",
+    "nepanest": "config.urlconfs.nepanest",
+}
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -32,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "nepanest.products.hamrogym.apps.HamroGymConfig",
+    "nepanest.products.nepanest.apps.NepanestProductConfig",
     "nepanest.modules.people.apps.PeopleModuleConfig",
     "nepanest.modules.human_resources.apps.HumanResourcesModuleConfig",
     "nepanest.modules.assets.apps.AssetsModuleConfig",
@@ -49,6 +68,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "nepanest.common.middlewares.host_routing.HostURLConfMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -69,6 +89,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "nepanest.common.helpers.context.organization_context",
+                "nepanest.products.hamrogym.context_processors.base_layout_template",
             ],
         },
     },
@@ -125,10 +146,17 @@ USE_TZ = True
 
 
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = []
+
+project_static_dir = BASE_DIR / "static"
+if project_static_dir.exists():
+    STATICFILES_DIRS.append(project_static_dir)
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"

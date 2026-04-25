@@ -1,0 +1,563 @@
+{% extends "hamrogym/layouts/app.html" %}
+
+{% block title %}HamroGym Dashboard{% endblock %}
+{% block page_title %}HamroGym Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dashboard-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .hero-panel {
+    border: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    color: #fff;
+    background:
+      radial-gradient(circle at top right, rgba(251, 146, 60, 0.28), transparent 28%),
+      linear-gradient(135deg, #0f172a 0%, #1f2937 48%, #7c2d12 100%);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .hero-copy {
+    max-width: 36rem;
+  }
+
+  .hero-stat {
+    border-radius: 18px;
+    padding: 1rem 1.1rem;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .hero-stat-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .hero-stat-value {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .surface-card {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  }
+
+  .focus-card {
+    height: 100%;
+    border: 1px solid #fde7d6;
+    border-radius: 18px;
+    padding: 1.1rem;
+    background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
+  }
+
+  .focus-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff1e8;
+    color: #c2410c;
+    margin-bottom: 0.9rem;
+  }
+
+  .stat-card {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    height: 100%;
+  }
+
+  .stat-card .icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .theme-sky { background: linear-gradient(180deg, #f7fbff 0%, #e7f2ff 100%); }
+  .theme-sky .icon-wrap { background: rgba(14, 116, 144, 0.14); color: #0c4a6e; }
+  .theme-emerald { background: linear-gradient(180deg, #f4fff9 0%, #e0f7ea 100%); }
+  .theme-emerald .icon-wrap { background: rgba(5, 150, 105, 0.14); color: #065f46; }
+  .theme-amber { background: linear-gradient(180deg, #fffaf1 0%, #ffedc2 100%); }
+  .theme-amber .icon-wrap { background: rgba(217, 119, 6, 0.14); color: #92400e; }
+  .theme-rose { background: linear-gradient(180deg, #fff7f7 0%, #ffe4e6 100%); }
+  .theme-rose .icon-wrap { background: rgba(225, 29, 72, 0.14); color: #9f1239; }
+
+  .metric-value {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .module-group {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1rem;
+    height: 100%;
+    background: #fff;
+  }
+
+  .module-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    color: inherit;
+    text-decoration: none;
+    border-top: 1px solid #eef2f7;
+  }
+
+  .module-link:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .module-link.disabled {
+    color: #94a3b8;
+    pointer-events: none;
+  }
+
+  .quick-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    border-radius: 16px;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .quick-link:hover {
+    transform: translateY(-2px);
+    border-color: #fdba74;
+    box-shadow: 0 16px 30px rgba(249, 115, 22, 0.12);
+  }
+
+  .quick-link-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff7ed;
+    color: #c2410c;
+    flex-shrink: 0;
+  }
+
+  .soft-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: capitalize;
+  }
+
+  .badge-pending { background: #fff7ed; color: #9a3412; }
+  .badge-approved, .badge-active { background: #ecfdf3; color: #166534; }
+  .badge-draft { background: #eff6ff; color: #1d4ed8; }
+  .badge-rejected, .badge-inactive { background: #fff1f2; color: #be123c; }
+
+  .list-table td,
+  .list-table th {
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+    vertical-align: middle;
+  }
+
+  .ops-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .ops-card {
+    border: 1px solid #e7ecf3;
+    border-radius: 18px;
+    padding: 1.1rem;
+    background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+  }
+
+  .ops-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.8rem;
+    color: #9a3412;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .ops-value {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .lane-card {
+    border: 0;
+    border-radius: 20px;
+    background:
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 28%),
+      linear-gradient(180deg, #fffdfb 0%, #ffffff 100%);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
+  }
+
+  .lane-item {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding: 0.95rem 0;
+    border-top: 1px solid #eef2f7;
+  }
+
+  .lane-item:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .lane-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff1e8;
+    color: #c2410c;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 767.98px) {
+    .hero-panel .row > div + div {
+      margin-top: 1rem;
+    }
+
+    .ops-strip {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-shell">
+  <section class="card hero-panel">
+    <div class="card-body p-4 p-lg-5">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <span class="hero-tag mb-3">
+            <i data-feather="activity"></i>
+            /product/hamrogym/dashboard/
+          </span>
+          <div class="hero-copy">
+            <h2 class="mb-3 fw-bold">HamroGym now runs on its own dashboard, separate from the Nepanest product page.</h2>
+            <p class="mb-4 text-white-50">
+              This page is the HamroGym command center. We can keep using shared modules underneath, but the dashboard
+              experience, messaging, and entry point now belong to HamroGym only.
+            </p>
+          </div>
+          <div class="d-flex flex-wrap gap-3">
+            {% for link in quick_links|slice:":2" %}
+            <a href="{{ link.url }}" class="btn btn-light btn-lg{% if link.url == '#' %} disabled{% endif %}">
+              {{ link.title }}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="hero-stat">
+                <span class="hero-stat-label">Employees</span>
+                <span class="hero-stat-value">{{ stats.1.value }}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="hero-stat">
+                <span class="hero-stat-label">Applicants</span>
+                <span class="hero-stat-value">{{ stats.3.value }}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="hero-stat">
+                <span class="hero-stat-label">Open Posts</span>
+                <span class="hero-stat-value">{{ stats.2.value }}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="hero-stat">
+                <span class="hero-stat-label">System Users</span>
+                <span class="hero-stat-value">{{ stats.0.value }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ops-strip">
+    {% for panel in operations_panels %}
+    <div class="ops-card">
+      <div class="ops-kicker">
+        <i data-feather="{{ panel.icon }}"></i>
+        {{ panel.label }}
+      </div>
+      <div class="ops-value">{{ panel.value }}</div>
+      <p class="text-muted small mb-0 mt-2">{{ panel.description }}</p>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="row g-4">
+    {% for area in focus_areas %}
+    <div class="col-md-4">
+      <div class="focus-card">
+        <span class="focus-icon">
+          <i data-feather="{{ area.icon }}"></i>
+        </span>
+        <h6 class="mb-2">{{ area.title }}</h6>
+        <p class="text-muted small mb-0">{{ area.description }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="row g-4">
+    <div class="col-lg-6">
+      <div class="card lane-card h-100">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+          <h5 class="mb-1">HamroGym Product Lanes</h5>
+          <p class="text-muted small mb-0">A gym-first dashboard should reflect member flow, coaching flow, and team flow.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          {% for lane in dashboard_lanes %}
+          <div class="lane-item">
+            <span class="lane-icon">
+              <i data-feather="{{ lane.icon }}"></i>
+            </span>
+            <div>
+              <h6 class="mb-1">{{ lane.title }}</h6>
+              <p class="text-muted small mb-0">{{ lane.description }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card lane-card h-100">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+          <h5 class="mb-1">Why This Dashboard Is Separate</h5>
+          <p class="text-muted small mb-0">HamroGym keeps its own product identity even while reusing the platform modules below.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          {% for point in separation_points %}
+          <div class="lane-item">
+            <span class="lane-icon">
+              <i data-feather="{{ point.icon }}"></i>
+            </span>
+            <div>
+              <h6 class="mb-1">{{ point.title }}</h6>
+              <p class="text-muted small mb-0">{{ point.description }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4">
+    {% for stat in stats %}
+    <div class="col-md-6 col-xl-3">
+      <div class="card stat-card theme-{{ stat.theme }}">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <div class="text-muted small text-uppercase fw-semibold">{{ stat.label }}</div>
+              <div class="metric-value mt-2">{{ stat.value }}</div>
+            </div>
+            <div class="icon-wrap">
+              <i data-feather="{{ stat.icon }}"></i>
+            </div>
+          </div>
+          <div class="text-secondary small">{{ stat.subtitle }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="row g-4">
+    <div class="col-lg-5">
+      <div class="card surface-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">HamroGym Quick Actions</h5>
+          <p class="text-muted small mb-0">Fast access to the shared modules the HamroGym product is already leaning on.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="d-grid gap-3">
+            {% for link in quick_links %}
+            <a href="{{ link.url }}" class="quick-link{% if link.url == '#' %} disabled{% endif %}">
+              <span class="quick-link-icon">
+                <i data-feather="{{ link.icon }}"></i>
+              </span>
+              <span>
+                <strong class="d-block">{{ link.title }}</strong>
+                <span class="text-muted small">{{ link.description }}</span>
+              </span>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card surface-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Shared Nepanest Modules</h5>
+          <p class="text-muted small mb-0">HamroGym keeps its own dashboard here, while these reusable modules continue to power the back office.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="row g-3">
+            {% for group in module_groups %}
+            <div class="col-md-6">
+              <div class="module-group">
+                <h6 class="mb-2">{{ group.title }}</h6>
+                <p class="text-muted small mb-3">{{ group.summary }}</p>
+                {% for link in group.links %}
+                <a href="{{ link.url }}" class="module-link{% if link.url == '#' %} disabled{% endif %}">
+                  <span>{{ link.label }}</span>
+                  <i data-feather="arrow-right"></i>
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4">
+    <div class="col-lg-6">
+      <div class="card surface-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Recent Users</h5>
+          <p class="text-muted small mb-0">Latest system access records from the shared people module.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="table-responsive">
+            <table class="table list-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in recent_users %}
+                <tr>
+                  <td>{{ user.get_full_name|default:user.username }}</td>
+                  <td>{{ user.email|default:"-" }}</td>
+                  <td>
+                    <span class="soft-badge {% if user.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                      {% if user.is_active %}active{% else %}inactive{% endif %}
+                    </span>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-muted">No users found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card surface-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Recruitment Snapshot</h5>
+          <p class="text-muted small mb-0">A quick read on the shared hiring workflow currently feeding HamroGym.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="table-responsive">
+            <table class="table list-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for applicant in recent_applicants %}
+                <tr>
+                  <td>{{ applicant.full_name }}</td>
+                  <td>{{ applicant.job_posting.job_position.name|default:"-" }}</td>
+                  <td>
+                    <span class="soft-badge badge-{{ applicant.status|default:'pending' }}">{{ applicant.status|default:"pending" }}</span>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-muted">No applicants found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

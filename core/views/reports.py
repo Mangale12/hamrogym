@@ -140,6 +140,23 @@ class BaseReportView(LoginRequiredMixin, TemplateView):
     def get_summary_cards(self, report_data):
         return []
 
+    def get_screen_grid_columns(self, report_data):
+        return [
+            {"field": key, "headerName": label}
+            for key, label in self.get_screen_columns()
+        ]
+
+    def get_screen_grid_rows(self, report_data):
+        rows = []
+        for row in self.get_table_rows(report_data):
+            rows.append(
+                {
+                    key: self.normalize_export_value(row.get(key))
+                    for key, _label in self.get_screen_columns()
+                }
+            )
+        return rows
+
     def get_report_title(self, report_data=None):
         return (report_data or {}).get("report_title") or self.report_title
 
@@ -208,6 +225,8 @@ class BaseReportView(LoginRequiredMixin, TemplateView):
             "print_columns": self.get_print_columns(),
             "export_columns": self.get_export_columns(),
             "table_rows": self.get_table_rows(report_data),
+            "screen_grid_columns": self.get_screen_grid_columns(report_data),
+            "screen_grid_rows": self.get_screen_grid_rows(report_data),
             "export_query": export_query,
             "report_actions": self.get_report_actions(),
             "report_table_id": self.report_table_id,

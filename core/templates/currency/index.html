@@ -24,7 +24,7 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-  const table = window.currencyTable || $('#currencyTable').DataTable();
+  const table = window.currencyTable;
 
   initCrudModal({
     modalId: 'currencyModal',

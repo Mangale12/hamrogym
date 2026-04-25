@@ -1,0 +1,151 @@
+.richtext-shell {
+    border: 1px solid #d7e0ea;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.richtext-shell:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.14);
+}
+
+.richtext-shell.is-invalid {
+    border-color: #dc3545;
+}
+
+.richtext-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e5edf5;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+}
+
+.richtext-toolbar__group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding-right: 0.6rem;
+    margin-right: 0.6rem;
+    border-right: 1px solid #dce6f0;
+}
+
+.richtext-toolbar__group:last-child {
+    padding-right: 0;
+    margin-right: 0;
+    border-right: 0;
+}
+
+.richtext-toolbar button {
+    border: 1px solid #d1dbe6;
+    border-radius: 0.65rem;
+    min-width: 2.2rem;
+    height: 2.2rem;
+    padding: 0 0.6rem;
+    background: #fff;
+    color: #102033;
+    font-size: 0.92rem;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.richtext-toolbar button:hover,
+.richtext-toolbar button:focus {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.richtext-toolbar button.is-active {
+    background: #dbeafe;
+    border-color: #60a5fa;
+    color: #1d4ed8;
+}
+
+.richtext-toolbar button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.richtext-surface {
+    min-height: 240px;
+    padding: 1rem 1.1rem;
+    color: #122033;
+    line-height: 1.65;
+    outline: none;
+    overflow-wrap: anywhere;
+}
+
+.richtext-surface[data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: #94a3b8;
+}
+
+.richtext-surface h1,
+.richtext-surface h2,
+.richtext-surface h3,
+.richtext-surface h4 {
+    margin-top: 0.75rem;
+    margin-bottom: 0.65rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.richtext-surface p,
+.richtext-surface ul,
+.richtext-surface ol,
+.richtext-surface blockquote,
+.richtext-surface pre {
+    margin-bottom: 0.85rem;
+}
+
+.richtext-surface blockquote {
+    margin-left: 0;
+    padding-left: 1rem;
+    border-left: 4px solid #cbd5e1;
+    color: #475569;
+}
+
+.richtext-surface pre {
+    padding: 0.9rem 1rem;
+    border-radius: 0.8rem;
+    background: #0f172a;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+}
+
+.richtext-surface code {
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.35rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.richtext-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 1rem 0.8rem;
+    border-top: 1px solid #e5edf5;
+    background: #fbfdff;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.richtext-shell.is-disabled {
+    background: #f8fafc;
+}
+
+.richtext-shell.is-disabled .richtext-surface {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.richtext-shell.is-disabled .richtext-toolbar button {
+    pointer-events: none;
+}

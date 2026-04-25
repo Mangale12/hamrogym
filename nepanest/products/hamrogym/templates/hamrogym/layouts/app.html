@@ -1,0 +1,763 @@
+{% load static %}
+{% load sidebar_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HamroGym{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" href="{% static 'css/richtext.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/datatable-actions.js' %}"></script>
+    <script src="{% static 'js/crud-modal.js' %}"></script>
+    <script src="{% static 'js/richtext.js' %}"></script>
+    <script src="{% static 'js/dynamic-sections.js' %}"></script>
+
+    <style>
+        :root {
+            --hg-ink: #111827;
+            --hg-ink-soft: #4b5563;
+            --hg-line: rgba(148, 163, 184, 0.26);
+            --hg-surface: rgba(255, 255, 255, 0.88);
+            --hg-surface-strong: #ffffff;
+            --hg-accent: #f97316;
+            --hg-accent-soft: #fff1e8;
+            --hg-accent-deep: #9a3412;
+            --hg-highlight: #14b8a6;
+            --hg-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+            color: var(--hg-ink);
+            background:
+                radial-gradient(circle at top left, rgba(249, 115, 22, 0.18), transparent 24%),
+                radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.14), transparent 20%),
+                linear-gradient(180deg, #fff8f1 0%, #f8fafc 100%);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .hg-app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .hg-sidebar {
+            width: 300px;
+            flex-shrink: 0;
+            background:
+                radial-gradient(circle at top, rgba(249, 115, 22, 0.16), transparent 22%),
+                linear-gradient(180deg, #0f172a 0%, #172033 52%, #1f2937 100%);
+            color: #fff;
+            padding: 24px 18px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 16px 0 40px rgba(15, 23, 42, 0.14);
+            z-index: 20;
+        }
+
+        .hg-sidebar-header {
+            padding-bottom: 18px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .hg-sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .hg-sidebar-mark {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+            color: #fff;
+            box-shadow: 0 12px 30px rgba(234, 88, 12, 0.32);
+        }
+
+        .hg-sidebar-label {
+            color: rgba(255, 255, 255, 0.64);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .hg-sidebar-title {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .hg-sidebar-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.88rem;
+        }
+
+        .hg-sidebar-nav .nav {
+            gap: 8px;
+        }
+
+        .hg-nav-link,
+        .hg-subnav-link {
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .hg-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.82);
+            padding: 0.9rem 0.95rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .hg-nav-link:hover,
+        .hg-nav-link.active {
+            color: #fff;
+            background: linear-gradient(90deg, rgba(249, 115, 22, 0.26), rgba(255, 255, 255, 0.08));
+        }
+
+        .hg-nav-link.disabled,
+        .hg-subnav-link.disabled {
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .hg-nav-icon {
+            width: 20px;
+            min-width: 20px;
+            display: inline-flex;
+            justify-content: center;
+        }
+
+        .hg-nav-copy {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .hg-nav-caret {
+            display: inline-flex;
+            opacity: 0.72;
+        }
+
+        .hg-subnav {
+            margin-top: 6px;
+            padding-left: 14px;
+            gap: 6px;
+        }
+
+        .hg-subnav-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.72);
+            padding: 0.72rem 0.95rem;
+            border-radius: 14px;
+        }
+
+        .hg-subnav-link:hover,
+        .hg-subnav-link.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .hg-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .hg-shell {
+            width: min(1440px, calc(100vw - 48px));
+            margin: 0 auto;
+            padding: 24px 0 40px;
+        }
+
+        .hg-sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            padding-top: 10px;
+            margin-bottom: 16px;
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(248, 250, 252, 0.88) 78%, rgba(248, 250, 252, 0) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .hg-search-form {
+            margin: 0;
+            width: 220px;
+            min-width: 220px;
+        }
+
+        .hg-search-shell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.52rem 0.8rem;
+            border-radius: 12px;
+            border: 1px solid var(--hg-line);
+            background: #fff;
+        }
+
+        .hg-search-shell i {
+            color: var(--hg-ink-soft);
+            flex-shrink: 0;
+        }
+
+        .hg-search-input {
+            border: 0;
+            outline: 0;
+            background: transparent;
+            width: 100%;
+            color: var(--hg-ink);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .hg-search-input::placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .hg-toolbar-btn {
+            border: 1px solid var(--hg-line);
+            background: var(--hg-surface-strong);
+            border-radius: 12px;
+            padding: 0.52rem 0.7rem;
+            color: var(--hg-ink);
+        }
+
+        .hg-toolbar-btn .badge {
+            margin-left: 6px;
+        }
+
+        .calendar-switcher-form {
+            margin: 0;
+        }
+
+        .calendar-switcher {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--hg-line);
+        }
+
+        .calendar-switcher-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 8px 0 6px;
+            color: var(--hg-ink-soft);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .calendar-switcher .btn {
+            border: 0;
+            border-radius: 999px;
+            padding: 0.38rem 0.68rem;
+            color: var(--hg-ink-soft);
+            font-size: 0.74rem;
+            font-weight: 800;
+        }
+
+        .calendar-switcher .btn.active {
+            background: var(--hg-accent-soft);
+            color: var(--hg-accent-deep);
+        }
+
+        .hg-route-pill,
+        .hg-product-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.42rem 0.72rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .hg-route-pill {
+            background: var(--hg-accent-soft);
+            color: var(--hg-accent-deep);
+        }
+
+        .hg-product-pill {
+            background: rgba(20, 184, 166, 0.12);
+            color: #0f766e;
+        }
+
+        .hg-user-button {
+            border: 1px solid var(--hg-line);
+            background: var(--hg-surface-strong);
+            border-radius: 12px;
+            padding: 0.35rem 0.62rem;
+        }
+
+        .hg-user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hg-user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: #fff;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .hg-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .hg-topnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 14px;
+            border: 1px solid rgba(228, 231, 236, 0.95);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .hg-topnav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .hg-topnav-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+            white-space: nowrap;
+        }
+
+        .hg-topnav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.45rem 0.72rem;
+            border-radius: 999px;
+            color: var(--hg-ink-soft);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.82rem;
+            transition: all 0.2s ease;
+        }
+
+        .hg-topnav-link:hover,
+        .hg-topnav-link.active {
+            color: var(--hg-accent-deep);
+            background: var(--hg-accent-soft);
+        }
+
+        .hg-topnav-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.5rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(20, 184, 166, 0.1);
+            color: #0f766e;
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .hg-page-title {
+            margin: 0;
+            font-size: clamp(1.95rem, 2.2vw, 2.7rem);
+            line-height: 1.02;
+            font-weight: 900;
+            color: var(--hg-ink);
+        }
+
+        .hg-page-note {
+            margin: 6px 0 0;
+            color: var(--hg-ink-soft);
+            font-size: 0.96rem;
+        }
+
+        .hg-content {
+            min-height: 60vh;
+        }
+
+        .hg-sidebar-toggle {
+            display: none;
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 14px;
+            align-items: center;
+            justify-content: center;
+            background: #fff1e8;
+            color: #9a3412;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1f2937 0%, #7c2d12 100%);
+            color: #fff;
+        }
+
+        @media (max-width: 991.98px) {
+            .hg-sidebar {
+                position: fixed;
+                left: -320px;
+                transition: left 0.3s ease;
+                width: 286px;
+                height: 100vh;
+            }
+
+            .hg-sidebar.active {
+                left: 0;
+            }
+
+            .hg-shell {
+                width: min(100vw - 24px, 1440px);
+                padding-top: 16px;
+            }
+
+            .hg-sticky-top {
+                padding-top: 10px;
+            }
+
+            .hg-sidebar-toggle {
+                display: inline-flex;
+            }
+
+            .hg-shell {
+                width: min(100vw - 24px, 1440px);
+            }
+
+            .hg-topnav,
+            .hg-page-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hg-topnav-tools {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .hg-topnav-meta {
+                width: fit-content;
+            }
+
+            .hg-search-form {
+                width: 100%;
+                min-width: 100%;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="hg-app-shell">
+        {% render_hamrogym_sidebar %}
+
+        <div class="hg-main">
+    <div class="hg-shell">
+        <div class="hg-sticky-top">
+            <nav class="hg-topnav" aria-label="HamroGym top navigation">
+                <div class="hg-topnav-links">
+                    {% url 'dashboard' as dashboard_url %}
+                    {% url 'user_list' as user_list_url %}
+                    {% url 'employee_list' as employee_list_url %}
+                    {% url 'job_posting_list' as job_posting_list_url %}
+
+                    <button class="hg-sidebar-toggle" type="button" aria-label="Toggle sidebar">
+                        <i data-feather="menu"></i>
+                    </button>
+                    <a href="{{ dashboard_url|default:'/' }}" class="hg-topnav-link {% if request.path == dashboard_url %}active{% endif %}">
+                        <i data-feather="home"></i>
+                        Overview
+                    </a>
+                    <a href="{{ user_list_url|default:'#' }}" class="hg-topnav-link {% if user_list_url != '#' and request.path|slice:':6' == '/core/' %}active{% endif %}">
+                        <i data-feather="shield"></i>
+                        Users
+                    </a>
+                    <a href="{{ employee_list_url|default:'#' }}" class="hg-topnav-link">
+                        <i data-feather="users"></i>
+                        Staff
+                    </a>
+                    <a href="{{ job_posting_list_url|default:'#' }}" class="hg-topnav-link">
+                        <i data-feather="target"></i>
+                        Recruitment
+                    </a>
+                </div>
+
+                <div class="hg-topnav-tools">
+                    <form class="hg-search-form" role="search">
+                        <label class="hg-search-shell">
+                            <i data-feather="search"></i>
+                            <input
+                                class="hg-search-input"
+                                type="search"
+                                name="q"
+                                placeholder="Search members, staff, plans, or modules"
+                                aria-label="Global search">
+                        </label>
+                    </form>
+                    <form method="post" action="{% url 'calendar_switch' %}" class="calendar-switcher-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <div class="calendar-switcher">
+                            <div class="calendar-switcher-label">
+                                <i data-feather="calendar"></i>
+                                <span>Calendar</span>
+                            </div>
+                            <button
+                                type="submit"
+                                name="calendar_type"
+                                value="AD"
+                                class="btn {% if calendar_type == 'AD' %}active{% endif %}">
+                                AD
+                            </button>
+                            <button
+                                type="submit"
+                                name="calendar_type"
+                                value="BS"
+                                class="btn {% if calendar_type == 'BS' %}active{% endif %}">
+                                BS
+                            </button>
+                        </div>
+                    </form>
+                    <div class="dropdown">
+                        <button class="btn hg-toolbar-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i data-feather="bell"></i>
+                            <span class="badge bg-danger rounded-pill">4</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Quick Access</h6></li>
+                            <li><a class="dropdown-item" href="{{ dashboard_url|default:'/' }}">Dashboard Home</a></li>
+                            <li><a class="dropdown-item" href="{{ user_list_url|default:'#' }}">Manage Users</a></li>
+                            <li><a class="dropdown-item" href="{{ employee_list_url|default:'#' }}">Employee Records</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ job_posting_list_url|default:'#' }}">Recruitment Module</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn hg-user-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="hg-user-info">
+                                <span class="hg-user-avatar">{{ request.user.username|default:"HG"|slice:":2"|upper }}</span>
+                                <span class="text-start d-none d-md-block">
+                                    <strong class="d-block">{% firstof request.user.get_full_name request.user.username "HamroGym User" %}</strong>
+                                    <span class="text-muted small">{% firstof request.user.email "Signed in" %}</span>
+                                </span>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><span class="dropdown-item-text text-muted small">{% firstof request.user.email request.user.username "HamroGym" %}</span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">
+                                        <i data-feather="log-out"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <section class="hg-page-header">
+            <div>
+                <h2 class="hg-page-title">{% block page_title %}HamroGym{% endblock %}</h2>
+                <p class="hg-page-note">This layout is reserved for HamroGym so its dashboard never falls back to the shared Nepanest page.</p>
+            </div>
+            {% block header_actions %}{% endblock %}
+        </section>
+
+        <main class="hg-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        (function () {
+            function replaceFeatherIcons() {
+                if (window.feather) {
+                    feather.replace({ "aria-hidden": "true" });
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", replaceFeatherIcons);
+            window.addEventListener("load", replaceFeatherIcons);
+
+            const observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                    if (mutation.addedNodes.length) {
+                        replaceFeatherIcons();
+                    }
+                });
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+            window.refreshFeatherIcons = replaceFeatherIcons;
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const sidebar = document.getElementById("hgSidebar");
+                const toggle = document.querySelector(".hg-sidebar-toggle");
+                if (!sidebar || !toggle) {
+                    return;
+                }
+
+                toggle.addEventListener("click", function () {
+                    sidebar.classList.toggle("active");
+                });
+            });
+        })();
+
+        window.initializeModalSelect2 = function ($scope) {
+            const $container = $scope && $scope.length ? $scope : $(document);
+
+            $container.find("select[data-url]").each(function () {
+                const $select = $(this);
+                const url = $select.data("url");
+                const fieldName = $select.data("field-name") || "";
+                const $modal = $select.closest(".modal");
+
+                if (!url || $select.data("select2")) {
+                    return;
+                }
+
+                $select.select2({
+                    theme: "bootstrap-5",
+                    width: "100%",
+                    placeholder: fieldName ? `Select ${fieldName}` : "Select option",
+                    allowClear: !($select.prop("required")),
+                    dropdownParent: $modal.length ? $modal : undefined,
+                    ajax: {
+                        url: url,
+                        dataType: "json",
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term,
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function (data, params) {
+                            return {
+                                results: data.results || data,
+                                pagination: {
+                                    more: (params.page || 1) < (data.pagination?.total_pages || 1)
+                                }
+                            };
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
+
+                const pendingValues = $select.data("selectedValues");
+                const pendingValue = $select.attr("data-selected-value");
+                const currentValue = pendingValues || pendingValue || $select.val();
+                if (!currentValue) {
+                    return;
+                }
+
+                const values = (Array.isArray(currentValue) ? currentValue : [currentValue]).map(
+                    (item) => String(item)
+                );
+                const missing = values.filter(
+                    (val) => $select.find(`option[value="${val}"]`).length === 0
+                );
+
+                if (!missing.length) {
+                    $select.val($select.prop("multiple") ? values : values[0]).trigger("change");
+                    $select.removeAttr("data-selected-value");
+                    $select.removeData("selectedValues");
+                    $select.trigger("change");
+                    return;
+                }
+
+                $.get(url, { ids: missing.join(",") }).done(function (res) {
+                    const results = res && res.results ? res.results : [];
+                    results.forEach(function (item) {
+                        const option = new Option(item.text, item.id, true, true);
+                        $select.append(option);
+                    });
+                    $select.val($select.prop("multiple") ? values : values[0]);
+                    $select.removeAttr("data-selected-value");
+                    $select.removeData("selectedValues");
+                    $select.trigger("change");
+                });
+            });
+        };
+
+        $(document).on("shown.bs.modal", ".modal", function () {
+            window.initializeModalSelect2($(this));
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

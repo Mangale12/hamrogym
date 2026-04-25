@@ -27,30 +27,39 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="table-responsive report-screen-table-wrap">
-          <table id="{{ report_table_id|default:'sharedReportTable' }}" class="table table-striped table-bordered align-middle report-datatable">
-            <thead>
-              <tr>
-                {% for key, label in screen_columns %}
-                  <th>{{ label }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in table_rows %}
-                <tr>
-                  {% for key, label in screen_columns %}
-                    <td>{{ row|get_item:key|render_report_value }}</td>
-                  {% endfor %}
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="{{ screen_columns|length }}" class="text-center text-muted py-4">No records found.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        {% with table_key=report_table_id|default:'sharedReportTable' %}
+        {% with grid_columns_id="report-grid-columns-"|add:table_key grid_rows_id="report-grid-rows-"|add:table_key %}
+          {{ screen_grid_columns|json_script:grid_columns_id }}
+          {{ screen_grid_rows|json_script:grid_rows_id }}
+        {% endwith %}
+        <div class="report-screen-table-wrap">
+          <div class="report-grid-toolbar">
+            <div class="input-group report-grid-search-wrap">
+              <span class="input-group-text"><i data-feather="search"></i></span>
+              <input
+                type="search"
+                class="form-control"
+                id="report-grid-search-{{ report_table_id|default:'sharedReportTable' }}"
+                placeholder="Search report rows">
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                id="report-grid-refresh-{{ report_table_id|default:'sharedReportTable' }}">
+                <i data-feather="rotate-cw"></i>
+                Refresh
+              </button>
+              <span class="report-grid-meta" id="report-grid-status-{{ report_table_id|default:'sharedReportTable' }}">
+                {{ screen_grid_rows|length }} rows
+              </span>
+            </div>
+          </div>
+          <div class="report-grid-panel">
+            <div id="{{ table_key }}" class="report-ag-grid ag-theme-quartz"></div>
+          </div>
         </div>
+        {% endwith %}
         <div class="report-print-table-wrap">
           <table class="table table-striped table-bordered align-middle">
             <thead>

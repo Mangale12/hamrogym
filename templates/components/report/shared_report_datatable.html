@@ -85,6 +85,37 @@
     display: none;
   }
 
+  .report-grid-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .report-grid-search-wrap {
+    max-width: 340px;
+  }
+
+  .report-grid-meta {
+    color: #667085;
+    font-size: 0.85rem;
+  }
+
+  .report-grid-panel {
+    border: 1px solid #e4e7ec;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+  }
+
+  .report-ag-grid {
+    width: 100%;
+    min-height: 520px;
+  }
+
   @media (max-width: 768px) {
     .report-action-bar {
       width: 100%;
@@ -103,10 +134,9 @@
     .report-filter-panel,
     .report-action-bar,
     .btn,
-    .dataTables_length,
-    .dataTables_filter,
-    .dataTables_info,
-    .dataTables_paginate {
+    .report-grid-toolbar,
+    .ag-paging-panel,
+    .ag-status-bar {
       display: none !important;
     }
 
@@ -242,8 +272,7 @@
       overflow: visible !important;
     }
 
-    .report-output-area .datatable,
-    .report-output-area .report-datatable,
+    .report-output-area .report-ag-grid,
     .report-output-area .report-print-table-wrap table {
       width: 100% !important;
     }
@@ -271,17 +300,39 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@35.2.1/dist/ag-grid-community.min.js"></script>
+{% load static %}
+<script src="{% static 'js/ag-grid-table.js' %}"></script>
 <script>
 function initSharedReportUi() {
-  $('.report-datatable').each(function() {
-    if ($.fn.DataTable.isDataTable(this)) {
-      $(this).DataTable().destroy();
+  document.querySelectorAll('.report-ag-grid').forEach(function(gridEl) {
+    const tableId = gridEl.id;
+    if (!tableId || !window.initAgGridClientTable) {
+      return;
     }
-    $(this).DataTable({
-      pageLength: 25,
-      responsive: true,
-      order: [],
+    if (gridEl.dataset.gridInitialized === 'true') {
+      return;
+    }
+    const columnsEl = document.getElementById(`report-grid-columns-${tableId}`);
+    const rowsEl = document.getElementById(`report-grid-rows-${tableId}`);
+    if (!columnsEl || !rowsEl) {
+      return;
+    }
+
+    const columnDefs = JSON.parse(columnsEl.textContent || '[]');
+    const rowData = JSON.parse(rowsEl.textContent || '[]');
+
+    window.initAgGridClientTable({
+      tableId: tableId,
+      columnDefs: columnDefs,
+      rowData: rowData,
+      searchInputId: `report-grid-search-${tableId}`,
+      refreshButtonId: `report-grid-refresh-${tableId}`,
+      statusElementId: `report-grid-status-${tableId}`,
+      emptyMessage: 'No report rows found',
     });
+
+    gridEl.dataset.gridInitialized = 'true';
   });
 
   $(document).off('click.reportPrint').on('click.reportPrint', '[data-report-print="true"]', function() {
