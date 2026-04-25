@@ -1,6 +1,6 @@
 from core.datatables.views import BaseDataTableView
-from core.helpers.helper import encode_date_for_display
-from core.models import FiscalYear
+from nepanest.common.helpers.helper import encode_date_for_display
+from nepanest.foundation.fiscal import FiscalYear
 
 
 class FiscalYearDataTableView(BaseDataTableView):

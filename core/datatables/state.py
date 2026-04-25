@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from core.models import State
+from nepanest.foundation.geography import State
 
 
 class StateDataTableView(BaseDataTableView):

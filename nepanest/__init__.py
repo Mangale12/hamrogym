@@ -1,0 +1,1 @@
+"""nepanest ERP platform namespace."""

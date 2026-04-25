@@ -1,7 +1,7 @@
 from core.config import EntityConfig
 from core.datatables.branch import BranchDataTableView
 from core.forms.branch_form import BranchForm
-from core.models import Branch
+from nepanest.foundation.organization import Branch
 from core.registry import register_entity
 
 

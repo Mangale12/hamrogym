@@ -1,7 +1,7 @@
 from core.config import EntityConfig
 from core.datatables.organization import OrganizationDataTableView
 from core.forms.organization_form import OrganizationForm
-from core.models import Organization
+from nepanest.foundation.organization import Organization
 from core.registry import register_entity
 
 

@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import Country
+from nepanest.foundation.geography import Country
 
 
 class CountryForm(forms.ModelForm):

@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from core.models import OrganizationSettings
+from nepanest.foundation.organization import OrganizationSettings
 
 
 class OrganizationSettingsDataTableView(BaseDataTableView):

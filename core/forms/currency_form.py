@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models.curency import Currency
+from nepanest.foundation.fiscal import Currency
 
 class CurrencyForm(forms.ModelForm):
     class Meta:

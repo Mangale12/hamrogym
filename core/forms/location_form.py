@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import Location
+from nepanest.foundation.geography import Location
 
 
 class LocationForm(forms.ModelForm):

@@ -1,6 +1,6 @@
 from django import template
 
-from core.helpers.helper import encode_date_for_display, get_calendar_type
+from nepanest.common.helpers.helper import encode_date_for_display, get_calendar_type
 
 
 register = template.Library()

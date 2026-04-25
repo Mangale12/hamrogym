@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import FiscalYear
+from nepanest.foundation.fiscal import FiscalYear
 
 class FiscalYearForm(forms.ModelForm):
     class Meta:

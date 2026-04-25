@@ -1,0 +1,16 @@
+from nepanest.modules.human_resources.entities.master import applicant  # noqa: F401
+from nepanest.modules.human_resources.entities.master import approval_workflow_level  # noqa: F401
+from nepanest.modules.human_resources.entities.master import hire  # noqa: F401
+from nepanest.modules.human_resources.entities.master import hiring_plan  # noqa: F401
+from nepanest.modules.human_resources.entities.master import interview  # noqa: F401
+from nepanest.modules.human_resources.entities.master import interview_stage  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_application  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_batch_  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_category  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_offer  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_position  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_posting  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_posting_channel  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_requisition  # noqa: F401
+from nepanest.modules.human_resources.entities.master import job_skill  # noqa: F401
+from nepanest.modules.human_resources.entities.master import skill_level  # noqa: F401

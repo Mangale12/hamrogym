@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from core.models import Location
+from nepanest.foundation.geography import Location
 
 
 LOCATION_COLUMNS = [

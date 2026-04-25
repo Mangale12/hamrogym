@@ -1,5 +1,5 @@
 from django import forms
-from core.models import OrganizationSettings
+from nepanest.foundation.organization import OrganizationSettings
 
 
 class OrganizationSettingsForm(forms.ModelForm):

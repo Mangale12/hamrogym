@@ -1,7 +1,7 @@
 from core.config import EntityConfig
 from core.datatables import CurrencyDataTableView
 from core.forms import CurrencyForm
-from core.models.curency import Currency
+from nepanest.foundation.fiscal import Currency
 from core.registry import register_entity
 
 

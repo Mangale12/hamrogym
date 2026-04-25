@@ -5,7 +5,7 @@ from django.forms import widgets as form_widgets
 from django.utils.dateparse import parse_date
 from django.utils.html import conditional_escape
 
-from core.helpers.helper import encode_date_for_display
+from nepanest.common.helpers.helper import encode_date_for_display
 
 
 register = template.Library()

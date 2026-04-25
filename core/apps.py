@@ -5,7 +5,7 @@ class CoreConfig(AppConfig):
     name = "core"
 
     def ready(self):
-        import core.helpers.register
+        import nepanest.common.helpers.register
         from core.registry import autodiscover_entities
 
         autodiscover_entities()

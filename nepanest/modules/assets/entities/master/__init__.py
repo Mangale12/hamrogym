@@ -1,0 +1,13 @@
+from nepanest.modules.assets.entities.master import asset  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_assignment  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_category  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_condition  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_incident  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_incident_type  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_location  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_maintenance  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_status  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_transfer  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_type  # noqa: F401
+from nepanest.modules.assets.entities.master import asset_vendor  # noqa: F401
+from nepanest.modules.assets.entities.master import depreciation_register  # noqa: F401

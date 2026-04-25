@@ -3,7 +3,7 @@ from django.core.cache import cache
 from core.config import EntityConfig
 from core.datatables.organization_settings import OrganizationSettingsDataTableView
 from core.forms.organization_settings_form import OrganizationSettingsForm
-from core.models import OrganizationSettings
+from nepanest.foundation.organization import OrganizationSettings
 from core.registry import register_entity
 
 

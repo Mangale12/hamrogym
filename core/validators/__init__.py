@@ -1,2 +1,1 @@
-from .file_upload import validate_file_size, validate_file_extension
-
+from nepanest.common.validators import validate_file_extension, validate_file_size

@@ -1,7 +1,7 @@
 from core.config import EntityConfig
 from core.datatables.state import StateDataTableView
 from core.forms import StateForm
-from core.models import State
+from nepanest.foundation.geography import State
 from core.registry import register_entity
 
 

@@ -1,7 +1,7 @@
 from core.config import EntityConfig
 from core.datatables.fiscal_year import FiscalYearDataTableView
 from core.forms import FiscalYearForm
-from core.models import FiscalYear
+from nepanest.foundation.fiscal import FiscalYear
 from core.registry import register_entity
 
 

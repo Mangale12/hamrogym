@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import State
+from nepanest.foundation.geography import State
 
 
 class StateForm(forms.ModelForm):

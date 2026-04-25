@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import Branch
+from nepanest.foundation.organization import Branch
 
 
 class BranchForm(forms.ModelForm):

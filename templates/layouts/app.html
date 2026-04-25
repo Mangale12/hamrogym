@@ -726,11 +726,15 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
                 <li><h6 class="dropdown-header">Quick Access</h6></li>
-                <li><a class="dropdown-item" href="{% url 'dashboard' %}">Dashboard Home</a></li>
-                <li><a class="dropdown-item" href="{% url 'user_list' %}">Manage Users</a></li>
-                <li><a class="dropdown-item" href="{% url 'employee_list' %}">Employee Records</a></li>
+                {% url 'dashboard' as dashboard_url %}
+                {% url 'user_list' as user_list_url %}
+                {% url 'employee_list' as employee_list_url %}
+                {% url 'job_posting_list' as job_posting_list_url %}
+                <li><a class="dropdown-item" href="{{ dashboard_url|default:'/' }}">Dashboard Home</a></li>
+                <li><a class="dropdown-item" href="{{ user_list_url|default:'#' }}">Manage Users</a></li>
+                <li><a class="dropdown-item" href="{{ employee_list_url|default:'#' }}">Employee Records</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{% url 'job_posting_list' %}">Recruitment Module</a></li>
+                <li><a class="dropdown-item" href="{{ job_posting_list_url|default:'#' }}">Recruitment Module</a></li>
             </ul>
         </div>
         <div class="dropdown ms-3">

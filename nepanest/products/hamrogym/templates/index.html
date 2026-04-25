@@ -1,0 +1,375 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Dashboard | GymERP{% endblock %}
+{% block page_title %}Gym ERP Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dashboard-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .hero-panel {
+    position: relative;
+    overflow: hidden;
+    border: 0;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top right, rgba(95, 175, 255, 0.28), transparent 28%),
+      linear-gradient(135deg, #0f172a 0%, #132b50 55%, #1d4e89 100%);
+    color: #fff;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+  }
+
+  .hero-panel::after {
+    content: "";
+    position: absolute;
+    inset: auto -40px -40px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .hero-kicker {
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .hero-metric {
+    border-radius: 18px;
+    padding: 1rem 1.1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+  }
+
+  .hero-metric strong {
+    display: block;
+    font-size: 1.4rem;
+  }
+
+  .dashboard-card {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  }
+
+  .stat-card {
+    position: relative;
+    overflow: hidden;
+    border: 0;
+    border-radius: 20px;
+    color: #0f172a;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  }
+
+  .stat-card .icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .theme-sky { background: linear-gradient(180deg, #f7fbff 0%, #e7f2ff 100%); }
+  .theme-sky .icon-wrap { background: rgba(14, 116, 144, 0.14); color: #0c4a6e; }
+  .theme-emerald { background: linear-gradient(180deg, #f4fff9 0%, #e0f7ea 100%); }
+  .theme-emerald .icon-wrap { background: rgba(5, 150, 105, 0.14); color: #065f46; }
+  .theme-amber { background: linear-gradient(180deg, #fffaf1 0%, #ffedc2 100%); }
+  .theme-amber .icon-wrap { background: rgba(217, 119, 6, 0.14); color: #92400e; }
+  .theme-rose { background: linear-gradient(180deg, #fff7f7 0%, #ffe4e6 100%); }
+  .theme-rose .icon-wrap { background: rgba(225, 29, 72, 0.14); color: #9f1239; }
+
+  .metric-value {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .quick-link {
+    border-radius: 18px;
+    padding: 1rem;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+  }
+
+  .quick-link:hover {
+    transform: translateY(-2px);
+    border-color: #93c5fd;
+    box-shadow: 0 16px 30px rgba(59, 130, 246, 0.12);
+  }
+
+  .quick-link-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .list-table td,
+  .list-table th {
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+    vertical-align: middle;
+  }
+
+  .soft-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: capitalize;
+  }
+
+  .badge-pending { background: #fff7ed; color: #9a3412; }
+  .badge-approved, .badge-active { background: #ecfdf3; color: #166534; }
+  .badge-draft { background: #eff6ff; color: #1d4ed8; }
+  .badge-rejected, .badge-inactive { background: #fff1f2; color: #be123c; }
+
+  @media (max-width: 767.98px) {
+    .hero-panel .row > div + div {
+      margin-top: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-shell">
+  <section class="card hero-panel">
+    <div class="card-body p-4 p-lg-5">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+          <div class="hero-kicker mb-2">Operations Overview</div>
+          <h2 class="mb-3 fw-bold">Run HamroGym from one place with clearer hiring, admin, and user access control.</h2>
+          <p class="mb-4 text-white-50">
+            This workspace gives your team a quick operational snapshot and direct access to the records used most often in daily ERP work.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            <a href="{% url 'user_list' %}" class="btn btn-light btn-lg">Manage Users</a>
+            {% url 'employee_list' as employee_list_url %}
+            <a href="{{ employee_list_url|default:'#' }}" class="btn btn-outline-light btn-lg">Open HR Records</a>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="hero-metric">
+                <span class="text-white-50 small">Employees</span>
+                <strong>{{ stats.1.value }}</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="hero-metric">
+                <span class="text-white-50 small">Applicants</span>
+                <strong>{{ stats.3.value }}</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="hero-metric">
+                <span class="text-white-50 small">Open Posts</span>
+                <strong>{{ stats.2.value }}</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="hero-metric">
+                <span class="text-white-50 small">Users</span>
+                <strong>{{ stats.0.value }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4">
+    {% for stat in stats %}
+    <div class="col-md-6 col-xl-3">
+      <div class="card stat-card theme-{{ stat.theme }}">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <div class="text-muted small text-uppercase fw-semibold">{{ stat.label }}</div>
+              <div class="metric-value mt-2">{{ stat.value }}</div>
+            </div>
+            <div class="icon-wrap">
+              <i data-feather="{{ stat.icon }}"></i>
+            </div>
+          </div>
+          <div class="text-secondary small">{{ stat.subtitle }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="row g-4">
+    <div class="col-lg-5">
+      <div class="card dashboard-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Quick Actions</h5>
+          <p class="text-muted small mb-0">Jump directly into the core modules your team uses most.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="d-grid gap-3">
+            {% for link in quick_links %}
+            <a href="{% url link.url_name %}" class="quick-link">
+              <div class="d-flex align-items-start gap-3">
+                <span class="quick-link-icon">
+                  <i data-feather="{{ link.icon }}"></i>
+                </span>
+                <span>
+                  <strong class="d-block">{{ link.title }}</strong>
+                  <span class="text-muted small">{{ link.description }}</span>
+                </span>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card dashboard-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Recent User Accounts</h5>
+          <p class="text-muted small mb-0">Newest system access records created in the ERP.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="table-responsive">
+            <table class="table list-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in recent_users %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="text-muted small">@{{ user.username }}</div>
+                  </td>
+                  <td>{{ user.email|default:"-" }}</td>
+                  <td>
+                    <span class="soft-badge {% if user.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                      {% if user.is_active %}active{% else %}inactive{% endif %}
+                    </span>
+                  </td>
+                  <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No users found yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4">
+    <div class="col-lg-6">
+      <div class="card dashboard-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Latest Applicants</h5>
+          <p class="text-muted small mb-0">Recruitment pipeline snapshot from the HR app.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="table-responsive">
+            <table class="table list-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Job Posting</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for applicant in recent_applicants %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ applicant.name }}</div>
+                    <div class="text-muted small">{{ applicant.email|default:"No email" }}</div>
+                  </td>
+                  <td>{{ applicant.job_posting|default:"-" }}</td>
+                  <td>
+                    <span class="soft-badge badge-{{ applicant.status }}">{{ applicant.status|default:"pending" }}</span>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-4">No applicants available.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card dashboard-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Recent Job Requisitions</h5>
+          <p class="text-muted small mb-0">Track the latest hiring requests and approval stages.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="table-responsive">
+            <table class="table list-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Job Title</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for requisition in recent_requisitions %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ requisition.job_title }}</div>
+                    <div class="text-muted small">{{ requisition.designation|default:"-" }}</div>
+                  </td>
+                  <td>{{ requisition.department|default:"-" }}</td>
+                  <td>
+                    <span class="soft-badge badge-{{ requisition.status }}">{{ requisition.status }}</span>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-4">No requisitions found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

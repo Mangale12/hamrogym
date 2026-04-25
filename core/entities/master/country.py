@@ -1,7 +1,7 @@
 from core.config import EntityConfig
 from core.datatables.country import CountryDataTableView
 from core.forms import CountryForm
-from core.models import Country
+from nepanest.foundation.geography import Country
 from core.registry import register_entity
 
 

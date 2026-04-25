@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import Organization
+from nepanest.foundation.organization import Organization
 
 
 class OrganizationForm(forms.ModelForm):

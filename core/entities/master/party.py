@@ -1,6 +1,6 @@
 from core.config import EntityConfig
 from core.registry import register_entity
-from core.utils.dynamic_sections import (
+from nepanest.common.utils.dynamic_sections import (
     RelatedDynamicSectionConfig,
     build_related_section_loader,
     build_related_section_saver,

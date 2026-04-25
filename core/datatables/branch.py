@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from core.models import Branch
+from nepanest.foundation.organization import Branch
 
 
 class BranchDataTableView(BaseDataTableView):

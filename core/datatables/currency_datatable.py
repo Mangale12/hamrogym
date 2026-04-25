@@ -1,5 +1,5 @@
 from core.datatables.views import BaseDataTableView
-from core.models import Currency
+from nepanest.foundation.fiscal import Currency
 
 
 class CurrencyDataTableView(BaseDataTableView):
