@@ -14,7 +14,10 @@
     <link rel="stylesheet" href="{% static 'css/richtext.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    <link href="https://nepalidatepicker.sajanmaharjan.com.np/v5/nepali.datepicker/css/nepali.datepicker.v5.0.6.min.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@35.2.1/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@35.2.1/styles/ag-theme-quartz.css">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -22,6 +25,7 @@
     <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://nepalidatepicker.sajanmaharjan.com.np/v5/nepali.datepicker/js/nepali.datepicker.v5.0.6.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'js/datatable-actions.js' %}"></script>
     <script src="{% static 'js/crud-modal.js' %}"></script>
     <script src="{% static 'js/richtext.js' %}"></script>
@@ -299,6 +303,51 @@
         .calendar-switcher .btn.active {
             background: var(--hg-accent-soft);
             color: var(--hg-accent-deep);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .calendar-switch-field .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .calendar-switch-field .rotate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #5568d3 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            min-width: 46px;
+            min-height: 46px;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.22);
+        }
+
+        .calendar-switch-field .rotate-btn:hover,
+        .calendar-switch-field .rotate-btn:focus {
+            background: linear-gradient(135deg, #5568d3 0%, #4757c4 100%);
+            transform: rotate(180deg);
+        }
+
+        .calendar-switch-field .rotate-btn svg {
+            color: #fff;
+            width: 18px;
+            height: 18px;
+        }
+
+        .calendar-switch-field .mode-indicator {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
         }
 
         .hg-route-pill,
@@ -755,6 +804,214 @@
 
         $(document).on("shown.bs.modal", ".modal", function () {
             window.initializeModalSelect2($(this));
+        });
+
+        window.convertBSToAD = function (bsDate) {
+            const parts = String(bsDate || "").split("-");
+            if (parts.length !== 3) {
+                return "";
+            }
+
+            const bsYear = parseInt(parts[0], 10);
+            const bsMonth = parseInt(parts[1], 10);
+            const bsDay = parseInt(parts[2], 10);
+            if (Number.isNaN(bsYear) || Number.isNaN(bsMonth) || Number.isNaN(bsDay)) {
+                return "";
+            }
+
+            if (window.NepaliFunctions && typeof window.NepaliFunctions.BS2AD === "function") {
+                try {
+                    const converted = window.NepaliFunctions.BS2AD({
+                        year: bsYear,
+                        month: bsMonth,
+                        day: bsDay,
+                    });
+                    if (converted && converted.year && converted.month && converted.day) {
+                        return `${converted.year}-${String(converted.month).padStart(2, "0")}-${String(converted.day).padStart(2, "0")}`;
+                    }
+                } catch (error) {
+                    console.warn("BS2AD conversion fallback used:", error);
+                }
+            }
+
+            return "";
+        };
+
+        window.convertADToBS = function (adDate) {
+            const parts = String(adDate || "").split("-");
+            if (parts.length !== 3) {
+                return "";
+            }
+
+            const adYear = parseInt(parts[0], 10);
+            const adMonth = parseInt(parts[1], 10);
+            const adDay = parseInt(parts[2], 10);
+            if (Number.isNaN(adYear) || Number.isNaN(adMonth) || Number.isNaN(adDay)) {
+                return "";
+            }
+
+            if (window.NepaliFunctions && typeof window.NepaliFunctions.AD2BS === "function") {
+                try {
+                    const converted = window.NepaliFunctions.AD2BS({
+                        year: adYear,
+                        month: adMonth,
+                        day: adDay,
+                    });
+                    if (converted && converted.year && converted.month && converted.day) {
+                        return `${converted.year}-${String(converted.month).padStart(2, "0")}-${String(converted.day).padStart(2, "0")}`;
+                    }
+                } catch (error) {
+                    console.warn("AD2BS conversion fallback used:", error);
+                }
+            }
+
+            return "";
+        };
+
+        window.syncCalendarFieldValues = function (wrapper, sourceMode) {
+            if (!wrapper) {
+                return;
+            }
+
+            const bsInput = wrapper.querySelector('input[data-bs-input="true"]');
+            const adInput = wrapper.querySelector('input[data-ad-input="true"]');
+
+            if (sourceMode === "bs" && bsInput && adInput && bsInput.value) {
+                const converted = window.convertBSToAD(bsInput.value);
+                if (converted) {
+                    adInput.value = converted;
+                }
+            } else if (sourceMode === "ad" && adInput && bsInput && adInput.value) {
+                const converted = window.convertADToBS(adInput.value);
+                if (converted) {
+                    bsInput.value = converted;
+                }
+            }
+        };
+
+        window.updateCalendarModeIndicator = function (wrapper, mode) {
+            if (!wrapper) {
+                return;
+            }
+            const indicator = wrapper.querySelector("[data-calendar-mode-indicator]");
+            if (indicator) {
+                indicator.textContent = mode === "bs" ? "🇳🇵 BS (Bikram Sambat)" : "🌍 AD (Gregorian)";
+            }
+        };
+
+        window.ensureCalendarFieldInitialized = function (input) {
+            if (!input || input.dataset.calendarInitialized === "true") {
+                return;
+            }
+
+            const modal = input.closest(".modal");
+            const wrapper = input.closest('[data-calendar-field="true"]');
+            const options = modal && modal.id ? { container: `#${modal.id}` } : {};
+            if (wrapper) {
+                options.onChange = function (date) {
+                    input.value = date;
+                    window.syncCalendarFieldValues(wrapper, "bs");
+                };
+            }
+
+            if (typeof input.nepaliDatePicker === "function") {
+                input.nepaliDatePicker(options);
+                input.dataset.calendarInitialized = "true";
+            } else if (typeof input.NepaliDatePicker === "function") {
+                input.NepaliDatePicker(options);
+                input.dataset.calendarInitialized = "true";
+            }
+        };
+
+        window.toggleCalendarFieldMode = function (wrapper) {
+            if (!wrapper) {
+                return;
+            }
+
+            const fieldName = wrapper.dataset.fieldName || "";
+            const currentMode = wrapper.dataset.currentMode === "bs" ? "bs" : "ad";
+            const nextMode = currentMode === "bs" ? "ad" : "bs";
+            const bsInput = wrapper.querySelector('input[data-bs-input="true"]');
+            const adInput = wrapper.querySelector('input[data-ad-input="true"]');
+            const hiddenBsField = wrapper.querySelector('input[data-bs-date-field="true"]');
+
+            if (!bsInput || !adInput) {
+                return;
+            }
+
+            if (nextMode === "bs") {
+                if (adInput.value) {
+                    const converted = window.convertADToBS(adInput.value);
+                    if (converted) {
+                        bsInput.value = converted;
+                    }
+                }
+                bsInput.classList.remove("hidden");
+                adInput.classList.add("hidden");
+                bsInput.name = fieldName;
+                adInput.removeAttribute("name");
+                if (hiddenBsField) {
+                    hiddenBsField.disabled = false;
+                }
+                wrapper.dataset.currentMode = "bs";
+                window.updateCalendarModeIndicator(wrapper, "bs");
+                window.ensureCalendarFieldInitialized(bsInput);
+                return;
+            }
+
+            if (bsInput.value) {
+                const converted = window.convertBSToAD(bsInput.value);
+                if (converted) {
+                    adInput.value = converted;
+                }
+            }
+            adInput.classList.remove("hidden");
+            bsInput.classList.add("hidden");
+            adInput.name = fieldName;
+            bsInput.removeAttribute("name");
+            if (hiddenBsField) {
+                hiddenBsField.disabled = true;
+            }
+            wrapper.dataset.currentMode = "ad";
+            window.updateCalendarModeIndicator(wrapper, "ad");
+        };
+
+        window.initializeCalendarSwitchFields = function ($scope) {
+            const $container = $scope && $scope.length ? $scope : $(document);
+            $container.find('[data-calendar-field="true"]').each(function () {
+                const wrapper = this;
+                const currentMode = wrapper.dataset.currentMode === "bs" ? "bs" : "ad";
+                window.syncCalendarFieldValues(wrapper, currentMode);
+                window.updateCalendarModeIndicator(wrapper, currentMode);
+                if (currentMode === "bs") {
+                    const bsInput = wrapper.querySelector('input[data-bs-input="true"]');
+                    window.ensureCalendarFieldInitialized(bsInput);
+                }
+            });
+        };
+
+        $(function () {
+            window.initializeCalendarSwitchFields($(document));
+        });
+
+        $(document).on("click", '[data-calendar-toggle="true"]', function () {
+            window.toggleCalendarFieldMode(this.closest('[data-calendar-field="true"]'));
+        });
+
+        $(document).on("change", 'input[data-ad-input="true"]', function () {
+            window.syncCalendarFieldValues(this.closest('[data-calendar-field="true"]'), "ad");
+        });
+
+        $(document).on("change", 'input[data-bs-input="true"]', function () {
+            window.syncCalendarFieldValues(this.closest('[data-calendar-field="true"]'), "bs");
+        });
+
+        $(document).on("shown.bs.modal", ".modal", function () {
+            window.initializeCalendarSwitchFields($(this));
+        });
+
+        $(document).on("focus click", 'input[data-calendar-mode="bs"]', function () {
+            window.ensureCalendarFieldInitialized(this);
         });
     </script>
 

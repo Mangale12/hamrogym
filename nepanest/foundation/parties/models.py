@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from nepanest.common.mixins import ERPBaseModel
@@ -50,6 +51,35 @@ class Party(ERPBaseModel):
 
     def __str__(self) -> str:
         return self.display_name or self.name
+
+
+class PartyIndividualProfile(models.Model):
+    GENDER_CHOICES = (
+        ("male", "Male"),
+        ("female", "Female"),
+        ("other", "Other"),
+    )
+
+    party = models.OneToOneField(
+        Party,
+        on_delete=models.CASCADE,
+        related_name="individual_profile",
+    )
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
+    photo = models.ImageField(upload_to="party/individual_photos/", null=True, blank=True)
+
+    class Meta:
+        app_label = "core"
+        ordering = ["party_id"]
+
+    def __str__(self) -> str:
+        return f"Individual Profile for {self.party}"
+
+    def clean(self):
+        super().clean()
+        if self.party_id and self.party.category != "individual":
+            raise ValidationError({"party": "Individual profile can only be used with individual parties."})
 
 
 class PartyContact(ERPBaseModel):

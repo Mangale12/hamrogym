@@ -1,6 +1,10 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.http import JsonResponse
 from django.urls import NoReverseMatch, reverse
 from django.shortcuts import render
+
+from core.models import Party
 
 
 def _resolve_url(url_name):
@@ -191,3 +195,43 @@ def dashboard(request):
         "recent_requisitions": requisitions.select_related("department", "designation").order_by("-created_at")[:5],
     }
     return render(request, "hamrogym/dashboard.html", context)
+
+
+@login_required
+def member_available_party_select(request):
+    term = (request.GET.get("term") or request.GET.get("q") or "").strip()
+    page = max(int(request.GET.get("page", 1) or 1), 1)
+    page_size = min(max(int(request.GET.get("page_size", 20) or 20), 1), 100)
+    ids_param = (request.GET.get("ids") or request.GET.get("id") or "").strip()
+
+    queryset = Party.objects.filter(category="individual").order_by("name", "id")
+
+    if ids_param:
+        ids = [int(value) for value in ids_param.split(",") if value.strip().isdigit()]
+        queryset = queryset.filter(pk__in=ids)
+        results = [
+            {"id": obj.pk, "text": obj.display_name or obj.name}
+            for obj in queryset
+        ]
+        return JsonResponse({"results": results, "pagination": {"more": False}})
+
+    queryset = queryset.filter(hamrogym_member__isnull=True)
+    if term:
+        queryset = queryset.filter(
+            Q(name__icontains=term)
+            | Q(display_name__icontains=term)
+            | Q(pan_number__icontains=term)
+            | Q(vat_number__icontains=term)
+        )
+
+    start = (page - 1) * page_size
+    items = list(queryset[start : start + page_size + 1])
+    more = len(items) > page_size
+    items = items[:page_size]
+
+    return JsonResponse(
+        {
+            "results": [{"id": obj.pk, "text": obj.display_name or obj.name} for obj in items],
+            "pagination": {"more": more},
+        }
+    )

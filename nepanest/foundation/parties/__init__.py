@@ -6,6 +6,7 @@ from .models import (
     PartyBankDetail,
     PartyContact,
     PartyFinancial,
+    PartyIndividualProfile,
     PartyRole,
     PartyType,
 )

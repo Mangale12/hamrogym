@@ -4,4 +4,5 @@ from nepanest.foundation.parties import (
     PartyBankDetail,
     PartyContact,
     PartyFinancial,
+    PartyIndividualProfile,
 )

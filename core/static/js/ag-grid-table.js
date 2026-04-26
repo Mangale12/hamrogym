@@ -83,11 +83,52 @@
     return fieldOrder;
   }
 
+  function normalizePageLength(value, fallback) {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+    return fallback;
+  }
+
+  function resolvePageLength(config, state) {
+    return normalizePageLength(
+      state && state.pageLength,
+      normalizePageLength(config.pageLength, 25)
+    );
+  }
+
+  function resolvePageLengthOptions(config) {
+    const defaults = [10, 25, 50, 100];
+    const source = Array.isArray(config.pageLengthOptions) && config.pageLengthOptions.length
+      ? config.pageLengthOptions
+      : defaults;
+    const fallback = normalizePageLength(config.pageLength, 25);
+    const seen = new Set();
+
+    return source
+      .concat([fallback])
+      .map(function (value) {
+        return normalizePageLength(value, fallback);
+      })
+      .filter(function (value) {
+        if (seen.has(value)) {
+          return false;
+        }
+        seen.add(value);
+        return true;
+      })
+      .sort(function (left, right) {
+        return left - right;
+      });
+  }
+
   function buildRequestUrl(config, request, state) {
     const url = new URL(config.ajaxUrl, window.location.origin);
     const startRow = request.startRow || 0;
-    const endRow = request.endRow || (startRow + config.pageLength);
-    const length = Math.max(endRow - startRow, config.pageLength || 25);
+    const pageLength = resolvePageLength(config, state);
+    const endRow = request.endRow || (startRow + pageLength);
+    const length = Math.max(endRow - startRow, pageLength);
     const fieldOrder = buildFieldOrder(config);
 
     url.searchParams.set("draw", "1");
@@ -122,6 +163,27 @@
     }
   }
 
+  function applyPageLength(api, state, config, value) {
+    const nextLength = normalizePageLength(value, resolvePageLength(config, state));
+    state.pageLength = nextLength;
+    state.pendingStartRow = 0;
+    config.pageLength = nextLength;
+
+    const pageLengthSelect = document.getElementById(`ag-grid-page-length-${config.tableId}`);
+    if (pageLengthSelect) {
+      pageLengthSelect.value = String(nextLength);
+    }
+
+    api.setGridOption("cacheBlockSize", nextLength);
+    api.setGridOption("paginationPageSize", nextLength);
+    api.purgeInfiniteCache();
+    window.setTimeout(function () {
+      api.ensureIndexVisible(0, "top");
+    }, 0);
+
+    return nextLength;
+  }
+
   function buildWrapper(api, state, config) {
     const wrapper = {
       api: api,
@@ -139,12 +201,6 @@
         }
         return wrapper;
       },
-      page: function (target) {
-        if (target === "first") {
-          state.pendingStartRow = 0;
-        }
-        return wrapper;
-      },
       draw: function () {
         api.purgeInfiniteCache();
         window.setTimeout(function () {
@@ -158,7 +214,39 @@
       },
     };
 
+    wrapper.page = function (target) {
+      if (target === "first") {
+        state.pendingStartRow = 0;
+      }
+      return wrapper;
+    };
+    wrapper.page.len = function (value) {
+      applyPageLength(api, state, config, value);
+      return wrapper;
+    };
+
     return wrapper;
+  }
+
+  function bindPageLengthSelector(api, state, config) {
+    const pageLengthSelect = document.getElementById(`ag-grid-page-length-${config.tableId}`);
+    if (!pageLengthSelect) {
+      return;
+    }
+
+    const options = resolvePageLengthOptions(config);
+    const selectedLength = resolvePageLength(config, state);
+    pageLengthSelect.innerHTML = options
+      .map(function (value) {
+        const selected = value === selectedLength ? " selected" : "";
+        return `<option value="${value}"${selected}>${value}</option>`;
+      })
+      .join("");
+
+    pageLengthSelect.value = String(selectedLength);
+    pageLengthSelect.addEventListener("change", function () {
+      applyPageLength(api, state, config, this.value);
+    });
   }
 
   function bindToolbar(api, state, config) {
@@ -184,6 +272,8 @@
         api.refreshInfiniteCache();
       });
     }
+
+    bindPageLengthSelector(api, state, config);
   }
 
   function bindClientToolbar(api, config) {
@@ -226,6 +316,7 @@
     const state = {
       currentSearch: "",
       pendingStartRow: null,
+      pageLength: normalizePageLength(config.pageLength, 25),
     };
 
     const columnDefs = buildColumnDefs(config);
@@ -234,7 +325,7 @@
       getRows: function (params) {
         const startRow = state.pendingStartRow != null ? state.pendingStartRow : params.startRow;
         const endRow = state.pendingStartRow != null
-          ? state.pendingStartRow + (config.pageLength || 25)
+          ? state.pendingStartRow + resolvePageLength(config, state)
           : params.endRow;
 
         state.pendingStartRow = null;
@@ -277,7 +368,7 @@
       },
     };
 
-    const pageLength = config.pageLength || 25;
+    const pageLength = resolvePageLength(config, state);
     const gridOptions = {
       columnDefs: columnDefs,
       defaultColDef: {
@@ -304,9 +395,7 @@
       overlayNoRowsTemplate: '<span class="ag-overlay-loading-center">No records found</span>',
     };
 
-    if (window.agGrid.themeQuartz) {
-      gridOptions.theme = window.agGrid.themeQuartz;
-    }
+    gridOptions.theme = "legacy";
 
     const api = window.agGrid.createGrid(gridElement, gridOptions);
     bindToolbar(api, state, config);
@@ -350,9 +439,7 @@
       overlayNoRowsTemplate: `<span class="ag-overlay-loading-center">${config.emptyMessage || "No rows found"}</span>`,
     };
 
-    if (window.agGrid.themeQuartz) {
-      gridOptions.theme = window.agGrid.themeQuartz;
-    }
+    gridOptions.theme = "legacy";
 
     const api = window.agGrid.createGrid(gridElement, gridOptions);
     bindClientToolbar(api, config);

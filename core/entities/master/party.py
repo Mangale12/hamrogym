@@ -8,7 +8,7 @@ from nepanest.common.utils.dynamic_sections import (
 
 from ...datatables.party_data_table import PartyDataTableView
 from ...forms.party_form import PartyForm
-from ...models import Party
+from ...models import Party, PartyIndividualProfile
 from ...models.party import PartyAddress, PartyBankDetail, PartyContact, PartyFinancial
 
 
@@ -268,6 +268,34 @@ register_entity(
                 "fields": [],
                 "sections": ["contacts"],
                 "requires_id": True,
+            },
+            {
+                "key": "individual_profile",
+                "label": "Individual Profile",
+                "fields": [
+                    {
+                        "name": "date_of_birth",
+                        "label": "Date of Birth",
+                        "type": "date",
+                        "required": False,
+                        "col": 4,
+                    },
+                    {
+                        "name": "gender",
+                        "label": "Gender",
+                        "type": "static_select",
+                        "required": False,
+                        "col": 4,
+                        "options": [("", "Select Gender"), *PartyIndividualProfile.GENDER_CHOICES],
+                    },
+                    {
+                        "name": "photo",
+                        "label": "Photo",
+                        "type": "file",
+                        "required": False,
+                        "col": 4,
+                    },
+                ],
             },
             {
                 "key": "addresses",

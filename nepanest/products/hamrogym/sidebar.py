@@ -40,6 +40,10 @@ SIDEBAR_ITEMS = [
                 "url_name": "employee_list",
             },
             {
+                "label": "Members",
+                "url_name": "member_list",
+            },
+            {
                 "label": "Departments",
                 "url_name": "department_list",
             },
@@ -64,12 +68,12 @@ SIDEBAR_ITEMS = [
         ],
     },
     {
-        "label": "Back Office",
+        "label": "Master Setup",
         "icon": "briefcase",
         "children": [
             {
-                "label": "Tasks",
-                "url_name": "task_board",
+                "label": "Gym Facilities",
+                "url_name": "gym_facility_list",
             },
             {
                 "label": "Assets",
