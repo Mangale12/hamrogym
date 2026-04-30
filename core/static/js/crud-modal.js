@@ -53,7 +53,19 @@
       const $field = $form.find(`[name="${key}"]`);
       if (!$field.length) return;
       if ($field.is(':checkbox')) {
-        $field.prop('checked', !!value);
+        const isMultipleCheckboxGroup = $field.length > 1 || Array.isArray(value);
+        if (isMultipleCheckboxGroup) {
+          const selectedValues = new Set(
+            (Array.isArray(value) ? value : (value == null || value === '' ? [] : [value]))
+              .map((item) => String(item))
+          );
+          $field.each(function () {
+            const $checkbox = $(this);
+            $checkbox.prop('checked', selectedValues.has(String($checkbox.val())));
+          });
+        } else {
+          $field.prop('checked', !!value);
+        }
       } else if ($field.is('select')) {
         const normalizedValue = $field.prop('multiple')
           ? (Array.isArray(value) ? value : (value ? [value] : [])).map((item) => String(item))
@@ -274,6 +286,7 @@
       $form[0].reset();
       $form.find(`[name="${idFieldName}"]`).val('');
       $form.find('[name="_active_tab"]').val('');
+      $form.find('input[type="checkbox"][data-checkbox-group]').prop('checked', false);
       $form.find('select').each(function () {
         $(this).removeAttr('data-selected-value').removeData('selectedValues').trigger('change');
       });

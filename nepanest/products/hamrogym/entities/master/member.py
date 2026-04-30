@@ -5,7 +5,7 @@ from ...datatables.member_data_table import MEMBER_COLUMNS, MemberDataTableView
 from ...forms.member_form import MemberForm
 from core.models import PartyIndividualProfile
 
-from ...models import Member, MemberProfile
+from ...models import FitnessGoal, Member, MemberProfile
 
 
 register_entity(
@@ -46,27 +46,7 @@ register_entity(
                         "col": 4,
                         "url_name": "party_type_select",
                     },
-                    {
-                        "name": "pan_number",
-                        "label": "PAN Number",
-                        "type": "text",
-                        "required": False,
-                        "col": 4,
-                    },
-                    {
-                        "name": "vat_number",
-                        "label": "VAT Number",
-                        "type": "text",
-                        "required": False,
-                        "col": 4,
-                    },
-                    {
-                        "name": "registration_number",
-                        "label": "Registration Number",
-                        "type": "text",
-                        "required": False,
-                        "col": 4,
-                    },
+                   
                     {
                         "name": "party_is_active",
                         "label": "Party Active",
@@ -87,6 +67,7 @@ register_entity(
             {
                 "key": "membership",
                 "label": "Membership",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "member_code",
@@ -108,10 +89,10 @@ register_entity(
                     {
                         "name": "status",
                         "label": "Status",
-                        "type": "static_select",
+                        "type": "select",
                         "required": True,
                         "col": 4,
-                        "options": [("", "Select Status"), *Member._meta.get_field("status").choices],
+                        "url_name": "member_status_select",
                     },
                     {
                         "name": "branch",
@@ -148,6 +129,7 @@ register_entity(
             {
                 "key": "profile",
                 "label": "Profile",
+                "requires_id": True,
                 "fields": [
                     {
                         "name": "date_of_birth",
@@ -167,12 +149,28 @@ register_entity(
                         "options": [("", "Select Gender"), *PartyIndividualProfile.GENDER_CHOICES],
                     },
                     {
-                        "name": "fitness_goal",
-                        "label": "Fitness Goal",
-                        "type": "static_select",
+                        "name": "fitness_goals",
+                        "label": "Fitness Goals",
+                        "type": "checkbox_table",
+                        "required": False,
+                        "col": 12,
+                        "options": lambda _request=None: [
+                            {
+                                "value": goal.pk,
+                                "label": goal.name,
+                                "code": goal.code,
+                                "remarks": goal.remarks,
+                            }
+                            for goal in FitnessGoal.objects.order_by("name")
+                        ],
+                    },
+                    {
+                        "name": "activity_level",
+                        "label": "Activity Level",
+                        "type": "select",
                         "required": False,
                         "col": 4,
-                        "options": [("", "Select Goal"), *MemberProfile.FITNESS_GOAL_CHOICES],
+                        "url_name": "activity_level_select",
                     },
                     {
                         "name": "height",
@@ -193,18 +191,43 @@ register_entity(
                         "min": 0,
                     },
                     {
+                        "name": "bmi",
+                        "label": "BMI",
+                        "type": "number",
+                        "required": False,
+                        "col": 3,
+                        "step": "0.01",
+                        "min": 0,
+                    },
+                    {
+                        "name": "body_fat_percentage",
+                        "label": "Body Fat %",
+                        "type": "number",
+                        "required": False,
+                        "col": 3,
+                        "step": "0.01",
+                        "min": 0,
+                    },
+                    {
                         "name": "photo",
                         "label": "Photo",
                         "type": "file",
                         "required": False,
-                        "col": 6,
+                        "col": 4,
                     },
                     {
                         "name": "medical_conditions",
                         "label": "Medical Conditions",
                         "type": "textarea",
                         "required": False,
-                        "col": 12,
+                        "col": 6,
+                    },
+                    {
+                        "name": "injuries",
+                        "label": "Injuries",
+                        "type": "textarea",
+                        "required": False,
+                        "col": 6,
                     },
                 ],
             },
@@ -217,7 +240,7 @@ register_entity(
             for key, _accessor in MEMBER_COLUMNS
             if key != "id"
         ],
-        reset_defaults={"status": "active", "party_is_active": True},
+        reset_defaults={"party_is_active": True},
         select_search_fields=["member_code", "party__name", "party__display_name", "branch__name"],
         select_label_func=lambda obj: f"{obj.member_code} - {obj.party.display_name or obj.party.name}",
     )

@@ -1,2 +1,8 @@
+from .access_type_data_table import AccessTypeDataTableView
+from .fitness_goal_data_table import FitnessGoalDataTableView
 from .gym_facility_data_table import GymFacilityDataTableView
 from .member_data_table import MemberDataTableView
+from .member_membership_data_table import MemberMembershipDataTableView, MembershipFreezeDataTableView
+from .member_referral_data_table import MemberReferralDataTableView
+from .member_status_data_table import MemberStatusDataTableView
+from .membership_plan_data_table import MembershipPlanDataTableView

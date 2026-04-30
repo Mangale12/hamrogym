@@ -1,2 +1,10 @@
+from . import access_type  # noqa: F401
+from . import fitness_goal  # noqa: F401
 from . import gym_facility  # noqa: F401
 from . import member  # noqa: F401
+from . import member_membership  # noqa: F401
+from . import member_referral  # noqa: F401
+from . import member_status  # noqa: F401
+from . import membership_plan  # noqa: F401
+from . import member_tag  # noqa: F401
+from . import activity_level  # noqa: F401

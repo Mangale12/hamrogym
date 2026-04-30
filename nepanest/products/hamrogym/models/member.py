@@ -5,12 +5,6 @@ from core.mixins import ERPBaseModel
 from core.models import Party
 
 
-class MemberStatus(models.TextChoices):
-    ACTIVE = "active", "Active"
-    INACTIVE = "inactive", "Inactive"
-    SUSPENDED = "suspended", "Suspended"
-
-
 class Member(ERPBaseModel):
     party = models.OneToOneField(
         Party,
@@ -19,11 +13,26 @@ class Member(ERPBaseModel):
     )
     member_code = models.CharField(max_length=30, unique=True, blank=True)
     join_date = models.DateField()
-    status = models.CharField(
-        max_length=20,
-        choices=MemberStatus.choices,
-        default=MemberStatus.ACTIVE,
+    status = models.ForeignKey(
+        "hamrogym.MemberStatus",
+        on_delete=models.PROTECT,
+        related_name="members",
+        null=True,
+        blank=True,
     )
+    activity_level = models.ForeignKey(
+        "hamrogym.ActivityLevel",
+        on_delete=models.PROTECT,
+        related_name="members",
+        null=True,
+        blank=True,
+    )
+    height = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    bmi = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    body_fat_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    medical_conditions = models.TextField(blank=True)
+    injuries = models.TextField(blank=True)
     emergency_contact_name = models.CharField(max_length=255, blank=True)
     emergency_contact_phone = models.CharField(max_length=30, blank=True)
 
@@ -43,8 +52,11 @@ class Member(ERPBaseModel):
             self.member_code = self._generate_member_code()
         if self.branch_id and not self.organization_id:
             self.organization_id = self.branch.organization_id
-        self.is_active = self.status == MemberStatus.ACTIVE
+        self.is_active = bool(self.status and self.status.code == "active")
         super().save(*args, **kwargs)
+
+    def get_status_display(self):
+        return self.status.name if self.status_id else ""
 
     def _generate_member_code(self) -> str:
         branch_token = None
@@ -69,14 +81,6 @@ class Member(ERPBaseModel):
 
 
 class MemberProfile(models.Model):
-    FITNESS_GOAL_CHOICES = (
-        ("weight_loss", "Weight Loss"),
-        ("muscle_gain", "Muscle Gain"),
-        ("general_fitness", "General Fitness"),
-        ("strength", "Strength"),
-        ("rehabilitation", "Rehabilitation"),
-    )
-
     member = models.OneToOneField(
         Member,
         on_delete=models.CASCADE,
@@ -84,7 +88,11 @@ class MemberProfile(models.Model):
     )
     height = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    fitness_goal = models.CharField(max_length=30, choices=FITNESS_GOAL_CHOICES, blank=True)
+    fitness_goals = models.ManyToManyField(
+        "hamrogym.FitnessGoal",
+        related_name="member_profiles",
+        blank=True,
+    )
     medical_conditions = models.TextField(blank=True)
 
     class Meta:
@@ -92,3 +100,82 @@ class MemberProfile(models.Model):
 
     def __str__(self) -> str:
         return f"Profile for {self.member}"
+
+
+class MemberReferral(ERPBaseModel):
+    referrer_member = models.ForeignKey(
+        Member,
+        on_delete=models.PROTECT,
+        related_name="referrals_made",
+    )
+    referred_member = models.ForeignKey(
+        Member,
+        on_delete=models.PROTECT,
+        related_name="referrals_received",
+    )
+    referral_date = models.DateField()
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-referral_date", "-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("referrer_member", "referred_member"),
+                name="unique_hamrogym_member_referral_pair",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.referrer_member} referred {self.referred_member}"
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if (
+            self.referrer_member_id
+            and self.referred_member_id
+            and self.referrer_member_id == self.referred_member_id
+        ):
+            errors["referred_member"] = "A member cannot refer themselves."
+        if (
+            self.referrer_member_id
+            and self.branch_id
+            and self.referrer_member.branch_id
+            and self.referrer_member.branch_id != self.branch_id
+        ):
+            errors["referrer_member"] = "Referrer member branch must match the referral branch."
+        if (
+            self.referred_member_id
+            and self.branch_id
+            and self.referred_member.branch_id
+            and self.referred_member.branch_id != self.branch_id
+        ):
+            errors["referred_member"] = "Referred member branch must match the referral branch."
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        if self.branch_id and not self.organization_id:
+            self.organization_id = self.branch.organization_id
+        super().save(*args, **kwargs)
+
+
+class MemberTagMap(models.Model):
+    member = models.ForeignKey(
+        Member,
+        on_delete=models.CASCADE,
+        related_name="tag_maps",
+    )
+    tag = models.ForeignKey(
+        "hamrogym.MemberTag",
+        on_delete=models.CASCADE,
+        related_name="member_maps",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("member", "tag")
+
+    def __str__(self) -> str:
+        return f"{self.member} - {self.tag}"

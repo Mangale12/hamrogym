@@ -16,6 +16,8 @@
       {% include "components/forms/select.html" with label=field.label name=field.name required=field.required value=field.value data_field_name=field.name data_url=field.url data_modal_id=modal_id attributes=field.attributes multiple=field.multiple no_wrapper=True %}
     {% elif field.type == "static_select" %}
       {% include "components/forms/select.html" with label=field.label name=field.name required=field.required value=field.value options=field.options attributes=field.attributes multiple=field.multiple no_wrapper=True %}
+    {% elif field.type == "checkbox_table" %}
+      {% include "components/forms/checkbox_table.html" with label=field.label name=field.name required=field.required value=field.value options=field.options no_wrapper=True %}
     {% elif field.type == "date" %}
       {% include "components/forms/datepicker.html" with label=field.label name=field.name required=field.required value=field.value placeholder=field.placeholder class=field.class id=field.id min=field.min max=field.max step=field.step attributes=field.attributes calendar_mode=field.calendar_mode calendar_switchable=field.calendar_switchable no_wrapper=True %}
     {% elif field.type == "datetime" %}

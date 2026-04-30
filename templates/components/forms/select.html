@@ -11,6 +11,7 @@
     class="form-select {{ class|default:'' }}"
     {% if data_field_name %}data-field-name="{{ data_field_name }}"{% endif %}
     {% if data_url %}data-url="{{ data_url }}"{% endif %}
+    {% if multiple %}data-multiple="true"{% endif %}
     {% if data_url and value and not multiple %}data-selected-value="{{ value }}"{% endif %}
     {% if data_modal_id %}data-modal-id="{{ data_modal_id }}"{% endif %}
     {% if required %}required{% endif %}
@@ -21,7 +22,9 @@
       {% endfor %}
     {% endif %}
   >
+    {% if not multiple %}
     <option value="">{{ empty_label|default:"Select" }}{% if label %} {{ label }}{% endif %}</option>
+    {% endif %}
     {% if options and not data_url %}
       {% for option in options %}
         {% if option.0 is not None %}

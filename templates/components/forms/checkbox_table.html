@@ -1,0 +1,52 @@
+{% if not no_wrapper %}
+<div class="mb-3 {{ wrapper_class|default:'' }}">
+{% endif %}
+  <label class="form-label d-block">
+    {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
+  </label>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 72px;">Select</th>
+          <th>Name</th>
+          <th style="width: 140px;">Code</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for option in options %}
+        <tr>
+          <td class="text-center">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="{{ name }}"
+              value="{{ option.value }}"
+              data-checkbox-group="{{ name }}"
+              data-checkbox-value="{{ option.value }}"
+            >
+          </td>
+          <td>{{ option.label }}</td>
+          <td>{{ option.code|default:"" }}</td>
+          <td>{{ option.remarks|default:"" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="text-muted text-center">No fitness goals available.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if help %}
+    <small class="text-muted">{{ help }}</small>
+  {% endif %}
+  {% if errors %}
+    <div class="invalid-feedback d-block">{{ errors|join:" " }}</div>
+  {% endif %}
+{% if not no_wrapper %}
+</div>
+{% endif %}

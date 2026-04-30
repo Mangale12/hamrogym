@@ -316,6 +316,10 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                         _assign_context_defaults(request, obj, form)
                         if form.errors:
                             return JsonResponse({"success": False, "errors": form.errors}, status=400)
+                        if hasattr(form, "prepare_related"):
+                            form.prepare_related(obj)
+                        if form.errors:
+                            return JsonResponse({"success": False, "errors": form.errors}, status=400)
                         if hasattr(obj, "created_by_id"):
                             obj.created_by = request.user
                         if hasattr(obj, "updated_by_id"):
@@ -325,6 +329,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                         obj.save()
                         if hasattr(form, "save_m2m"):
                             form.save_m2m()
+                        if hasattr(form, "save_related"):
+                            form.save_related(obj)
                         if entity.dynamic_sections_saver:
                             entity.dynamic_sections_saver(request, obj)
                         if entity.post_save:
@@ -345,6 +351,10 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                         _assign_context_defaults(request, obj, form)
                         if form.errors:
                             return JsonResponse({"success": False, "errors": form.errors}, status=400)
+                        if hasattr(form, "prepare_related"):
+                            form.prepare_related(obj)
+                        if form.errors:
+                            return JsonResponse({"success": False, "errors": form.errors}, status=400)
                         if hasattr(obj, "updated_by_id"):
                             obj.updated_by = request.user
                         if entity.pre_save:
@@ -352,6 +362,8 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                         obj.save()
                         if hasattr(form, "save_m2m"):
                             form.save_m2m()
+                        if hasattr(form, "save_related"):
+                            form.save_related(obj)
                         if entity.dynamic_sections_saver:
                             entity.dynamic_sections_saver(request, obj)
                         if entity.post_save:

@@ -732,9 +732,14 @@
                 const url = $select.data("url");
                 const fieldName = $select.data("field-name") || "";
                 const $modal = $select.closest(".modal");
+                const isMultiple = $select.data("multiple") === true || $select.attr("data-multiple") === "true";
 
                 if (!url || $select.data("select2")) {
                     return;
+                }
+
+                if (isMultiple) {
+                    $select.prop("multiple", true).attr("multiple", "multiple");
                 }
 
                 $select.select2({
@@ -742,6 +747,7 @@
                     width: "100%",
                     placeholder: fieldName ? `Select ${fieldName}` : "Select option",
                     allowClear: !($select.prop("required")),
+                    closeOnSelect: !$select.prop("multiple"),
                     dropdownParent: $modal.length ? $modal : undefined,
                     ajax: {
                         url: url,
