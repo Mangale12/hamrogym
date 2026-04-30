@@ -21,7 +21,7 @@ class MembershipPlan(ERPBaseModel):
     )
     freeze_limit_days = models.PositiveIntegerField(default=0)
     description = models.TextField(blank=True)
-    plan_type = models.CharField(max_length=20, choices=PLAN_TYPE_CHOICES)
+    plan_type = models.CharField(max_length=20, choices=PLAN_TYPE_CHOICES, default='duration_based')
 
     class Meta:
         ordering = ["name"]

@@ -1,4 +1,5 @@
 from .base import *  # noqa: F403
+from importlib.util import find_spec
 
 
 DEBUG = True
@@ -12,8 +13,9 @@ INTERNAL_IPS = [
 # emit noisy warnings during local development.
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
-INSTALLED_APPS = [*INSTALLED_APPS, "debug_toolbar"]
-MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
-    *MIDDLEWARE,
-]
+if find_spec("debug_toolbar"):
+    INSTALLED_APPS = [*INSTALLED_APPS, "debug_toolbar"]
+    MIDDLEWARE = [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        *MIDDLEWARE,
+    ]

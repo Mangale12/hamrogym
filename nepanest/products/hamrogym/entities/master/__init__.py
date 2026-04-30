@@ -8,3 +8,5 @@ from . import member_status  # noqa: F401
 from . import membership_plan  # noqa: F401
 from . import member_tag  # noqa: F401
 from . import activity_level  # noqa: F401
+from . import membership_freeze  # noqa: F401
+from . import membership_extension  # noqa: F401

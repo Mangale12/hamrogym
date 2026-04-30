@@ -7,3 +7,4 @@ from .member import Member, MemberProfile, MemberReferral
 from .membership_plan import MembershipPlan
 from .activity_level import ActivityLevel
 from .member_tag import MemberTag
+from .membership_extension import MembershipExtension

@@ -106,6 +106,10 @@ SIDEBAR_ITEMS = [
                 "label": "Member Tags",
                 "url_name": "member_tag_list",
             },
+            {
+                "label": "Membership Extensions",
+                "url_name": "membership_extension_list",
+            }
         ],
     },
 ]

@@ -83,7 +83,15 @@ class MembershipFreeze(
     )
     start_date = models.DateField()
     end_date = models.DateField()
+    total_days = models.PositiveIntegerField(default=0)
     reason = models.TextField(blank=True)
+    approved_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="membership_freezes",
+        null=True,
+        blank=True
+    )
     remarks = models.TextField(blank=True)
 
     class Meta:
