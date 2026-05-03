@@ -14,12 +14,10 @@ register_entity(
         form_class=MembershipExtensionForm,
         datatable_view=MembershipExtensionDataTableView,
         fields=[
-            {"name": "membership", "label": "Membership", "type": "select", "required": True, "col": 6, "url_name": "membership_list"},
-            {"name": "start_date", "label": "Start Date", "type": "date", "required": True, "col": 6},
-            {"name": "end_date", "label": "End Date", "type": "date", "required": True, "col": 6},
-            {"name": "total_days", "label": "Total Days", "type": "number", "required": True, "col": 6},
+            {"name": "membership", "label": "Membership", "type": "select", "required": True, "col": 6, "url_name": "member_membership_select"},
+            {"name": "extra_days", "label": "Extra Days", "type": "number", "required": True, "col": 6, "min": 1, "step": 1},
+            {"name": "approved_by", "label": "Approved By", "type": "select", "required": False, "col": 6, "url_name": "user_select"},
             {"name": "reason", "label": "Reason", "type": "textarea", "required": False, "col": 6},
-            {"name": "approved_by", "label": "Approved By", "type": "select", "required": True, "col": 6, "url_name": "user_list"},
         ],
         datatable_columns=[
             {"name": key, "title": key.replace("_", " ").title()}

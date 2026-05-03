@@ -1,0 +1,61 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}{{ entity_label }} | HamroGym{% endblock %}
+{% block page_title %}{{ entity_label }}{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+
+<section class="card border-0 shadow-sm overflow-hidden">
+  <div class="card-body p-4 p-lg-5" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(20, 184, 166, 0.08));">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+      <div>
+        <span class="text-uppercase fw-semibold small text-muted">Front Desk</span>
+        <h3 class="mb-2">{{ entity_label }}</h3>
+        <p class="mb-0 text-muted">
+          Review all members here and record the correct next action.
+          Members who have not checked in today show <strong>Check In</strong>.
+          Members currently inside show <strong>Check Out</strong>.
+          Members already checked out today do not show action buttons.
+        </p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <span class="badge rounded-pill text-bg-success-subtle border border-success-subtle text-success px-3 py-2">Ready for Check In</span>
+        <span class="badge rounded-pill text-bg-warning-subtle border border-warning-subtle text-warning px-3 py-2">Checked In</span>
+        <span class="badge rounded-pill text-bg-secondary px-3 py-2">Checked Out</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-1">{{ entity_label }}</h5>
+      <small class="text-muted">Member-wise check-in and check-out control board.</small>
+    </div>
+  </div>
+  <div class="card-body">
+    {% include "components/tables/datatable.html" with table_id=table_id ajax_url=datatable_url columns=datatable_columns table_var=table_id %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initCrudModal({
+    modalId: '{{ modal_id }}',
+    formId: '{{ form_id }}',
+    table: window['{{ table_id }}'],
+    createUrl: '{{ create_url }}',
+    updateUrlTemplate: '{{ update_url_template }}',
+    detailUrlTemplate: '{{ detail_url_template }}',
+    deleteUrlTemplate: '{{ delete_url_template }}',
+    idFieldName: 'id',
+    entityName: '{{ entity_label }}'
+  });
+});
+</script>
+{% endblock %}

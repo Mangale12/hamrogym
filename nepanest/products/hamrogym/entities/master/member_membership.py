@@ -63,8 +63,8 @@ register_entity(
                 "options": [("", "Select Status"), *MemberMembership.Status.choices],
             },
             {
-                "name": "allowed_sessions",
-                "label": "Allowed Sessions",
+                "name": "total_sessions",
+                "label": "Total Sessions",
                 "type": "number",
                 "required": False,
                 "col": 4,
@@ -81,12 +81,27 @@ register_entity(
                 "step": 1,
             },
             {
+                "name": "source",
+                "label": "Source",
+                "type": "static_select",
+                "required": True,
+                "col": 4,
+                "options": [("", "Select Source"), *MemberMembership.Source.choices],
+            },
+            {
                 "name": "branch",
                 "label": "Branch",
                 "type": "select",
                 "required": True,
                 "col": 4,
                 "url_name": "branch_select",
+            },
+            {
+                "name": "notes",
+                "label": "Notes",
+                "type": "textarea",
+                "required": False,
+                "col": 12,
             },
             {
                 "name": "remarks",
@@ -101,8 +116,12 @@ register_entity(
             for key, _accessor in MEMBER_MEMBERSHIP_COLUMNS
             if key != "id"
         ],
-        reset_defaults={"status": MemberMembership.Status.ACTIVE, "used_sessions": 0},
-        select_search_fields=["member__member_code", "member__party__name", "membership_plan__name", "status"],
+        reset_defaults={
+            "status": MemberMembership.Status.ACTIVE,
+            "source": MemberMembership.Source.MANUAL,
+            "used_sessions": 0,
+        },
+        select_search_fields=["member__member_code", "member__party__name", "membership_plan__name", "status", "source"],
         select_label_func=lambda obj: f"{obj.member.member_code} - {obj.membership_plan.name}",
     )
 )
@@ -152,12 +171,29 @@ register_entity(
                 "calendar_mode": "ad",
             },
             {
+                "name": "total_days",
+                "label": "Total Days",
+                "type": "number",
+                "required": False,
+                "col": 4,
+                "min": 0,
+                "step": 1,
+            },
+            {
                 "name": "branch",
                 "label": "Branch",
                 "type": "select",
                 "required": True,
                 "col": 4,
                 "url_name": "branch_select",
+            },
+            {
+                "name": "approved_by",
+                "label": "Approved By",
+                "type": "select",
+                "required": False,
+                "col": 6,
+                "url_name": "user_select",
             },
             {
                 "name": "reason",

@@ -727,6 +727,50 @@
         window.initializeModalSelect2 = function ($scope) {
             const $container = $scope && $scope.length ? $scope : $(document);
 
+            const bindSelect2KeyboardSupport = function ($select) {
+                if ($select.data("select2TabFocusBound")) {
+                    return;
+                }
+
+                const focusSearchField = function () {
+                    window.setTimeout(function () {
+                        const searchField = document.querySelector(".select2-container--open .select2-search__field");
+                        if (searchField) {
+                            searchField.focus();
+                            searchField.select();
+                        }
+                    }, 0);
+                };
+
+                $select.on("select2:open.select2TabFocus", function () {
+                    focusSearchField();
+                });
+
+                $select.on("select2:close.select2TabFocus", function () {
+                    $select.data("select2LastClosedAt", Date.now());
+                });
+
+                const instance = $select.data("select2");
+                const $selection = instance && instance.$selection
+                    ? instance.$selection
+                    : $select.next(".select2-container").find(".select2-selection");
+
+                $selection.on("focus.select2TabFocus", function () {
+                    if ($select.prop("disabled")) {
+                        return;
+                    }
+
+                    const lastClosedAt = Number($select.data("select2LastClosedAt") || 0);
+                    if (Date.now() - lastClosedAt < 150) {
+                        return;
+                    }
+
+                    $select.select2("open");
+                });
+
+                $select.data("select2TabFocusBound", true);
+            };
+
             $container.find("select[data-url]").each(function () {
                 const $select = $(this);
                 const url = $select.data("url");
@@ -734,7 +778,7 @@
                 const $modal = $select.closest(".modal");
                 const isMultiple = $select.data("multiple") === true || $select.attr("data-multiple") === "true";
 
-                if (!url || $select.data("select2")) {
+                if (!url) {
                     return;
                 }
 
@@ -742,35 +786,39 @@
                     $select.prop("multiple", true).attr("multiple", "multiple");
                 }
 
-                $select.select2({
-                    theme: "bootstrap-5",
-                    width: "100%",
-                    placeholder: fieldName ? `Select ${fieldName}` : "Select option",
-                    allowClear: !($select.prop("required")),
-                    closeOnSelect: !$select.prop("multiple"),
-                    dropdownParent: $modal.length ? $modal : undefined,
-                    ajax: {
-                        url: url,
-                        dataType: "json",
-                        delay: 250,
-                        data: function (params) {
-                            return {
-                                q: params.term,
-                                page: params.page || 1
-                            };
+                if (!$select.data("select2")) {
+                    $select.select2({
+                        theme: "bootstrap-5",
+                        width: "100%",
+                        placeholder: fieldName ? `Select ${fieldName}` : "Select option",
+                        allowClear: !($select.prop("required")),
+                        closeOnSelect: !$select.prop("multiple"),
+                        dropdownParent: $modal.length ? $modal : undefined,
+                        ajax: {
+                            url: url,
+                            dataType: "json",
+                            delay: 250,
+                            data: function (params) {
+                                return {
+                                    q: params.term,
+                                    page: params.page || 1
+                                };
+                            },
+                            processResults: function (data, params) {
+                                return {
+                                    results: data.results || data,
+                                    pagination: {
+                                        more: (params.page || 1) < (data.pagination?.total_pages || 1)
+                                    }
+                                };
+                            },
+                            cache: true
                         },
-                        processResults: function (data, params) {
-                            return {
-                                results: data.results || data,
-                                pagination: {
-                                    more: (params.page || 1) < (data.pagination?.total_pages || 1)
-                                }
-                            };
-                        },
-                        cache: true
-                    },
-                    minimumInputLength: 0
-                });
+                        minimumInputLength: 0
+                    });
+                }
+
+                bindSelect2KeyboardSupport($select);
 
                 const pendingValues = $select.data("selectedValues");
                 const pendingValue = $select.attr("data-selected-value");

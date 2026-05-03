@@ -12,9 +12,11 @@ MEMBER_MEMBERSHIP_COLUMNS = [
     ("membership_plan", lambda obj: obj.membership_plan.name),
     ("start_date", lambda obj, request: encode_date_for_display(obj.start_date, request)),
     ("end_date", lambda obj, request: encode_date_for_display(obj.end_date, request)),
-    ("allowed_sessions", "allowed_sessions"),
+    ("total_sessions", "total_sessions"),
     ("used_sessions", "used_sessions"),
+    ("remaining_sessions", lambda obj: obj.remaining_sessions if obj.remaining_sessions is not None else ""),
     ("status", "status"),
+    ("source", "source"),
     ("branch", lambda obj: obj.branch.name if obj.branch_id else ""),
 ]
 
@@ -28,7 +30,9 @@ class MemberMembershipDataTableView(BaseDataTableView):
         "member__party__display_name",
         "membership_plan__name",
         "status",
+        "source",
         "branch__name",
+        "notes",
         "remarks",
     ]
     orderable_columns = [
@@ -37,9 +41,10 @@ class MemberMembershipDataTableView(BaseDataTableView):
         "membership_plan__name",
         "start_date",
         "end_date",
-        "allowed_sessions",
+        "total_sessions",
         "used_sessions",
         "status",
+        "source",
         "branch__name",
     ]
 
@@ -54,7 +59,9 @@ MEMBERSHIP_FREEZE_COLUMNS = [
     ("membership", lambda obj: obj.membership.membership_plan.name),
     ("start_date", lambda obj, request: encode_date_for_display(obj.start_date, request)),
     ("end_date", lambda obj, request: encode_date_for_display(obj.end_date, request)),
+    ("total_days", "total_days"),
     ("reason", "reason"),
+    ("approved_by", lambda obj: obj.approved_by.get_full_name() or obj.approved_by.username if obj.approved_by else ""),
     ("branch", lambda obj: obj.branch.name if obj.branch_id else ""),
 ]
 
@@ -68,6 +75,9 @@ class MembershipFreezeDataTableView(BaseDataTableView):
         "member__party__display_name",
         "membership__membership_plan__name",
         "reason",
+        "approved_by__username",
+        "approved_by__first_name",
+        "approved_by__last_name",
         "branch__name",
         "remarks",
     ]
@@ -77,9 +87,11 @@ class MembershipFreezeDataTableView(BaseDataTableView):
         "membership__membership_plan__name",
         "start_date",
         "end_date",
+        "total_days",
         "reason",
+        "approved_by__username",
         "branch__name",
     ]
 
     def get_queryset(self):
-        return self.model.objects.select_related("member__party", "membership__membership_plan", "branch")
+        return self.model.objects.select_related("member__party", "membership__membership_plan", "approved_by", "branch")

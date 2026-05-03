@@ -12,15 +12,18 @@ class MemberMembershipForm(forms.ModelForm):
             "membership_plan",
             "start_date",
             "end_date",
-            "allowed_sessions",
+            "total_sessions",
             "used_sessions",
             "status",
+            "source",
+            "notes",
             "branch",
             "remarks",
         ]
         widgets = {
             "start_date": forms.DateInput(attrs={"type": "date"}),
             "end_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 3}),
             "remarks": forms.Textarea(attrs={"rows": 3}),
         }
 
@@ -47,7 +50,9 @@ class MembershipFreezeForm(forms.ModelForm):
             "membership",
             "start_date",
             "end_date",
+            "total_days",
             "reason",
+            "approved_by",
             "branch",
             "remarks",
         ]

@@ -8,9 +8,10 @@ class MembershipExtensionForm(forms.ModelForm):
         model = MembershipExtension
         fields = [
             "membership",
-            "start_date",
-            "end_date",
-            "total_days",
+            "extra_days",
             "reason",
             "approved_by"
         ]
+        widgets = {
+            "reason": forms.Textarea(attrs={"rows": 3}),
+        }

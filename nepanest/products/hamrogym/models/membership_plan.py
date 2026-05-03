@@ -34,3 +34,24 @@ class MembershipPlan(ERPBaseModel):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.access_type.name})"
+
+
+class MembershipRestriction(ERPBaseModel):
+    class RestrictionType(models.TextChoices):
+        TIME = "time", "Time"
+        DAY = "day", "Day"
+        USAGE = "usage", "Usage"
+
+    membership_plan = models.ForeignKey(
+        "hamrogym.MembershipPlan",
+        on_delete=models.CASCADE,
+        related_name="restrictions",
+    )
+    restriction_type = models.CharField(max_length=20, choices=RestrictionType.choices)
+    value = models.CharField(max_length=255)
+
+    class Meta:
+        ordering = ["restriction_type", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.membership_plan.name} - {self.get_restriction_type_display()}: {self.value}"

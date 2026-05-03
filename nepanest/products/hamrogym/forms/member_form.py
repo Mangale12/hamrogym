@@ -41,6 +41,10 @@ class MemberForm(forms.ModelForm):
             "medical_conditions",
             "injuries",
         },
+        "memberships": set(),
+        "freezes": set(),
+        "extensions": set(),
+        "upgrades": set(),
     }
 
     party_name = forms.CharField(max_length=255, required=True)

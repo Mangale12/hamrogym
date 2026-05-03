@@ -104,6 +104,85 @@
       {% endif %}
     >
     {% endif %}
+  {% elif type == "datetime-local" %}
+    <div class="calendar-switch-field" data-calendar-field="true" data-field-name="{{ name }}" data-field-type="datetime" data-current-mode="{% if explicit_calendar_mode|lower == 'bs' or is_bs_calendar %}bs{% else %}ad{% endif %}">
+      <div class="input-wrapper">
+        <div class="{% if explicit_calendar_mode|lower == 'bs' or is_bs_calendar %}hidden{% endif %}" data-ad-group="true" style="flex:1 1 auto;">
+          <div class="erp-datetime-wrapper">
+            <input
+              type="date"
+              data-ad-date-input="true"
+              value="{% if not explicit_calendar_mode|lower == 'bs' and not is_bs_calendar and value %}{{ value|slice:':10' }}{% endif %}"
+              {% if id %}id="{{ id }}_ad_date"{% endif %}
+              class="erp-date-input"
+              autocomplete="off"
+              {% if required %}required{% endif %}
+              {% if min %}min="{{ min|slice:':10' }}"{% endif %}
+              {% if max %}max="{{ max|slice:':10' }}"{% endif %}>
+            <input
+              type="time"
+              data-ad-time-input="true"
+              value="{% if not explicit_calendar_mode|lower == 'bs' and not is_bs_calendar and value|length > 10 %}{{ value|slice:'11:' }}{% endif %}"
+              {% if id %}id="{{ id }}_ad_time"{% endif %}
+              class="erp-time-input"
+              step="{{ step|default:'1' }}"
+              autocomplete="off"
+              {% if required %}required{% endif %}>
+          </div>
+        </div>
+        <div class="{% if not explicit_calendar_mode|lower == 'bs' and not is_bs_calendar %}hidden{% endif %}" data-bs-group="true" style="flex:1 1 auto;">
+          <div class="erp-datetime-wrapper">
+            <input
+              type="text"
+              data-bs-input="true"
+              value="{% if explicit_calendar_mode|lower == 'bs' or is_bs_calendar %}{{ value|slice:':10' }}{% endif %}"
+              {% if id %}id="{{ id }}_bs"{% endif %}
+              class="erp-date-input"
+              placeholder="{{ placeholder|default:'YYYY-MM-DD' }}"
+              data-calendar-mode="bs"
+              data-bs-date-input="true"
+              autocomplete="off"
+              readonly
+              {% if required %}required{% endif %}>
+            <input
+              type="time"
+              data-bs-time-input="true"
+              value="{% if explicit_calendar_mode|lower == 'bs' or is_bs_calendar and value|length > 10 %}{{ value|slice:'11:' }}{% endif %}"
+              {% if id %}id="{{ id }}_bs_time"{% endif %}
+              class="erp-time-input"
+              step="{{ step|default:'1' }}"
+              autocomplete="off"
+              {% if required %}required{% endif %}>
+          </div>
+        </div>
+        <button type="button" class="rotate-btn" data-calendar-toggle="true" title="Switch Calendar">
+          <i data-feather="refresh-cw"></i>
+        </button>
+      </div>
+      <div class="mode-indicator" data-calendar-mode-indicator>
+        {% if explicit_calendar_mode|lower == "bs" or is_bs_calendar %}
+        🇳🇵 BS (Bikram Sambat)
+        {% else %}
+        🌍 AD (Gregorian)
+        {% endif %}
+      </div>
+      <input
+        type="hidden"
+        data-ad-input="true"
+        {% if not explicit_calendar_mode|lower == "bs" and not is_bs_calendar %}name="{{ name }}"{% endif %}
+        value="{% if not explicit_calendar_mode|lower == 'bs' and not is_bs_calendar %}{{ value|default:'' }}{% endif %}">
+      <input
+        type="hidden"
+        data-bs-combined-input="true"
+        {% if explicit_calendar_mode|lower == "bs" or is_bs_calendar %}name="{{ name }}"{% endif %}
+        value="{% if explicit_calendar_mode|lower == 'bs' or is_bs_calendar %}{{ value|default:'' }}{% endif %}">
+      <input
+        type="hidden"
+        name="__bs_datetime_fields"
+        value="{{ name }}"
+        {% if not explicit_calendar_mode|lower == "bs" and not is_bs_calendar %}disabled{% endif %}
+        data-bs-datetime-field="true">
+    </div>
   {% elif prefix or suffix %}
     <div class="input-group">
       {% if prefix %}

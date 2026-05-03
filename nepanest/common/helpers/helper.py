@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from django.core.cache import cache
 from nepali_datetime import date as bs_date
@@ -68,6 +68,8 @@ def bs_to_ad(bs_date_string):
 def encode_date_for_display(date_value, request=None):
     if not date_value:
         return ""
+    if isinstance(date_value, datetime):
+        date_value = date_value.date()
     if get_calendar_type(request) == "BS":
         bs_value = ad_to_bs(date_value)
         return f"{bs_value.year:04d}-{bs_value.month:02d}-{bs_value.day:02d}"
