@@ -123,8 +123,35 @@ SIDEBAR_ITEMS = [
                 "url_name": "exercise_list",
             },
             {
-                "label": "Member Referrals",
-                "url_name": "member_referral_list",
+                "label": "Workout Plans",
+                "url_name": "workout_plan_list",
+            },
+            {
+                "label": "Departments",
+                "url_name": "department_list",
+            },
+        ],
+    },
+     
+      {
+        "label": "Diet and Nutrition",
+        "icon": "food",
+        "children": [
+            {
+                "label": "Muscle Groups",
+                "url_name": "muscle_group_list",
+            },
+            {
+                "label": "Equipment Types",
+                "url_name": "equipment_type_list",
+            },
+            {
+                "label": "Exercise",
+                "url_name": "exercise_list",
+            },
+            {
+                "label": "Workout Plans",
+                "url_name": "workout_plan_list",
             },
             {
                 "label": "Departments",

@@ -19,7 +19,7 @@ register_entity(
             {"name": "muscle_group", "label": "Muscle Group", "type": "select", "required": True, "col": 6, "url_name": "muscle_group_select"},
             {"name": "equipment_type", "label": "Equipment Type", "type": "select", "required": True, "col": 6, "url_name": "equipment_type_select"},
             {"name": "exercise_type", "label": "Exercise Type", "type": "static_select", "required": True, "col": 6, "options": Exercise.EXERCISE_TYPE_CHOICES},
-            {"name": "difficulty_level", "label": "Difficulty Level", "type": "static_select", "required": True, "col": 6, "options": Exercise.DIFFICULTY_CHOICES},
+            {"name": "difficulty_level", "label": "Difficulty Level", "type": "static_select", "required": True, "col": 6, "options": Exercise.DIFFICULTY_LEVEL_CHOICES},
             {"name": "instructions", "label": "Instructions", "type": "textarea", "required": False, "col": 12},
             {"name": "precautions", "label": "Precautions", "type": "textarea", "required": False, "col": 12},
             {"name": "is_active", "label": "Is Active", "type": "checkbox", "required": False, "col": 6},

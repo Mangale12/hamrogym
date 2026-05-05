@@ -1,0 +1,86 @@
+{% extends "hamrogym/layouts/app.html" %}
+
+{% block title %}Create Workout Log | HamroGym{% endblock %}
+{% block page_title %}Workout Logs{% endblock %}
+
+{% block extra_css %}
+<style>
+  .log-shell {
+    border-radius: 28px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
+  }
+
+  .log-sidebar-card {
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  {% include "hamrogym/workout/_alert.html" %}
+  <div class="row g-4 align-items-start">
+    <div class="col-xl-8">
+      <form method="post" class="log-shell p-4 p-lg-5">
+        {% csrf_token %}
+        <div class="mb-4">
+          <p class="text-uppercase text-muted fw-bold small mb-2">Execution Log</p>
+          <h3 class="mb-2">Track actual workout performance separately</h3>
+          <p class="text-muted mb-0">Logs belong to execution and follow-up, not to the workout plan definition screen. Saving a better performance now updates personal bests automatically.</p>
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="row g-4">
+          {% include "hamrogym/workout/_field.html" with field=form.member col=6 %}
+          {% include "hamrogym/workout/_field.html" with field=form.workout_assignment col=6 %}
+          {% include "hamrogym/workout/_field.html" with field=form.workout_day col=6 %}
+          {% include "hamrogym/workout/_field.html" with field=form.exercise col=6 %}
+          {% include "hamrogym/workout/_field.html" with field=form.date col=6 %}
+          {% include "hamrogym/workout/_field.html" with field=form.duration_seconds col=6 %}
+          {% include "hamrogym/workout/_field.html" with field=form.sets_completed col=4 %}
+          {% include "hamrogym/workout/_field.html" with field=form.reps_completed col=4 %}
+          {% include "hamrogym/workout/_field.html" with field=form.weight_used col=4 %}
+          {% include "hamrogym/workout/_field.html" with field=form.notes col=12 %}
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary btn-lg">Save Log</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="log-sidebar-card p-4">
+        <p class="text-uppercase text-muted fw-bold small mb-2">Personal Bests</p>
+        <h5 class="mb-2">Recent performance milestones</h5>
+        <p class="text-muted small mb-3">These records are maintained from workout logs so coaches can see progress without editing separate master data by hand.</p>
+        {% if recent_personal_bests %}
+          <div class="d-grid gap-3">
+            {% for pb in recent_personal_bests %}
+              <div class="border rounded-4 p-3 bg-light-subtle">
+                <div class="fw-semibold">{{ pb.member }}</div>
+                <div class="text-muted small mb-2">{{ pb.exercise.name }} • {{ pb.achieved_on|date:"M d, Y" }}</div>
+                <div class="d-flex flex-wrap gap-2 small">
+                  <span class="badge text-bg-light">{{ pb.best_weight|default:"-" }} kg</span>
+                  <span class="badge text-bg-light">{{ pb.best_reps|default:"-" }} reps</span>
+                  <span class="badge text-bg-light">{{ pb.best_duration|default:"-" }} sec</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-muted small">No personal bests recorded yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

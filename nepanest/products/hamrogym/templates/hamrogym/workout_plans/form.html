@@ -1,0 +1,64 @@
+{% extends "hamrogym/layouts/app.html" %}
+
+{% block title %}{% if plan %}Edit {{ plan.name }}{% else %}Create Workout Plan{% endif %} | HamroGym{% endblock %}
+{% block page_title %}{% if plan %}Edit Workout Plan{% else %}Create Workout Plan{% endif %}{% endblock %}
+
+{% block header_actions %}
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'hamrogym_workout_plan_list' %}" class="btn btn-outline-secondary btn-lg">Back to Plans</a>
+    {% if plan %}
+      <a href="{% url 'hamrogym_workout_plan_structure' plan.pk %}" class="btn btn-outline-warning btn-lg">Open Structure</a>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .workout-form-shell {
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 255, 255, 0.9));
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.08);
+  }
+
+  .workout-form-band {
+    border-radius: 24px;
+    background: linear-gradient(135deg, #111827 0%, #7c2d12 100%);
+    color: #fff;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  {% include "hamrogym/workout/_alert.html" %}
+
+  <form method="post" class="workout-form-shell p-4 p-lg-5">
+    {% csrf_token %}
+    <div class="workout-form-band p-4 mb-4">
+      <p class="text-uppercase small fw-bold mb-2 opacity-75">Main Form</p>
+      <h3 class="mb-2">Only save plan-level data here</h3>
+      <p class="mb-0 opacity-75">Weeks, days, and exercises belong on the separate structure screen after the plan exists.</p>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="row g-4">
+      {% include "hamrogym/workout/_field.html" with field=form.name col=6 %}
+      {% include "hamrogym/workout/_field.html" with field=form.fitness_goal col=6 %}
+      {% include "hamrogym/workout/_field.html" with field=form.difficulty_level col=4 %}
+      {% include "hamrogym/workout/_field.html" with field=form.duration_week col=4 %}
+      {% include "hamrogym/workout/_field.html" with field=form.days_per_week col=4 %}
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-5">
+      <p class="text-muted mb-0">After saving, continue on the structure screen to build the workout calendar.</p>
+      <button type="submit" class="btn btn-primary btn-lg px-4">
+        {% if plan %}Update Plan{% else %}Save Plan{% endif %}
+      </button>
+    </div>
+  </form>
+{% endblock %}

@@ -1,10 +1,31 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import JsonResponse
 from django.urls import NoReverseMatch, reverse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
 
 from core.models import Party
+from nepanest.products.hamrogym.forms import (
+    WorkoutAssignmentForm,
+    WorkoutDayForm,
+    WorkoutExerciseForm,
+    WorkoutLogForm,
+    WorkoutPlanForm,
+    WorkoutWeekForm,
+)
+from nepanest.products.hamrogym.models import (
+    PersonalBest,
+    WorkoutAssignment,
+    WorkoutDay,
+    WorkoutExercise,
+    WorkoutLog,
+    WorkoutPlan,
+    WorkoutPlanVersion,
+    WorkoutWeek,
+)
 
 
 def _resolve_url(url_name):
@@ -235,3 +256,351 @@ def member_available_party_select(request):
             "pagination": {"more": more},
         }
     )
+
+
+def _workout_plan_alert(request):
+    status = (request.GET.get("status") or "").strip()
+    alerts = {
+        "plan-created": ("success", "Workout plan created successfully."),
+        "plan-updated": ("success", "Workout plan updated successfully."),
+        "week-added": ("success", "Week added to the workout structure."),
+        "week-deleted": ("success", "Week removed from the workout structure."),
+        "day-added": ("success", "Day added to the workout structure."),
+        "day-deleted": ("success", "Day removed from the workout structure."),
+        "exercise-added": ("success", "Exercise added to the workout day."),
+        "exercise-deleted": ("success", "Exercise removed from the workout day."),
+        "assignment-created": ("success", "Workout assignment created successfully."),
+        "log-created": ("success", "Workout log created successfully."),
+        "log-created-pb": ("success", "Workout log saved and a personal best was updated."),
+    }
+    return alerts.get(status)
+
+
+def _build_workout_plan_queryset():
+    return WorkoutPlan.objects.select_related("fitness_goal").prefetch_related(
+        "workout_weeks",
+        "workout_weeks__days",
+        "workout_weeks__days__exercises",
+        "workout_weeks__days__exercises__exercise",
+        "versions",
+    )
+
+
+def _create_workout_plan_version(plan, change_notes):
+    latest_version = plan.versions.order_by("-version_number").first()
+    next_version = 1 if latest_version is None else latest_version.version_number + 1
+    return WorkoutPlanVersion.objects.create(
+        workout_plan=plan,
+        version_number=next_version,
+        change_notes=change_notes,
+    )
+
+
+def _update_personal_best_from_log(log):
+    if not log.exercise_id:
+        return None
+
+    metrics_present = any(
+        value is not None
+        for value in (log.weight_used, log.reps_completed, log.duration_seconds)
+    )
+    if not metrics_present:
+        return None
+
+    personal_best, _created = PersonalBest.objects.get_or_create(
+        member=log.member,
+        exercise=log.exercise,
+        defaults={
+            "best_weight": log.weight_used,
+            "best_reps": log.reps_completed,
+            "best_duration": log.duration_seconds,
+            "achieved_on": log.date,
+        },
+    )
+
+    changed = False
+    if log.weight_used is not None and (personal_best.best_weight is None or log.weight_used > personal_best.best_weight):
+        personal_best.best_weight = log.weight_used
+        changed = True
+    if log.reps_completed is not None and (personal_best.best_reps is None or log.reps_completed > personal_best.best_reps):
+        personal_best.best_reps = log.reps_completed
+        changed = True
+    if log.duration_seconds is not None and (personal_best.best_duration is None or log.duration_seconds > personal_best.best_duration):
+        personal_best.best_duration = log.duration_seconds
+        changed = True
+
+    if changed:
+        personal_best.achieved_on = log.date
+        personal_best.save()
+        return personal_best
+
+    return None
+
+
+def _workout_plan_context(
+    request,
+    *,
+    plan=None,
+    form=None,
+    active_tab="overview",
+    week_form=None,
+    day_form=None,
+    day_error_week_id=None,
+    exercise_form=None,
+    exercise_error_day_id=None,
+):
+    plans = None
+    if plan is None:
+        plans = WorkoutPlan.objects.select_related("fitness_goal").order_by("name")
+
+    structure = []
+    total_days = 0
+    total_exercises = 0
+    active_week_id = None
+    recent_versions = []
+    if plan is not None:
+        weeks = (
+            plan.workout_weeks.all()
+            .order_by("week_number", "id")
+            .prefetch_related("days__exercises__exercise")
+        )
+        structure = list(weeks)
+        for week in structure:
+            days = list(week.days.all().order_by("day_number", "id"))
+            week.prefetched_days = days
+            week.exercise_count = 0
+            total_days += len(days)
+            for day in days:
+                exercises = list(day.exercises.all().order_by("sequence_order", "id"))
+                day.prefetched_exercises = exercises
+                week.exercise_count += len(exercises)
+                total_exercises += len(exercises)
+        recent_versions = list(plan.versions.all()[:6])
+        if day_error_week_id:
+            active_week_id = day_error_week_id
+        elif exercise_error_day_id:
+            for week in structure:
+                if any(day.pk == exercise_error_day_id for day in week.prefetched_days):
+                    active_week_id = week.pk
+                    break
+        elif structure:
+            active_week_id = structure[0].pk
+
+    alert = _workout_plan_alert(request)
+    return {
+        "plans": plans,
+        "plan": plan,
+        "form": form or WorkoutPlanForm(instance=plan),
+        "week_form": week_form or WorkoutWeekForm(workout_plan=plan),
+        "blank_day_form": WorkoutDayForm(workout_plan=plan),
+        "day_form": day_form or WorkoutDayForm(workout_plan=plan),
+        "day_error_week_id": day_error_week_id,
+        "blank_exercise_form": WorkoutExerciseForm(),
+        "exercise_form": exercise_form or WorkoutExerciseForm(),
+        "exercise_error_day_id": exercise_error_day_id,
+        "structure": structure,
+        "active_week_id": active_week_id,
+        "total_days": total_days,
+        "total_exercises": total_exercises,
+        "recent_versions": recent_versions,
+        "active_tab": active_tab,
+        "alert": alert,
+    }
+
+
+class WorkoutPlanCreateView(LoginRequiredMixin, View):
+    def get(self, request):
+        context = _workout_plan_context(request, form=WorkoutPlanForm())
+        return render(request, "hamrogym/workout_plans/form.html", context)
+
+    def post(self, request):
+        form = WorkoutPlanForm(request.POST)
+        if form.is_valid():
+            plan = form.save()
+            _create_workout_plan_version(plan, "Initial workout plan created.")
+            return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=plan-created")
+        context = _workout_plan_context(request, form=form)
+        return render(request, "hamrogym/workout_plans/form.html", context, status=400)
+
+
+class WorkoutPlanUpdateView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        plan = get_object_or_404(WorkoutPlan.objects.select_related("fitness_goal"), pk=pk)
+        context = _workout_plan_context(request, plan=plan, form=WorkoutPlanForm(instance=plan))
+        return render(request, "hamrogym/workout_plans/form.html", context)
+
+    def post(self, request, pk):
+        plan = get_object_or_404(WorkoutPlan, pk=pk)
+        form = WorkoutPlanForm(request.POST, instance=plan)
+        if form.is_valid():
+            plan = form.save()
+            _create_workout_plan_version(plan, "Workout plan metadata updated.")
+            return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=plan-updated")
+        context = _workout_plan_context(request, plan=plan, form=form)
+        return render(request, "hamrogym/workout_plans/form.html", context, status=400)
+
+
+class WorkoutPlanDetailView(LoginRequiredMixin, View):
+    template_name = "hamrogym/workout_plans/detail.html"
+
+    def get(self, request, pk, tab="overview"):
+        plan = get_object_or_404(_build_workout_plan_queryset(), pk=pk)
+        active_tab = "structure" if tab == "structure" else "overview"
+        context = _workout_plan_context(request, plan=plan, active_tab=active_tab)
+        return render(request, self.template_name, context)
+
+
+class WorkoutWeekCreateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        plan = get_object_or_404(_build_workout_plan_queryset(), pk=pk)
+        form = WorkoutWeekForm(request.POST, workout_plan=plan)
+        if form.is_valid():
+            week = form.save(commit=False)
+            week.workout_plan = plan
+            week.save()
+            _create_workout_plan_version(plan, f"Added Week {week.week_number}.")
+            return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=week-added")
+        context = _workout_plan_context(request, plan=plan, active_tab="structure", week_form=form)
+        return render(request, "hamrogym/workout_plans/detail.html", context, status=400)
+
+
+class WorkoutWeekDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, week_id):
+        plan = get_object_or_404(WorkoutPlan, pk=pk)
+        week = get_object_or_404(WorkoutWeek, pk=week_id, workout_plan=plan)
+        week_number = week.week_number
+        week.days.all().delete()
+        week.delete()
+        _create_workout_plan_version(plan, f"Removed Week {week_number}.")
+        return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=week-deleted")
+
+
+class WorkoutDayCreateView(LoginRequiredMixin, View):
+    def post(self, request, pk, week_id):
+        plan = get_object_or_404(WorkoutPlan, pk=pk)
+        week = get_object_or_404(WorkoutWeek, pk=week_id, workout_plan=plan)
+        form = WorkoutDayForm(request.POST, workout_week=week, workout_plan=plan)
+        if form.is_valid():
+            day = form.save(commit=False)
+            day.workout_plan = plan
+            day.workout_week = week
+            day.save()
+            _create_workout_plan_version(plan, f"Added Day {day.day_number}: {day.title}.")
+            return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=day-added")
+        plan = get_object_or_404(_build_workout_plan_queryset(), pk=pk)
+        context = _workout_plan_context(
+            request,
+            plan=plan,
+            active_tab="structure",
+            day_form=form,
+            day_error_week_id=week.pk,
+        )
+        return render(request, "hamrogym/workout_plans/detail.html", context, status=400)
+
+
+class WorkoutDayDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, day_id):
+        plan = get_object_or_404(WorkoutPlan, pk=pk)
+        day = get_object_or_404(WorkoutDay, pk=day_id, workout_plan=plan)
+        day_label = f"Day {day.day_number}: {day.title}"
+        day.delete()
+        _create_workout_plan_version(plan, f"Removed {day_label}.")
+        return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=day-deleted")
+
+
+class WorkoutExerciseCreateView(LoginRequiredMixin, View):
+    def post(self, request, pk, day_id):
+        plan = get_object_or_404(WorkoutPlan, pk=pk)
+        day = get_object_or_404(WorkoutDay, pk=day_id, workout_plan=plan)
+        form = WorkoutExerciseForm(request.POST)
+        if form.is_valid():
+            workout_exercise = form.save(commit=False)
+            workout_exercise.workout_day = day
+            try:
+                workout_exercise.full_clean()
+            except ValidationError as exc:
+                form.add_error(None, exc)
+            else:
+                workout_exercise.save()
+                _create_workout_plan_version(
+                    plan,
+                    f"Added exercise {workout_exercise.exercise.name} to Day {day.day_number}.",
+                )
+                return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=exercise-added")
+        plan = get_object_or_404(_build_workout_plan_queryset(), pk=pk)
+        context = _workout_plan_context(
+            request,
+            plan=plan,
+            active_tab="structure",
+            exercise_form=form,
+            exercise_error_day_id=day.pk,
+        )
+        return render(request, "hamrogym/workout_plans/detail.html", context, status=400)
+
+
+class WorkoutExerciseDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, exercise_id):
+        plan = get_object_or_404(WorkoutPlan, pk=pk)
+        workout_exercise = get_object_or_404(
+            WorkoutExercise,
+            pk=exercise_id,
+            workout_day__workout_plan=plan,
+        )
+        exercise_label = workout_exercise.exercise.name
+        day_number = workout_exercise.workout_day.day_number
+        workout_exercise.delete()
+        _create_workout_plan_version(plan, f"Removed exercise {exercise_label} from Day {day_number}.")
+        return redirect(f"{reverse('hamrogym_workout_plan_structure', args=[plan.pk])}?status=exercise-deleted")
+
+
+class WorkoutAssignmentCreateView(LoginRequiredMixin, View):
+    def get(self, request):
+        initial = {}
+        workout_plan_id = request.GET.get("workout_plan")
+        if workout_plan_id:
+            initial["workout_plan"] = workout_plan_id
+        return render(
+            request,
+            "hamrogym/workout_assignments/form.html",
+            {
+                "form": WorkoutAssignmentForm(initial=initial),
+                "alert": _workout_plan_alert(request),
+            },
+        )
+
+    def post(self, request):
+        form = WorkoutAssignmentForm(request.POST)
+        if form.is_valid():
+            assignment = form.save()
+            return redirect(f"{reverse('hamrogym_workout_assignment_create')}?status=assignment-created&id={assignment.pk}")
+        return render(request, "hamrogym/workout_assignments/form.html", {"form": form}, status=400)
+
+
+class WorkoutLogCreateView(LoginRequiredMixin, View):
+    def get(self, request):
+        return render(
+            request,
+            "hamrogym/workout_logs/form.html",
+            {
+                "form": WorkoutLogForm(),
+                "alert": _workout_plan_alert(request),
+                "recent_personal_bests": PersonalBest.objects.select_related("member", "exercise").order_by("-achieved_on", "-id")[:6],
+            },
+        )
+
+    def post(self, request):
+        form = WorkoutLogForm(request.POST)
+        if form.is_valid():
+            log = form.save()
+            personal_best = _update_personal_best_from_log(log)
+            status = "log-created-pb" if personal_best else "log-created"
+            return redirect(f"{reverse('hamrogym_workout_log_create')}?status={status}&id={log.pk}")
+        return render(
+            request,
+            "hamrogym/workout_logs/form.html",
+            {
+                "form": form,
+                "recent_personal_bests": PersonalBest.objects.select_related("member", "exercise").order_by("-achieved_on", "-id")[:6],
+            },
+            status=400,
+        )

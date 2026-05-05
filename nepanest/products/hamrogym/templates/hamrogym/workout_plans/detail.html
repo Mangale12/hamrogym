@@ -1,0 +1,781 @@
+{% extends "hamrogym/layouts/app.html" %}
+
+{% block title %}{{ plan.name }} | HamroGym{% endblock %}
+{% block page_title %}{{ plan.name }}{% endblock %}
+
+{% block header_actions %}
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'hamrogym_workout_plan_list' %}" class="btn btn-outline-secondary btn-lg">All Plans</a>
+    <a href="{% url 'hamrogym_workout_plan_edit' plan.pk %}" class="btn btn-primary btn-lg">Edit Plan</a>
+  </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .workout-shell,
+  .builder-shell,
+  .builder-card,
+  .day-card,
+  .exercise-row,
+  .plan-strip,
+  .stat-card,
+  .form-panel,
+  .empty-panel,
+  .step-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
+  }
+
+  .workout-shell,
+  .builder-shell,
+  .plan-strip,
+  .empty-panel {
+    border-radius: 28px;
+  }
+
+  .builder-card,
+  .stat-card,
+  .step-card {
+    border-radius: 24px;
+  }
+
+  .day-card,
+  .form-panel {
+    border-radius: 20px;
+  }
+
+  .exercise-row {
+    border-radius: 18px;
+  }
+
+  .workout-tab {
+    border-radius: 999px !important;
+    padding: 0.8rem 1.1rem;
+    font-weight: 700;
+  }
+
+  .workout-tab.active {
+    background: #111827 !important;
+    color: #fff !important;
+  }
+
+  .plan-strip {
+    background:
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.14), transparent 24%),
+      linear-gradient(135deg, rgba(255, 247, 237, 0.95), rgba(255, 255, 255, 0.98));
+  }
+
+  .plan-kicker,
+  .section-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #9a3412;
+  }
+
+  .plan-lead {
+    max-width: 720px;
+    color: #475569;
+    font-size: 1rem;
+  }
+
+  .info-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.8rem 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(249, 115, 22, 0.16);
+  }
+
+  .info-pill-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #94a3b8;
+  }
+
+  .info-pill-value {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .stat-card {
+    padding: 1.25rem;
+    height: 100%;
+  }
+
+  .stat-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #94a3b8;
+  }
+
+  .stat-value {
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #0f172a;
+  }
+
+  .stat-note {
+    color: #475569;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .step-card {
+    padding: 1.1rem 1.2rem;
+    height: 100%;
+  }
+
+  .step-index {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: #0f172a;
+    color: #fff;
+    font-weight: 800;
+    margin-bottom: 0.9rem;
+  }
+
+  .builder-shell {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.98));
+  }
+
+  .form-panel {
+    background:
+      linear-gradient(180deg, rgba(255, 247, 237, 0.72), rgba(255, 255, 255, 0.98));
+    border-style: solid;
+  }
+
+  .form-panel.day-form-panel,
+  .form-panel.exercise-form-panel {
+    background:
+      linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.98));
+    border: 1px dashed rgba(148, 163, 184, 0.45);
+    box-shadow: none;
+  }
+
+  .builder-card {
+    padding: 1.5rem;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  }
+
+  .builder-week-header,
+  .builder-day-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .week-badge,
+  .day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.42rem 0.72rem;
+    border-radius: 999px;
+    background: #fff7ed;
+    color: #c2410c;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .builder-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 999px;
+    padding: 0.42rem 0.72rem;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .week-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+
+  .week-tab-btn {
+    min-width: 180px;
+    padding: 1rem 1.05rem;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.85);
+    text-align: left;
+    color: #0f172a;
+    transition: all 0.2s ease;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  }
+
+  .week-tab-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(249, 115, 22, 0.35);
+  }
+
+  .week-tab-btn.active {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+  }
+
+  .week-tab-btn.active .week-tab-copy,
+  .week-tab-btn.active .week-tab-meta {
+    color: rgba(255, 255, 255, 0.84);
+  }
+
+  .week-tab-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    margin-bottom: 0.7rem;
+    background: #fff7ed;
+    color: #c2410c;
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .week-tab-btn.active .week-tab-label {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+
+  .week-tab-copy {
+    display: block;
+    font-weight: 800;
+    margin-bottom: 0.18rem;
+  }
+
+  .week-tab-meta {
+    display: block;
+    color: #64748b;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .week-panel {
+    display: none;
+  }
+
+  .week-panel.active {
+    display: block;
+  }
+
+  .day-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .exercise-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .exercise-row {
+    padding: 1rem 1.05rem;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(255, 255, 255, 1));
+  }
+
+  .exercise-order {
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .exercise-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.65rem;
+  }
+
+  .exercise-meta span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .empty-panel {
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+    background:
+      radial-gradient(circle at top, rgba(249, 115, 22, 0.12), transparent 30%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  }
+
+  .empty-copy {
+    max-width: 520px;
+    margin: 0 auto;
+    color: #475569;
+  }
+
+  .version-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .version-item {
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+  }
+
+  .btn-soft-danger {
+    background: #fff;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #b91c1c;
+  }
+
+  .btn-soft-danger:hover {
+    background: #fef2f2;
+    color: #991b1b;
+  }
+
+  @media (max-width: 991.98px) {
+    .builder-week-header,
+    .builder-day-header {
+      flex-direction: column;
+    }
+
+    .week-tab-btn {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  {% include "hamrogym/workout/_alert.html" %}
+
+  <section class="plan-strip p-4 p-lg-5 mb-4">
+    <div class="d-flex flex-column flex-xl-row justify-content-between gap-4 mb-4">
+      <div>
+        <p class="plan-kicker mb-2">Workout Plan Builder</p>
+        <h2 class="mb-3">{{ plan.name }}</h2>
+        <p class="plan-lead mb-0">
+          This screen should feel like a structure builder, not a raw admin form. Weeks sit at the top level, each week owns its days, and each day owns its exercise prescription.
+        </p>
+      </div>
+      <div class="d-flex flex-wrap gap-3 align-content-start">
+        <div class="info-pill">
+          <div>
+            <div class="info-pill-label">Goal</div>
+            <div class="info-pill-value">{{ plan.fitness_goal.name|default:"Not set" }}</div>
+          </div>
+        </div>
+        <div class="info-pill">
+          <div>
+            <div class="info-pill-label">Difficulty</div>
+            <div class="info-pill-value">{{ plan.get_difficulty_level_display|default:"Not set" }}</div>
+          </div>
+        </div>
+        <div class="info-pill">
+          <div>
+            <div class="info-pill-label">Target Cadence</div>
+            <div class="info-pill-value">{{ plan.duration_week|default:"-" }} weeks / {{ plan.days_per_week|default:"-" }} days</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ul class="nav nav-pills gap-2">
+      <li class="nav-item">
+        <a class="nav-link workout-tab {% if active_tab == 'overview' %}active{% endif %}" href="{% url 'hamrogym_workout_plan_detail' plan.pk %}">Overview</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link workout-tab {% if active_tab == 'structure' %}active{% endif %}" href="{% url 'hamrogym_workout_plan_structure' plan.pk %}">Structure Builder</a>
+      </li>
+    </ul>
+  </section>
+
+  {% if active_tab == 'overview' %}
+    <section class="workout-shell p-4 p-lg-5">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+          <div class="stat-card">
+            <div class="stat-label">Configured Weeks</div>
+            <div class="stat-value mt-2">{{ structure|length }}</div>
+            <p class="stat-note mt-3 mb-0">The top-level training blocks already added to this plan.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="stat-card">
+            <div class="stat-label">Planned Workout Days</div>
+            <div class="stat-value mt-2">{{ total_days }}</div>
+            <p class="stat-note mt-3 mb-0">Use the structure builder when you need to balance day volume across each week.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="stat-card">
+            <div class="stat-label">Exercise Rows</div>
+            <div class="stat-value mt-2">{{ total_exercises }}</div>
+            <p class="stat-note mt-3 mb-0">Every exercise row stores order, sets, reps, load, duration, and rest targets.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+          <div class="step-card">
+            <div class="step-index">1</div>
+            <h5>Create the plan</h5>
+            <p class="text-muted mb-0">Keep metadata such as goal, difficulty, and cadence on the plan itself.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="step-card">
+            <div class="step-index">2</div>
+            <h5>Build the structure</h5>
+            <p class="text-muted mb-0">Add weeks, then add days inside each week, then prescribe exercises inside each day.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="step-card">
+            <div class="step-index">3</div>
+            <h5>Assign and log</h5>
+            <p class="text-muted mb-0">Once the structure is solid, assignments and workout logs can stay focused on execution.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+          <div>
+            <div class="stat-label">Plan Versions</div>
+            <h5 class="mt-2 mb-1">Tracked change history</h5>
+            <p class="text-muted mb-0">Metadata edits plus week, day, and exercise changes now create version records automatically.</p>
+          </div>
+          <div class="builder-chip align-self-start">{{ recent_versions|length }} recent version{{ recent_versions|length|pluralize }}</div>
+        </div>
+        {% if recent_versions %}
+          <div class="version-list">
+            {% for version in recent_versions %}
+              <div class="version-item">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                  <div>
+                    <div class="fw-semibold">Version {{ version.version_number }}</div>
+                    <div class="text-muted small mt-1">{{ version.change_notes|default:"No change notes provided." }}</div>
+                  </div>
+                  <div class="text-muted small">{{ version.created_at|date:"M d, Y H:i" }}</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-muted small">No versions recorded yet.</div>
+        {% endif %}
+      </div>
+    </section>
+  {% else %}
+    <section class="builder-shell p-4 p-lg-5">
+      <div class="d-flex flex-column flex-xl-row justify-content-between gap-4 mb-4">
+        <div>
+          <p class="section-kicker mb-2">Structure Builder</p>
+          <h3 class="mb-2">Build the training flow week by week</h3>
+          <p class="text-muted mb-0">
+            Pick a week tab, manage its days, then prescribe exercises inside each day without the whole page fighting for attention.
+          </p>
+          <div class="mt-3">
+            <a href="{% url 'hamrogym_workout_assignment_create' %}?workout_plan={{ plan.pk }}" class="btn btn-warning">
+              Assign Plan
+            </a>
+          </div>
+        </div>
+        <div class="row g-3 flex-grow-1" style="max-width: 560px;">
+          <div class="col-sm-4">
+            <div class="stat-card text-sm-start text-center">
+              <div class="stat-label">Weeks</div>
+              <div class="stat-value mt-2">{{ structure|length }}</div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="stat-card text-sm-start text-center">
+              <div class="stat-label">Days</div>
+              <div class="stat-value mt-2">{{ total_days }}</div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="stat-card text-sm-start text-center">
+              <div class="stat-label">Exercises</div>
+              <div class="stat-value mt-2">{{ total_exercises }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-panel p-4 mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+          <div>
+            <p class="section-kicker mb-2">Start Here</p>
+            <h4 class="mb-2">Add a new training week</h4>
+            <p class="text-muted mb-0">Weeks become tabs automatically, so the builder stays organized as the plan grows.</p>
+          </div>
+          <div class="builder-chip align-self-start">Top-level object: Week</div>
+        </div>
+        <form method="post" action="{% url 'hamrogym_workout_week_create' plan.pk %}">
+          {% csrf_token %}
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4 col-lg-3">
+              {% include "hamrogym/workout/_field.html" with field=week_form.week_number col=12 %}
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <button type="submit" class="btn btn-dark w-100">Add Week</button>
+            </div>
+          </div>
+          {% for error in week_form.non_field_errors %}
+            <div class="text-danger small mt-2">{{ error }}</div>
+          {% endfor %}
+        </form>
+      </div>
+
+      <div class="d-grid gap-4">
+        {% if structure %}
+          <div class="week-tabs" role="tablist" aria-label="Workout weeks">
+            {% for week in structure %}
+              <button
+                type="button"
+                class="week-tab-btn {% if active_week_id == week.pk %}active{% endif %}"
+                data-week-target="week-panel-{{ week.pk }}"
+                aria-selected="{% if active_week_id == week.pk %}true{% else %}false{% endif %}"
+              >
+                <span class="week-tab-label">{{ week.week_number }}</span>
+                <span class="week-tab-copy">Week {{ week.week_number }}</span>
+                <span class="week-tab-meta">{{ week.prefetched_days|length }} day{{ week.prefetched_days|length|pluralize }} • {{ week.exercise_count }} exercise{{ week.exercise_count|pluralize }}</span>
+              </button>
+            {% endfor %}
+          </div>
+
+          {% for week in structure %}
+            <article class="builder-card week-panel {% if active_week_id == week.pk %}active{% endif %}" id="week-panel-{{ week.pk }}">
+              <div class="builder-week-header mb-4">
+                <div>
+                  <span class="week-badge">Week {{ week.week_number }}</span>
+                  <h4 class="mt-3 mb-2">Training Block {{ week.week_number }}</h4>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="builder-chip">{{ week.prefetched_days|length }} day{{ week.prefetched_days|length|pluralize }}</span>
+                    <span class="builder-chip">{{ week.exercise_count }} exercise{{ week.exercise_count|pluralize }}</span>
+                  </div>
+                </div>
+                <form method="post" action="{% url 'hamrogym_workout_week_delete' plan.pk week.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-soft-danger btn-sm">Delete Week</button>
+                </form>
+              </div>
+
+              <div class="form-panel day-form-panel p-3 p-lg-4 mb-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                  <div>
+                    <h5 class="mb-1">Add a day to Week {{ week.week_number }}</h5>
+                    <p class="text-muted mb-0">Use day numbers that match the intended schedule order.</p>
+                  </div>
+                  <div class="builder-chip align-self-start">Child object: Day</div>
+                </div>
+                <form method="post" action="{% url 'hamrogym_workout_day_create' plan.pk week.pk %}">
+                  {% csrf_token %}
+                  <div class="row g-3 align-items-end">
+                    <div class="col-md-4 col-lg-3">
+                      {% if day_error_week_id == week.pk %}
+                        {% include "hamrogym/workout/_field.html" with field=day_form.day_number col=12 %}
+                      {% else %}
+                        {% include "hamrogym/workout/_field.html" with field=blank_day_form.day_number col=12 %}
+                      {% endif %}
+                    </div>
+                    <div class="col-md-8 col-lg-5">
+                      {% if day_error_week_id == week.pk %}
+                        {% include "hamrogym/workout/_field.html" with field=day_form.title col=12 %}
+                      {% else %}
+                        {% include "hamrogym/workout/_field.html" with field=blank_day_form.title col=12 %}
+                      {% endif %}
+                    </div>
+                    <div class="col-md-4 col-lg-2">
+                      <button type="submit" class="btn btn-outline-dark w-100">Add Day</button>
+                    </div>
+                  </div>
+                  {% if day_error_week_id == week.pk %}
+                    {% for error in day_form.non_field_errors %}
+                      <div class="text-danger small mt-2">{{ error }}</div>
+                    {% endfor %}
+                  {% endif %}
+                </form>
+              </div>
+
+              {% if week.prefetched_days %}
+                <div class="day-grid">
+                  {% for day in week.prefetched_days %}
+                    <section class="day-card p-3 p-lg-4">
+                      <div class="builder-day-header mb-3">
+                        <div>
+                          <span class="day-badge">Day {{ day.day_number }}</span>
+                          <h5 class="mt-3 mb-1">{{ day.title }}</h5>
+                          <div class="text-muted small mb-2">Workout Day {{ day.day_number }} in {{ plan.name }}</div>
+                          <span class="builder-chip">{{ day.prefetched_exercises|length }} exercise{{ day.prefetched_exercises|length|pluralize }}</span>
+                        </div>
+                        <form method="post" action="{% url 'hamrogym_workout_day_delete' plan.pk day.pk %}">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-soft-danger btn-sm">Delete Day</button>
+                        </form>
+                      </div>
+
+                      <div class="form-panel exercise-form-panel p-3 mb-3">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                          <div>
+                            <h6 class="mb-1">Add exercise prescription</h6>
+                            <p class="text-muted mb-0">Keep sequence first, then volume and timing fields.</p>
+                          </div>
+                          <div class="builder-chip align-self-start">Child object: Exercise</div>
+                        </div>
+                        <form method="post" action="{% url 'hamrogym_workout_exercise_create' plan.pk day.pk %}">
+                          {% csrf_token %}
+                          <div class="row g-3">
+                            {% if exercise_error_day_id == day.pk %}
+                              <div class="col-lg-4">{% include "hamrogym/workout/_field.html" with field=exercise_form.exercise col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=exercise_form.sequence_order col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=exercise_form.sets col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=exercise_form.reps col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=exercise_form.weight col=12 %}</div>
+                              <div class="col-sm-6 col-lg-3">{% include "hamrogym/workout/_field.html" with field=exercise_form.duration_seconds col=12 %}</div>
+                              <div class="col-sm-6 col-lg-3">{% include "hamrogym/workout/_field.html" with field=exercise_form.rest_time_seconds col=12 %}</div>
+                            {% else %}
+                              <div class="col-lg-4">{% include "hamrogym/workout/_field.html" with field=blank_exercise_form.exercise col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=blank_exercise_form.sequence_order col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=blank_exercise_form.sets col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=blank_exercise_form.reps col=12 %}</div>
+                              <div class="col-sm-6 col-lg-2">{% include "hamrogym/workout/_field.html" with field=blank_exercise_form.weight col=12 %}</div>
+                              <div class="col-sm-6 col-lg-3">{% include "hamrogym/workout/_field.html" with field=blank_exercise_form.duration_seconds col=12 %}</div>
+                              <div class="col-sm-6 col-lg-3">{% include "hamrogym/workout/_field.html" with field=blank_exercise_form.rest_time_seconds col=12 %}</div>
+                            {% endif %}
+                            <div class="col-lg-2 d-flex align-items-end">
+                              <button type="submit" class="btn btn-dark w-100">Add</button>
+                            </div>
+                          </div>
+                          {% if exercise_error_day_id == day.pk %}
+                            {% for error in exercise_form.non_field_errors %}
+                              <div class="text-danger small mt-2">{{ error }}</div>
+                            {% endfor %}
+                          {% endif %}
+                        </form>
+                      </div>
+
+                      {% if day.prefetched_exercises %}
+                        <div class="exercise-list">
+                          {% for workout_exercise in day.prefetched_exercises %}
+                            <div class="exercise-row">
+                              <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                                <div class="flex-grow-1">
+                                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="exercise-order">{{ workout_exercise.sequence_order }}</span>
+                                    <div class="fw-semibold fs-6">{{ workout_exercise.exercise.name }}</div>
+                                  </div>
+                                  <div class="exercise-meta">
+                                    <span>{{ workout_exercise.sets|default:"-" }} sets</span>
+                                    <span>{{ workout_exercise.reps|default:"-" }} reps</span>
+                                    <span>{{ workout_exercise.weight|default:"-" }} kg</span>
+                                    <span>{{ workout_exercise.duration_seconds|default:"-" }} sec</span>
+                                    <span>{{ workout_exercise.rest_time_seconds|default:"-" }} sec rest</span>
+                                  </div>
+                                </div>
+                                <form method="post" action="{% url 'hamrogym_workout_exercise_delete' plan.pk workout_exercise.pk %}">
+                                  {% csrf_token %}
+                                  <button type="submit" class="btn btn-soft-danger btn-sm">Remove</button>
+                                </form>
+                              </div>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <div class="text-muted small">No exercises added yet. Use the form above to prescribe the first movement for this day.</div>
+                      {% endif %}
+                    </section>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-panel">
+                  <h5 class="mb-2">No days inside this week yet</h5>
+                  <p class="empty-copy mb-0">Add the first day for Week {{ week.week_number }} to turn this training block into a usable schedule.</p>
+                </div>
+              {% endif %}
+            </article>
+          {% endfor %}
+        {% else %}
+          <div class="empty-panel">
+            <p class="section-kicker mb-2">Nothing Built Yet</p>
+            <h4 class="mb-2">Start with Week 1</h4>
+            <p class="empty-copy mb-0">A clean builder starts from the top down. Add the first week above, then expand it with days and exercises.</p>
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const weekButtons = Array.from(document.querySelectorAll("[data-week-target]"));
+    const weekPanels = Array.from(document.querySelectorAll(".week-panel"));
+
+    if (!weekButtons.length || !weekPanels.length) {
+      return;
+    }
+
+    function activateWeek(targetId) {
+      weekButtons.forEach((button) => {
+        const isActive = button.dataset.weekTarget === targetId;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-selected", isActive ? "true" : "false");
+      });
+
+      weekPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.id === targetId);
+      });
+    }
+
+    weekButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        activateWeek(button.dataset.weekTarget);
+      });
+    });
+
+    const activeButton = weekButtons.find((button) => button.classList.contains("active")) || weekButtons[0];
+    activateWeek(activeButton.dataset.weekTarget);
+  });
+</script>
+{% endblock %}

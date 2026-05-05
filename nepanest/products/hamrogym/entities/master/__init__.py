@@ -21,3 +21,5 @@ from . import trainer_module  # noqa: F401
 from . import muscle_group  # noqa: F401
 from . import equipment_type  # noqa: F401
 from . import exercise  # noqa: F401
+from . import workout_plan  # noqa: F401
+from . import diet_plan  # noqa: F401

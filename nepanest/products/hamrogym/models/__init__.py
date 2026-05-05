@@ -32,3 +32,14 @@ from .trainer import (
 from .muscle_group import MuscleGroup
 from .equipment_type import EquipmentType
 from .exercise import Exercise
+from .workout_plan import (
+    PersonalBest,
+    WorkoutAssignment,
+    WorkoutDay,
+    WorkoutExercise,
+    WorkoutLog,
+    WorkoutPlan,
+    WorkoutPlanVersion,
+    WorkoutWeek,
+)
+from .diet_plan import DietPlan

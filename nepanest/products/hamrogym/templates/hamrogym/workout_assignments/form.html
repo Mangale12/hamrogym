@@ -1,0 +1,46 @@
+{% extends "hamrogym/layouts/app.html" %}
+
+{% block title %}Create Workout Assignment | HamroGym{% endblock %}
+{% block page_title %}Workout Assignment{% endblock %}
+
+{% block extra_css %}
+<style>
+  .assignment-shell {
+    border-radius: 28px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  {% include "hamrogym/workout/_alert.html" %}
+  <form method="post" class="assignment-shell p-4 p-lg-5">
+    {% csrf_token %}
+    <div class="mb-4">
+      <p class="text-uppercase text-muted fw-bold small mb-2">Separate Form</p>
+      <h3 class="mb-2">Assign a plan to a member</h3>
+      <p class="text-muted mb-0">Assignments are operational records, so they stay out of the workout plan master form.</p>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="row g-4">
+      {% include "hamrogym/workout/_field.html" with field=form.member col=6 %}
+      {% include "hamrogym/workout/_field.html" with field=form.trainer col=6 %}
+      {% include "hamrogym/workout/_field.html" with field=form.workout_plan col=6 %}
+      {% include "hamrogym/workout/_field.html" with field=form.status col=6 %}
+      {% include "hamrogym/workout/_field.html" with field=form.start_date col=6 %}
+      {% include "hamrogym/workout/_field.html" with field=form.end_date col=6 %}
+    </div>
+
+    <div class="mt-4 d-flex justify-content-end">
+      <button type="submit" class="btn btn-primary btn-lg">Create Assignment</button>
+    </div>
+  </form>
+{% endblock %}

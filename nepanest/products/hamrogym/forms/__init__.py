@@ -13,6 +13,7 @@ from .member_membership_form import MemberMembershipForm, MembershipFreezeForm
 from .member_referral_form import MemberReferralForm
 from .member_status_form import MemberStatusForm
 from .membership_plan_form import MembershipPlanForm
+from .personal_best_form import PersonalBestForm
 from .trainer_forms import (
     MemberPTPackageForm,
     PTSessionCancellationForm,
@@ -25,3 +26,7 @@ from .trainer_forms import (
     TrainerPerformanceForm,
     TrainerTimeOffForm,
 )
+from .workout_assignment_form import WorkoutAssignmentForm
+from .workout_log_form import WorkoutLogForm
+from .workout_plan_form import WorkoutPlanForm
+from .workout_structure_form import WorkoutDayForm, WorkoutExerciseForm, WorkoutWeekForm
