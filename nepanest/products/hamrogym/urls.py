@@ -6,6 +6,7 @@ from nepanest.products.hamrogym.views import views
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="dashboard", permanent=False)),
     path("product/hamrogym/dashboard/", views.dashboard, name="dashboard"),
+    path("class-schedules/<int:pk>/view/", views.ClassScheduleDetailView.as_view(), name="hamrogym_class_schedule_view"),
     path("workout-plans/", RedirectView.as_view(pattern_name="workout_plan_list", permanent=False), name="hamrogym_workout_plan_list"),
     path("workout-plans/create/", views.WorkoutPlanCreateView.as_view(), name="hamrogym_workout_plan_create"),
     path("workout-plans/<int:pk>/", views.WorkoutPlanDetailView.as_view(), name="hamrogym_workout_plan_detail"),

@@ -133,29 +133,111 @@ SIDEBAR_ITEMS = [
         ],
     },
      
-      {
+    {
         "label": "Diet and Nutrition",
         "icon": "food",
         "children": [
             {
-                "label": "Muscle Groups",
-                "url_name": "muscle_group_list",
+                "label": "Diet Plans",
+                "url_name": "diet_plan_list",
             },
             {
-                "label": "Equipment Types",
-                "url_name": "equipment_type_list",
+                "label": "Diet Days",
+                "url_name": "diet_day_list",
             },
             {
-                "label": "Exercise",
-                "url_name": "exercise_list",
+                "label": "Meals",
+                "url_name": "meal_list",
             },
             {
-                "label": "Workout Plans",
-                "url_name": "workout_plan_list",
+                "label": "Diet Assignments",
+                "url_name": "diet_assignment_list",
             },
             {
-                "label": "Departments",
-                "url_name": "department_list",
+                "label": "Diet Logs",
+                "url_name": "diet_log_list",
+            },
+            {
+                "label": "Nutrition Goals",
+                "url_name": "nutrition_goal_list",
+            },
+            {
+                "label": "Water Intake Logs",
+                "url_name": "water_intake_log_list",
+            },
+        ],
+    },
+    {
+        "label": "Challenge",
+        "icon": "trophy",
+        "children": [
+            {
+                "label": "Challenges",
+                "url_name": "challenge_list",
+            },
+            {
+                "label": "Challenge Participants",
+                "url_name": "challenge_participant_list",
+            },
+            {
+                "label": "Challenge Progress Logs",
+                "url_name": "challenge_progress_log_list",
+            },
+            {
+                "label": "Leaderboards",
+                "url_name": "leaderboard_list",
+            },
+            {
+                "label": "Achievement Badges",
+                "url_name": "achievement_badge_list",
+            },
+            {
+                "label": "Member Badges",
+                "url_name": "member_badge_list",
+            },
+            {
+                "label": "Member Streaks",
+                "url_name": "member_streak_list",
+            },
+            {
+                "label": "Rewards",
+                "url_name": "reward_list",
+            },
+            {
+                "label": "Member Rewards",
+                "url_name": "member_reward_list",
+            },
+        ],
+    },
+    {
+        "label": "Class and Group Management",
+        "icon": "users",
+        "children": [
+            {
+                "label": "Class Types",
+                "url_name": "gym_class_type_list",
+            },
+            {
+                "label": "Class Rooms",
+                "url_name": "class_room_list",
+            },
+            {
+                "label": "Gym Classes",
+                "url_name": "gym_class_list",
+            },
+            {
+                "label": "Class Schedules",
+                "url_name": "class_schedule_list",
+            },
+            {
+                "label": "Bookings",
+                "url": "#",
+                "disabled": True,
+            },
+            {
+                "label": "Attendance",
+                "url": "#",
+                "disabled": True,
             },
         ],
     },

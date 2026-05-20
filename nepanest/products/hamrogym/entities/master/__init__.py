@@ -3,6 +3,7 @@ from . import access_log  # noqa: F401
 from . import access_rule  # noqa: F401
 from . import access_type  # noqa: F401
 from . import access_violation  # noqa: F401
+from . import challenge  # noqa: F401
 from . import fitness_goal  # noqa: F401
 from . import gym_facility  # noqa: F401
 from . import member  # noqa: F401
@@ -23,3 +24,7 @@ from . import equipment_type  # noqa: F401
 from . import exercise  # noqa: F401
 from . import workout_plan  # noqa: F401
 from . import diet_plan  # noqa: F401
+from . import gym_class_type  # noqa: F401
+from . import class_room  # noqa: F401
+from . import gym_class  # noqa: F401
+from . import class_schedule  # noqa: F401

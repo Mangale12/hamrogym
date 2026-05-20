@@ -1,10 +1,15 @@
+from datetime import date, timedelta
+from urllib.parse import urlencode
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db import transaction
+from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.urls import NoReverseMatch, reverse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views import View
 
 from core.models import Party
@@ -17,7 +22,15 @@ from nepanest.products.hamrogym.forms import (
     WorkoutWeekForm,
 )
 from nepanest.products.hamrogym.models import (
+    ClassAttendance,
+    ClassBooking,
+    ClassCancellation,
+    ClassSession,
+    ClassSchedule,
+    ClassWaitlist,
+    Member,
     PersonalBest,
+    Trainer,
     WorkoutAssignment,
     WorkoutDay,
     WorkoutExercise,
@@ -26,6 +39,16 @@ from nepanest.products.hamrogym.models import (
     WorkoutPlanVersion,
     WorkoutWeek,
 )
+
+SCHEDULE_WEEKDAY_MAP = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
 
 
 def _resolve_url(url_name):
@@ -256,6 +279,483 @@ def member_available_party_select(request):
             "pagination": {"more": more},
         }
     )
+
+
+def _build_class_schedule_queryset():
+    return ClassSchedule.objects.select_related(
+        "gym_class__class_type",
+        "class_room",
+        "trainer__employee__user",
+        "branch",
+    ).prefetch_related(
+        "sessions__trainer__employee__user",
+        "sessions__bookings__member__party",
+        "sessions__attendance_records__member__party",
+        "sessions__waitlists__member__party",
+        "sessions__cancellation",
+    )
+
+
+def _class_schedule_alert(request):
+    status = (request.GET.get("status") or "").strip()
+    created = int(request.GET.get("created", 0) or 0)
+    skipped = int(request.GET.get("skipped", 0) or 0)
+    session_date = request.GET.get("session_date", "")
+
+    if status == "sessions-generated":
+        if created and skipped:
+            return ("success", f"Generated {created} session(s). Skipped {skipped} existing session(s).")
+        if created:
+            return ("success", f"Generated {created} session(s) successfully.")
+        return ("warning", f"No new sessions were generated. Skipped {skipped} existing session(s).")
+    if status == "session-added":
+        return ("success", f"Manual session created for {session_date}.")
+    if status == "session-cancelled":
+        return ("success", f"Session on {session_date} was cancelled.")
+    if status == "session-completed":
+        return ("success", f"Session on {session_date} was marked completed.")
+    if status == "trainer-updated":
+        return ("success", f"Trainer assignment updated for {session_date}.")
+    if status == "booking-added":
+        return ("success", f"Booking added for session on {session_date}.")
+    if status == "attendance-saved":
+        return ("success", f"Attendance saved for session on {session_date}.")
+    if status == "waitlist-added":
+        return ("success", f"Member added to waitlist for session on {session_date}.")
+    if status == "waitlist-promoted":
+        return ("success", f"Waitlisted member promoted into session on {session_date}.")
+    if status == "invalid-range":
+        return ("danger", "End date must be on or after start date.")
+    if status == "invalid-weekday":
+        return ("danger", "This schedule has an invalid day of week and cannot generate sessions.")
+    return None
+
+
+def _build_class_schedule_context(request, schedule, *, generator_initial=None):
+    today = timezone.localdate()
+    upcoming_sessions = list(
+        schedule.sessions.select_related("trainer__employee__user").filter(
+            session_date__gte=today
+        ).order_by("session_date", "start_time")
+    )
+    past_sessions = list(
+        schedule.sessions.select_related("trainer__employee__user").filter(
+            session_date__lt=today
+        ).order_by("-session_date", "-start_time")
+    )
+    all_sessions = upcoming_sessions + past_sessions
+    completed_count = sum(1 for session in all_sessions if session.status == "completed")
+    cancelled_count = sum(1 for session in all_sessions if session.status == "cancelled")
+    scheduled_count = sum(1 for session in all_sessions if session.status == "scheduled")
+
+    initial = generator_initial or {
+        "start_date": today.isoformat(),
+        "end_date": (today + timedelta(days=56)).isoformat(),
+    }
+    manual_initial = {
+        "session_date": today.isoformat(),
+        "start_time": schedule.start_time.strftime("%H:%M") if schedule.start_time else "",
+        "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
+        "trainer_id": str(schedule.trainer_id or ""),
+        "max_capacity": schedule.gym_class.max_capacity if schedule.gym_class_id else "",
+    }
+
+    return {
+        "schedule": schedule,
+        "upcoming_sessions": upcoming_sessions,
+        "past_sessions": past_sessions,
+        "session_summary": {
+            "total": len(all_sessions),
+            "upcoming": len(upcoming_sessions),
+            "completed": completed_count,
+            "cancelled": cancelled_count,
+            "scheduled": scheduled_count,
+            "next_session": upcoming_sessions[0] if upcoming_sessions else None,
+        },
+        "today": today,
+        "alert": _class_schedule_alert(request),
+        "generator_initial": initial,
+        "manual_initial": manual_initial,
+        "active_trainers": Trainer.objects.filter(status=Trainer.Status.ACTIVE).select_related("employee__user").order_by("employee__employee_id"),
+        "active_members": Member.objects.select_related("party").filter(is_active=True).order_by("member_code"),
+        "attendance_status_choices": ClassAttendance._meta.get_field("status").choices,
+        "cancellation_actor_choices": ClassCancellation._meta.get_field("cancelled_by").choices,
+    }
+
+
+def _redirect_schedule_detail(schedule, status, **params):
+    query = urlencode({key: value for key, value in {"status": status, **params}.items() if value not in (None, "")})
+    return redirect(f"{reverse('hamrogym_class_schedule_view', args=[schedule.pk])}?{query}")
+
+
+class ClassScheduleDetailView(LoginRequiredMixin, View):
+    template_name = "hamrogym/class_schedules/detail.html"
+
+    def get(self, request, pk):
+        schedule = get_object_or_404(_build_class_schedule_queryset(), pk=pk)
+        return render(request, self.template_name, _build_class_schedule_context(request, schedule))
+
+    def post(self, request, pk):
+        schedule = get_object_or_404(_build_class_schedule_queryset(), pk=pk)
+        action = (request.POST.get("action") or "generate").strip()
+
+        if action == "generate":
+            return self._generate_sessions(request, schedule)
+        if action == "manual_add":
+            return self._manual_add_session(request, schedule)
+        if action == "cancel_session":
+            return self._cancel_session(request, schedule)
+        if action == "change_trainer":
+            return self._change_session_trainer(request, schedule)
+        if action == "complete_session":
+            return self._complete_session(request, schedule)
+        if action == "add_booking":
+            return self._add_booking(request, schedule)
+        if action == "mark_attendance":
+            return self._mark_attendance(request, schedule)
+        if action == "add_waitlist":
+            return self._add_waitlist(request, schedule)
+        if action == "promote_waitlist":
+            return self._promote_waitlist(request, schedule)
+
+        context = _build_class_schedule_context(request, schedule)
+        context["alert"] = ("danger", "Unsupported schedule session action.")
+        return render(request, self.template_name, context, status=400)
+
+    def _generate_sessions(self, request, schedule):
+        start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
+
+        generator_initial = {
+            "start_date": start_date or "",
+            "end_date": end_date or "",
+        }
+
+        if not start_date or not end_date:
+            context = _build_class_schedule_context(request, schedule, generator_initial=generator_initial)
+            context["alert"] = ("danger", "Start date and end date are required to generate sessions.")
+            return render(request, self.template_name, context, status=400)
+
+        try:
+            start_date = date.fromisoformat(start_date)
+            end_date = date.fromisoformat(end_date)
+        except ValueError:
+            context = _build_class_schedule_context(request, schedule, generator_initial=generator_initial)
+            context["alert"] = ("danger", "Enter valid dates to generate schedule sessions.")
+            return render(request, self.template_name, context, status=400)
+
+        if end_date < start_date:
+            return _redirect_schedule_detail(schedule, "invalid-range")
+
+        target_weekday = SCHEDULE_WEEKDAY_MAP.get(schedule.day_of_week)
+        if target_weekday is None:
+            return _redirect_schedule_detail(schedule, "invalid-weekday")
+
+        created_count = 0
+        skipped_count = 0
+        cursor = start_date
+
+        while cursor <= end_date:
+            if cursor.weekday() == target_weekday:
+                session, created = ClassSession.objects.get_or_create(
+                    class_schedule=schedule,
+                    session_date=cursor,
+                    defaults={
+                        "start_time": schedule.start_time,
+                        "end_time": schedule.end_time,
+                        "trainer": schedule.trainer,
+                        "max_capacity": schedule.gym_class.max_capacity,
+                        "status": "scheduled",
+                        "branch": schedule.branch,
+                        "organization": schedule.organization,
+                        "fiscal_year": schedule.fiscal_year,
+                    },
+                )
+                if created:
+                    created_count += 1
+                else:
+                    skipped_count += 1
+            cursor += timedelta(days=1)
+
+        return _redirect_schedule_detail(schedule, "sessions-generated", created=created_count, skipped=skipped_count)
+
+    def _manual_add_session(self, request, schedule):
+        session_date_raw = request.POST.get("session_date", "").strip()
+        start_time_raw = request.POST.get("start_time", "").strip()
+        end_time_raw = request.POST.get("end_time", "").strip()
+        trainer_id = request.POST.get("trainer", "").strip()
+        max_capacity_raw = request.POST.get("max_capacity", "").strip()
+
+        context = _build_class_schedule_context(request, schedule)
+        context["manual_initial"] = {
+            "session_date": session_date_raw,
+            "start_time": start_time_raw,
+            "end_time": end_time_raw,
+            "trainer_id": trainer_id,
+            "max_capacity": max_capacity_raw,
+        }
+
+        try:
+            session_date = date.fromisoformat(session_date_raw)
+        except ValueError:
+            context["alert"] = ("danger", "Enter a valid session date for the manual session.")
+            return render(request, self.template_name, context, status=400)
+
+        try:
+            start_time = datetime.strptime(start_time_raw, "%H:%M").time()
+            end_time = datetime.strptime(end_time_raw, "%H:%M").time()
+        except ValueError:
+            context["alert"] = ("danger", "Enter valid start and end times for the manual session.")
+            return render(request, self.template_name, context, status=400)
+
+        try:
+            max_capacity = int(max_capacity_raw)
+        except (TypeError, ValueError):
+            context["alert"] = ("danger", "Enter a valid max capacity for the manual session.")
+            return render(request, self.template_name, context, status=400)
+
+        trainer = None
+        if trainer_id:
+            trainer = Trainer.objects.filter(pk=trainer_id, status=Trainer.Status.ACTIVE).first()
+            if trainer is None:
+                context["alert"] = ("danger", "Select a valid active trainer for the manual session.")
+                return render(request, self.template_name, context, status=400)
+
+        try:
+            with transaction.atomic():
+                session = ClassSession(
+                    class_schedule=schedule,
+                    session_date=session_date,
+                    start_time=start_time,
+                    end_time=end_time,
+                    trainer=trainer or schedule.trainer,
+                    max_capacity=max_capacity,
+                    status="scheduled",
+                    branch=schedule.branch,
+                    organization=schedule.organization,
+                    fiscal_year=schedule.fiscal_year,
+                )
+                if hasattr(session, "created_by_id"):
+                    session.created_by = request.user
+                if hasattr(session, "updated_by_id"):
+                    session.updated_by = request.user
+                session.full_clean()
+                session.save()
+        except ValidationError as exc:
+            message = " ".join(sum((messages if isinstance(messages, list) else [str(messages)] for messages in getattr(exc, "message_dict", {}).values()), [])) or "Manual session could not be created."
+            context["alert"] = ("danger", message)
+            return render(request, self.template_name, context, status=400)
+
+        return _redirect_schedule_detail(schedule, "session-added", session_date=session.session_date.isoformat())
+
+    def _get_schedule_session(self, request, schedule):
+        session_id = request.POST.get("session_id", "").strip()
+        return get_object_or_404(ClassSession.objects.select_related("class_schedule", "trainer__employee__user"), pk=session_id, class_schedule=schedule)
+
+    def _cancel_session(self, request, schedule):
+        session = self._get_schedule_session(request, schedule)
+        cancelled_by = request.POST.get("cancelled_by", "").strip() or "admin"
+        reason = request.POST.get("reason", "").strip()
+        cancellation, _created = ClassCancellation.objects.get_or_create(
+            class_session=session,
+            defaults={
+                "cancelled_by": cancelled_by,
+                "reason": reason,
+                "branch": schedule.branch,
+                "organization": schedule.organization,
+                "fiscal_year": schedule.fiscal_year,
+            },
+        )
+        if not _created:
+            cancellation.cancelled_by = cancelled_by
+            cancellation.reason = reason
+        if hasattr(cancellation, "created_by_id") and _created:
+            cancellation.created_by = request.user
+        if hasattr(cancellation, "updated_by_id"):
+            cancellation.updated_by = request.user
+        cancellation.full_clean()
+        cancellation.save()
+        return _redirect_schedule_detail(schedule, "session-cancelled", session_date=session.session_date.isoformat())
+
+    def _complete_session(self, request, schedule):
+        session = self._get_schedule_session(request, schedule)
+        session.status = "completed"
+        if hasattr(session, "updated_by_id"):
+            session.updated_by = request.user
+        session.save(update_fields=["status", "updated_by", "updated_at"] if hasattr(session, "updated_by_id") else ["status", "updated_at"])
+        return _redirect_schedule_detail(schedule, "session-completed", session_date=session.session_date.isoformat())
+
+    def _change_session_trainer(self, request, schedule):
+        session = self._get_schedule_session(request, schedule)
+        trainer_id = request.POST.get("trainer", "").strip()
+        trainer = None
+        if trainer_id:
+            trainer = get_object_or_404(Trainer.objects.filter(status=Trainer.Status.ACTIVE), pk=trainer_id)
+        session.trainer = trainer
+        if hasattr(session, "updated_by_id"):
+            session.updated_by = request.user
+        try:
+            session.full_clean()
+            session.save()
+        except ValidationError as exc:
+            context = _build_class_schedule_context(request, schedule)
+            message = " ".join(sum((messages if isinstance(messages, list) else [str(messages)] for messages in getattr(exc, "message_dict", {}).values()), [])) or "Trainer update failed."
+            context["alert"] = ("danger", message)
+            return render(request, self.template_name, context, status=400)
+        return _redirect_schedule_detail(schedule, "trainer-updated", session_date=session.session_date.isoformat())
+
+    def _add_booking(self, request, schedule):
+        session = self._get_schedule_session(request, schedule)
+        member_id = request.POST.get("member", "").strip()
+        context = _build_class_schedule_context(request, schedule)
+
+        if not member_id:
+            context["alert"] = ("danger", "Select a member to create a booking.")
+            return render(request, self.template_name, context, status=400)
+
+        member = get_object_or_404(Member.objects.filter(is_active=True), pk=member_id)
+        try:
+            booking = ClassBooking(
+                class_session=session,
+                member=member,
+                status="booked",
+                branch=schedule.branch,
+                organization=schedule.organization,
+                fiscal_year=schedule.fiscal_year,
+            )
+            if hasattr(booking, "created_by_id"):
+                booking.created_by = request.user
+            if hasattr(booking, "updated_by_id"):
+                booking.updated_by = request.user
+            booking.full_clean()
+            booking.save()
+        except ValidationError as exc:
+            message = " ".join(sum((messages if isinstance(messages, list) else [str(messages)] for messages in getattr(exc, "message_dict", {}).values()), [])) or "Booking could not be created."
+            context["alert"] = ("danger", message)
+            return render(request, self.template_name, context, status=400)
+        return _redirect_schedule_detail(schedule, "booking-added", session_date=session.session_date.isoformat())
+
+    def _mark_attendance(self, request, schedule):
+        session = self._get_schedule_session(request, schedule)
+        member_id = request.POST.get("member", "").strip()
+        attendance_status = request.POST.get("attendance_status", "").strip() or "present"
+        context = _build_class_schedule_context(request, schedule)
+
+        if not member_id:
+            context["alert"] = ("danger", "Select a member to mark attendance.")
+            return render(request, self.template_name, context, status=400)
+
+        member = get_object_or_404(Member.objects.filter(is_active=True), pk=member_id)
+        booking = ClassBooking.objects.filter(class_session=session, member=member).first()
+        checked_in_at = timezone.now() if attendance_status in {"present", "late"} else None
+
+        try:
+            attendance, created = ClassAttendance.objects.get_or_create(
+                class_session=session,
+                member=member,
+                defaults={
+                    "booking": booking,
+                    "status": attendance_status,
+                    "checked_in_at": checked_in_at,
+                    "branch": schedule.branch,
+                    "organization": schedule.organization,
+                    "fiscal_year": schedule.fiscal_year,
+                    "created_by": request.user if hasattr(ClassAttendance, "created_by") else None,
+                    "updated_by": request.user if hasattr(ClassAttendance, "updated_by") else None,
+                },
+            )
+            if not created:
+                attendance.booking = booking
+                attendance.status = attendance_status
+                attendance.checked_in_at = checked_in_at
+                if hasattr(attendance, "updated_by_id"):
+                    attendance.updated_by = request.user
+                attendance.full_clean()
+                attendance.save()
+        except ValidationError as exc:
+            message = " ".join(sum((messages if isinstance(messages, list) else [str(messages)] for messages in getattr(exc, "message_dict", {}).values()), [])) or "Attendance could not be saved."
+            context["alert"] = ("danger", message)
+            return render(request, self.template_name, context, status=400)
+
+        return _redirect_schedule_detail(schedule, "attendance-saved", session_date=session.session_date.isoformat())
+
+    def _add_waitlist(self, request, schedule):
+        session = self._get_schedule_session(request, schedule)
+        member_id = request.POST.get("member", "").strip()
+        context = _build_class_schedule_context(request, schedule)
+
+        if not member_id:
+            context["alert"] = ("danger", "Select a member to add to the waitlist.")
+            return render(request, self.template_name, context, status=400)
+
+        member = get_object_or_404(Member.objects.filter(is_active=True), pk=member_id)
+        next_position = (session.waitlists.aggregate(Max("waitlist_position")).get("waitlist_position__max") or 0) + 1
+        try:
+            waitlist = ClassWaitlist(
+                class_session=session,
+                member=member,
+                waitlist_position=next_position,
+                branch=schedule.branch,
+                organization=schedule.organization,
+                fiscal_year=schedule.fiscal_year,
+            )
+            if hasattr(waitlist, "created_by_id"):
+                waitlist.created_by = request.user
+            if hasattr(waitlist, "updated_by_id"):
+                waitlist.updated_by = request.user
+            waitlist.full_clean()
+            waitlist.save()
+        except ValidationError as exc:
+            message = " ".join(sum((messages if isinstance(messages, list) else [str(messages)] for messages in getattr(exc, "message_dict", {}).values()), [])) or "Waitlist entry could not be created."
+            context["alert"] = ("danger", message)
+            return render(request, self.template_name, context, status=400)
+        return _redirect_schedule_detail(schedule, "waitlist-added", session_date=session.session_date.isoformat())
+
+    def _promote_waitlist(self, request, schedule):
+        session = self._get_schedule_session(request, schedule)
+        waitlist_id = request.POST.get("waitlist_id", "").strip()
+        waitlist = get_object_or_404(ClassWaitlist.objects.select_related("member"), pk=waitlist_id, class_session=session)
+        context = _build_class_schedule_context(request, schedule)
+
+        active_bookings = session.bookings.filter(status="booked").count()
+        if active_bookings >= session.max_capacity:
+            context["alert"] = ("danger", "Session is still at full capacity. Cancel a booking first or increase capacity before promoting.")
+            return render(request, self.template_name, context, status=400)
+
+        try:
+            with transaction.atomic():
+                booking = ClassBooking(
+                    class_session=session,
+                    member=waitlist.member,
+                    status="booked",
+                    branch=schedule.branch,
+                    organization=schedule.organization,
+                    fiscal_year=schedule.fiscal_year,
+                )
+                if hasattr(booking, "created_by_id"):
+                    booking.created_by = request.user
+                if hasattr(booking, "updated_by_id"):
+                    booking.updated_by = request.user
+                booking.full_clean()
+                booking.save()
+
+                waitlist.promoted_at = timezone.now()
+                if hasattr(waitlist, "updated_by_id"):
+                    waitlist.updated_by = request.user
+                waitlist.save(update_fields=["promoted_at", "updated_by", "updated_at"] if hasattr(waitlist, "updated_by_id") else ["promoted_at", "updated_at"])
+                waitlist.delete()
+
+                remaining = session.waitlists.order_by("waitlist_position", "id")
+                for index, item in enumerate(remaining, start=1):
+                    if item.waitlist_position != index:
+                        item.waitlist_position = index
+                        item.save(update_fields=["waitlist_position", "updated_at"])
+        except ValidationError as exc:
+            message = " ".join(sum((messages if isinstance(messages, list) else [str(messages)] for messages in getattr(exc, "message_dict", {}).values()), [])) or "Waitlist promotion failed."
+            context["alert"] = ("danger", message)
+            return render(request, self.template_name, context, status=400)
+
+        return _redirect_schedule_detail(schedule, "waitlist-promoted", session_date=session.session_date.isoformat())
 
 
 def _workout_plan_alert(request):

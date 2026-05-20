@@ -13,3 +13,4 @@ from .party_role_form import PartyRoleForm
 from .party_type_form import PartyTypeForm
 from .party_form import PartyForm
 from .widgets import RichTextWidget
+from .auth import RememberMeAuthenticationForm

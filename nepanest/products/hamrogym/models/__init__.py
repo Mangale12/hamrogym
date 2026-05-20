@@ -42,4 +42,26 @@ from .workout_plan import (
     WorkoutPlanVersion,
     WorkoutWeek,
 )
-from .diet_plan import DietPlan
+from .diet_plan import DietAssignment, DietDay, DietLog, DietPlan, Meal, NutritionGoal, WaterIntakeLog
+from .gym_class_type import GymClassType
+from .class_room import ClassRoom
+from .gym_class import GymClass
+from .class_schedule import (
+    ClassAttendance,
+    ClassBooking,
+    ClassCancellation,
+    ClassSchedule,
+    ClassSession,
+    ClassWaitlist,
+)
+from .challenge import (
+    AchievementBadge,
+    Challenge,
+    ChallengeParticipant,
+    ChallengeProgressLog,
+    Leaderboard,
+    MemberBadge,
+    MemberReward,
+    MemberStreak,
+    Reward,
+)

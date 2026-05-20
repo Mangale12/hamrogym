@@ -3,8 +3,29 @@ from .access_log_form import AccessLogForm
 from .access_rule_form import AccessRuleForm
 from .access_type_form import AccessTypeForm
 from .access_violation_form import AccessViolationForm
+from .challenge_form import (
+    AchievementBadgeForm,
+    ChallengeForm,
+    ChallengeParticipantForm,
+    ChallengeProgressLogForm,
+    LeaderboardForm,
+    MemberBadgeForm,
+    MemberRewardForm,
+    MemberStreakForm,
+    RewardForm,
+)
 from .checkin_session_form import CheckinSessionForm
+from .class_schedule_form import ClassScheduleForm
 from .daily_attendance_summary_form import DailyAttendanceSummaryForm
+from .diet_plan_form import (
+    DietAssignmentForm,
+    DietDayForm,
+    DietLogForm,
+    DietPlanForm,
+    MealForm,
+    NutritionGoalForm,
+    WaterIntakeLogForm,
+)
 from .fitness_goal_form import FitnessGoalForm
 from .gym_facility_form import GymFacilityForm
 from .member_form import MemberForm

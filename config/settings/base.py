@@ -25,6 +25,8 @@ ALLOWED_HOSTS = [
 
 HOST_URLCONF_MAP = {
     "127.0.0.1": "config.urls",
+    "crm.local": "config.urlconfs.crm",
+    "crm.nepanest.local": "config.urlconfs.crm",
     "localhost": "config.urls",
     "hamrogym.local": "config.urls",
     "hamrogym.nepanest.local": "config.urls",
@@ -37,6 +39,7 @@ PRODUCT_SUBDOMAIN_BASE_DOMAIN = os.environ.get(
 ).strip().lower()
 
 PRODUCT_SUBDOMAIN_URLCONFS = {
+    "crm": "config.urlconfs.crm",
     "hamrogym": "config.urls",
     "nepanest": "config.urlconfs.nepanest",
 }
@@ -51,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "nepanest.products.hamrogym.apps.HamroGymConfig",
     "nepanest.products.nepanest.apps.NepanestProductConfig",
+    "nepanest.modules.crm.apps.CRMModuleConfig",
     "nepanest.modules.people.apps.PeopleModuleConfig",
     "nepanest.modules.human_resources.apps.HumanResourcesModuleConfig",
     "nepanest.modules.assets.apps.AssetsModuleConfig",

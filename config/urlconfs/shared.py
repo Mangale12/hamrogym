@@ -3,13 +3,16 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 
 def build_product_urlpatterns(product_urls_module):
     urlpatterns = [
         path("admin/", admin.site.urls),
-        path("accounts/", include("django.contrib.auth.urls")),
+        path("accounts/", include("config.auth_urls")),
         path("", include(product_urls_module)),
+        path("product/crm/dashboard/", RedirectView.as_view(pattern_name="crm_dashboard", permanent=False)),
+        path("crm/", include("nepanest.modules.crm.urls")),
         path("hr/", include("nepanest.modules.human_resources.urls")),
         path("core/", include("nepanest.modules.assets.urls")),
         path("core/", include("nepanest.modules.accounting.urls")),

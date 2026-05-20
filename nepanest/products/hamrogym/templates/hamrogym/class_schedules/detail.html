@@ -1,0 +1,795 @@
+{% extends "hamrogym/layouts/app.html" %}
+
+{% block title %}{{ schedule.gym_class.name }} Schedule | HamroGym{% endblock %}
+{% block page_title %}{{ schedule.gym_class.name }} Schedule{% endblock %}
+
+{% block header_actions %}
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'class_schedule_list' %}" class="btn btn-outline-secondary btn-lg">All Schedules</a>
+  </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .schedule-shell,
+  .schedule-panel,
+  .generator-panel,
+  .session-row,
+  .empty-panel,
+  .summary-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
+  }
+
+  .schedule-shell,
+  .empty-panel {
+    border-radius: 28px;
+  }
+
+  .schedule-panel,
+  .generator-panel,
+  .summary-card {
+    border-radius: 24px;
+  }
+
+  .session-row {
+    border-radius: 18px;
+  }
+
+  .schedule-shell {
+    background:
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.14), transparent 24%),
+      linear-gradient(135deg, rgba(255, 247, 237, 0.96), rgba(255, 255, 255, 0.98));
+  }
+
+  .section-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #9a3412;
+  }
+
+  .info-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.8rem 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(249, 115, 22, 0.16);
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .summary-card {
+    padding: 1.25rem;
+    height: 100%;
+  }
+
+  .summary-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #94a3b8;
+  }
+
+  .summary-value {
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #0f172a;
+  }
+
+  .summary-note {
+    margin: 0;
+    color: #475569;
+  }
+
+  .schedule-panel {
+    padding: 1.5rem;
+  }
+
+  .generator-panel {
+    padding: 1.5rem;
+    background:
+      linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.98));
+  }
+
+  .action-box {
+    margin-top: 0.95rem;
+    padding-top: 0.95rem;
+    border-top: 1px dashed rgba(148, 163, 184, 0.35);
+  }
+
+  .action-box summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: #334155;
+    list-style: none;
+  }
+
+  .action-box summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .inline-form-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.35rem;
+  }
+
+  .subsection-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin-bottom: 0.55rem;
+  }
+
+  .compact-list {
+    margin: 0;
+    padding-left: 1rem;
+    color: #475569;
+    font-size: 0.92rem;
+  }
+
+  .form-note {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+  }
+
+  .session-row {
+    padding: 1rem 1.1rem;
+  }
+
+  .session-row + .session-row {
+    margin-top: 0.9rem;
+  }
+
+  .session-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 999px;
+    padding: 0.42rem 0.72rem;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .empty-panel {
+    padding: 1.4rem;
+    color: #475569;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include "hamrogym/workout/_alert.html" %}
+
+<div class="schedule-shell p-4 p-lg-5 mb-4">
+  <div class="d-flex flex-column flex-xl-row justify-content-between gap-4">
+    <div>
+      <div class="section-kicker mb-2">Schedule Workspace</div>
+      <h1 class="h2 fw-bold mb-2">{{ schedule.gym_class.name }}</h1>
+      <p class="text-muted mb-3">
+        Sessions are managed from this schedule flow so staff can monitor generated records without treating sessions as standalone setup data.
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="info-pill">{{ schedule.get_day_of_week_display }}</span>
+        <span class="info-pill">{{ schedule.start_time|time:"g:i A" }} to {{ schedule.end_time|time:"g:i A" }}</span>
+        <span class="info-pill">{{ schedule.class_room.name|default:"Room not assigned" }}</span>
+        <span class="info-pill">
+          {% if schedule.trainer_id %}
+            {{ schedule.trainer.employee.full_name|default:schedule.trainer.employee.employee_id }}
+          {% else %}
+            Trainer not assigned
+          {% endif %}
+        </span>
+      </div>
+    </div>
+    <div class="align-self-start">
+      <div class="meta-chip">{{ schedule.is_active|yesno:"Active schedule,Inactive schedule" }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="generator-panel mb-4">
+  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+    <div>
+      <div class="section-kicker mb-1">Generate Sessions</div>
+      <h2 class="h4 fw-bold mb-1">Create Schedule Sessions</h2>
+      <p class="text-muted mb-0">Pick a date range and the system will create sessions only on {{ schedule.get_day_of_week_display }}.</p>
+    </div>
+    <div class="meta-chip">Schedule-driven</div>
+  </div>
+
+  <form method="post" class="row g-3 align-items-end">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="generate">
+    <div class="col-md-4">
+      <label for="start_date" class="form-label fw-semibold">Start Date</label>
+      <input type="date" class="form-control" id="start_date" name="start_date" value="{{ generator_initial.start_date }}" required>
+    </div>
+    <div class="col-md-4">
+      <label for="end_date" class="form-label fw-semibold">End Date</label>
+      <input type="date" class="form-control" id="end_date" name="end_date" value="{{ generator_initial.end_date }}" required>
+    </div>
+    <div class="col-md-4">
+      <button type="submit" class="btn btn-primary btn-lg w-100">Generate Sessions</button>
+    </div>
+  </form>
+</div>
+
+<div class="generator-panel mb-4">
+  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+    <div>
+      <div class="section-kicker mb-1">Manual Extra Session</div>
+      <h2 class="h4 fw-bold mb-1">Add One-Off Session</h2>
+      <p class="text-muted mb-0">Use this for make-up classes, special events, or extra sessions outside the recurring weekday.</p>
+    </div>
+    <div class="meta-chip">Exception handling</div>
+  </div>
+
+  <form method="post" class="row g-3 align-items-end">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="manual_add">
+    <div class="col-md-2">
+      <label for="manual_session_date" class="form-label fw-semibold">Session Date</label>
+      <input type="date" class="form-control" id="manual_session_date" name="session_date" value="{{ manual_initial.session_date }}" required>
+    </div>
+    <div class="col-md-2">
+      <label for="manual_start_time" class="form-label fw-semibold">Start Time</label>
+      <input type="time" class="form-control" id="manual_start_time" name="start_time" value="{{ manual_initial.start_time }}" required>
+    </div>
+    <div class="col-md-2">
+      <label for="manual_end_time" class="form-label fw-semibold">End Time</label>
+      <input type="time" class="form-control" id="manual_end_time" name="end_time" value="{{ manual_initial.end_time }}" required>
+    </div>
+    <div class="col-md-3">
+      <label for="manual_trainer" class="form-label fw-semibold">Trainer</label>
+      <select class="form-select" id="manual_trainer" name="trainer">
+        <option value="">Use schedule trainer</option>
+        {% for trainer in active_trainers %}
+          <option value="{{ trainer.pk }}" {% if manual_initial.trainer_id == trainer.pk|stringformat:"s" %}selected{% endif %}>
+            {{ trainer.employee.employee_id }} - {{ trainer.employee.full_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-1">
+      <label for="manual_capacity" class="form-label fw-semibold">Cap.</label>
+      <input type="number" min="1" class="form-control" id="manual_capacity" name="max_capacity" value="{{ manual_initial.max_capacity }}" required>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-dark btn-lg w-100">Add Session</button>
+    </div>
+  </form>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="summary-card">
+      <div class="summary-label mb-2">Upcoming Sessions</div>
+      <div class="summary-value">{{ session_summary.upcoming }}</div>
+      <p class="summary-note mt-2">
+        {% if session_summary.next_session %}
+          Next: {{ session_summary.next_session.session_date|date:"M j, Y" }}
+        {% else %}
+          No future sessions generated yet.
+        {% endif %}
+      </p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="summary-card">
+      <div class="summary-label mb-2">Scheduled</div>
+      <div class="summary-value">{{ session_summary.scheduled }}</div>
+      <p class="summary-note mt-2">Operational sessions still planned from this schedule.</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="summary-card">
+      <div class="summary-label mb-2">Completed</div>
+      <div class="summary-value">{{ session_summary.completed }}</div>
+      <p class="summary-note mt-2">Historical sessions that have already run.</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="summary-card">
+      <div class="summary-label mb-2">Cancelled</div>
+      <div class="summary-value">{{ session_summary.cancelled }}</div>
+      <p class="summary-note mt-2">Cancelled exceptions still tracked inside the schedule flow.</p>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="schedule-panel">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+          <div class="section-kicker mb-1">Upcoming Sessions</div>
+          <h2 class="h4 fw-bold mb-0">Session List</h2>
+        </div>
+        <span class="meta-chip">{{ upcoming_sessions|length }} queued</span>
+      </div>
+
+      {% if upcoming_sessions %}
+        {% for session in upcoming_sessions %}
+          <div class="session-row">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div>
+                <h3 class="h6 fw-bold mb-1">{{ session.session_date|date:"l, M j, Y" }}</h3>
+                <p class="text-muted mb-2">{{ session.start_time|time:"g:i A" }} to {{ session.end_time|time:"g:i A" }}</p>
+                <div class="session-meta">
+                  <span class="meta-chip">{{ session.get_status_display }}</span>
+                  <span class="meta-chip">Capacity {{ session.max_capacity }}</span>
+                  <span class="meta-chip">
+                    {% if session.trainer_id %}
+                      {{ session.trainer.employee.full_name|default:session.trainer.employee.employee_id }}
+                    {% else %}
+                      Trainer not assigned
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+              <div class="text-muted small">Operational record</div>
+            </div>
+            <details class="action-box">
+              <summary>Session Actions</summary>
+              <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_trainer">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-12">
+                      <label class="inline-form-label">Change Trainer</label>
+                      <select class="form-select" name="trainer">
+                        <option value="">Unassign trainer</option>
+                        {% for trainer in active_trainers %}
+                          <option value="{{ trainer.pk }}" {% if session.trainer_id == trainer.pk %}selected{% endif %}>
+                            {{ trainer.employee.employee_id }} - {{ trainer.employee.full_name }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Update Trainer</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <label class="inline-form-label">Status Actions</label>
+                  <div class="d-flex gap-2 flex-wrap">
+                    {% if session.status != "completed" %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="complete_session">
+                      <input type="hidden" name="session_id" value="{{ session.pk }}">
+                      <button type="submit" class="btn btn-sm btn-outline-success">Mark Completed</button>
+                    </form>
+                    {% endif %}
+                    {% if session.status != "cancelled" %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="cancel_session">
+                      <input type="hidden" name="session_id" value="{{ session.pk }}">
+                      <input type="hidden" name="cancelled_by" value="admin">
+                      <input type="hidden" name="reason" value="Cancelled from schedule workspace">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Quick Cancel</button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_booking">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-12">
+                      <label class="inline-form-label">Add Booking</label>
+                      <select class="form-select" name="member">
+                        <option value="">Select member</option>
+                        {% for member in active_members %}
+                          <option value="{{ member.pk }}">{{ member.member_code }} - {{ member.party.display_name|default:member.party.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-dark">Add Booking</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_attendance">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-7">
+                      <label class="inline-form-label">Mark Attendance</label>
+                      <select class="form-select" name="member">
+                        <option value="">Select member</option>
+                        {% for member in active_members %}
+                          <option value="{{ member.pk }}">{{ member.member_code }} - {{ member.party.display_name|default:member.party.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-5">
+                      <label class="inline-form-label">Status</label>
+                      <select class="form-select" name="attendance_status">
+                        {% for status_value, status_label in attendance_status_choices %}
+                          <option value="{{ status_value }}">{{ status_label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-secondary">Save Attendance</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Bookings</div>
+                  {% if session.bookings.all %}
+                    <ul class="compact-list">
+                      {% for booking in session.bookings.all %}
+                        <li>{{ booking.member.member_code }} - {{ booking.member.party.display_name|default:booking.member.party.name }} ({{ booking.get_status_display }})</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted small mb-0">No bookings yet.</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Attendance</div>
+                  {% if session.attendance_records.all %}
+                    <ul class="compact-list">
+                      {% for attendance in session.attendance_records.all %}
+                        <li>{{ attendance.member.member_code }} - {{ attendance.member.party.display_name|default:attendance.member.party.name }} ({{ attendance.get_status_display }})</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted small mb-0">No attendance recorded yet.</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_waitlist">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-12">
+                      <label class="inline-form-label">Add To Waitlist</label>
+                      <select class="form-select" name="member">
+                        <option value="">Select member</option>
+                        {% for member in active_members %}
+                          <option value="{{ member.pk }}">{{ member.member_code }} - {{ member.party.display_name|default:member.party.name }}</option>
+                        {% endfor %}
+                      </select>
+                      <div class="form-note">Use when the session is full or when you want to queue demand.</div>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-warning">Add Waitlist</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancel_session">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-5">
+                      <label class="inline-form-label">Cancelled By</label>
+                      <select class="form-select" name="cancelled_by">
+                        {% for status_value, status_label in cancellation_actor_choices %}
+                          <option value="{{ status_value }}">{{ status_label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-7">
+                      <label class="inline-form-label">Cancellation Reason</label>
+                      <input type="text" class="form-control" name="reason" placeholder="Reason for cancellation">
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Cancel With Reason</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Waitlist</div>
+                  {% if session.waitlists.all %}
+                    <ul class="compact-list">
+                      {% for waitlist in session.waitlists.all %}
+                        <li>
+                          {{ waitlist.member.member_code }} - {{ waitlist.member.party.display_name|default:waitlist.member.party.name }} (#{{ waitlist.waitlist_position }})
+                          <form method="post" class="d-inline ms-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="promote_waitlist">
+                            <input type="hidden" name="session_id" value="{{ session.pk }}">
+                            <input type="hidden" name="waitlist_id" value="{{ waitlist.pk }}">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Promote</button>
+                          </form>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted small mb-0">No waitlist entries yet.</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Cancellation</div>
+                  {% if session.cancellation %}
+                    <p class="mb-1">{{ session.cancellation.get_cancelled_by_display }} on {{ session.cancellation.cancellation_time|date:"M j, Y g:i A" }}</p>
+                    <p class="text-muted small mb-0">{{ session.cancellation.reason|default:"No reason recorded." }}</p>
+                  {% else %}
+                    <p class="text-muted small mb-0">No cancellation recorded.</p>
+                  {% endif %}
+                </div>
+              </div>
+            </details>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-panel">
+          No upcoming sessions yet. In a real deployment, generated schedule sessions will appear here for operations, reassignment, cancellation, and booking review.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="schedule-panel">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+          <div class="section-kicker mb-1">Session History</div>
+          <h2 class="h4 fw-bold mb-0">Past Sessions</h2>
+        </div>
+        <span class="meta-chip">{{ past_sessions|length }} logged</span>
+      </div>
+
+      {% if past_sessions %}
+        {% for session in past_sessions %}
+          <div class="session-row">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div>
+                <h3 class="h6 fw-bold mb-1">{{ session.session_date|date:"l, M j, Y" }}</h3>
+                <p class="text-muted mb-2">{{ session.start_time|time:"g:i A" }} to {{ session.end_time|time:"g:i A" }}</p>
+                <div class="session-meta">
+                  <span class="meta-chip">{{ session.get_status_display }}</span>
+                  <span class="meta-chip">Capacity {{ session.max_capacity }}</span>
+                  <span class="meta-chip">
+                    {% if session.trainer_id %}
+                      {{ session.trainer.employee.full_name|default:session.trainer.employee.employee_id }}
+                    {% else %}
+                      Trainer not assigned
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+              <div class="text-muted small">
+                {% if session.status == "completed" %}
+                  Completed
+                {% elif session.status == "cancelled" %}
+                  Cancelled
+                {% else %}
+                  Recorded
+                {% endif %}
+              </div>
+            </div>
+            <details class="action-box">
+              <summary>Session Actions</summary>
+              <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_trainer">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-12">
+                      <label class="inline-form-label">Change Trainer</label>
+                      <select class="form-select" name="trainer">
+                        <option value="">Unassign trainer</option>
+                        {% for trainer in active_trainers %}
+                          <option value="{{ trainer.pk }}" {% if session.trainer_id == trainer.pk %}selected{% endif %}>
+                            {{ trainer.employee.employee_id }} - {{ trainer.employee.full_name }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Update Trainer</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <label class="inline-form-label">Status Actions</label>
+                  <div class="d-flex gap-2 flex-wrap">
+                    {% if session.status != "completed" %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="complete_session">
+                      <input type="hidden" name="session_id" value="{{ session.pk }}">
+                      <button type="submit" class="btn btn-sm btn-outline-success">Mark Completed</button>
+                    </form>
+                    {% endif %}
+                    {% if session.status != "cancelled" %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="cancel_session">
+                      <input type="hidden" name="session_id" value="{{ session.pk }}">
+                      <input type="hidden" name="cancelled_by" value="admin">
+                      <input type="hidden" name="reason" value="Cancelled from schedule workspace">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Quick Cancel</button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_booking">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-12">
+                      <label class="inline-form-label">Add Booking</label>
+                      <select class="form-select" name="member">
+                        <option value="">Select member</option>
+                        {% for member in active_members %}
+                          <option value="{{ member.pk }}">{{ member.member_code }} - {{ member.party.display_name|default:member.party.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-dark">Add Booking</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_attendance">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-7">
+                      <label class="inline-form-label">Mark Attendance</label>
+                      <select class="form-select" name="member">
+                        <option value="">Select member</option>
+                        {% for member in active_members %}
+                          <option value="{{ member.pk }}">{{ member.member_code }} - {{ member.party.display_name|default:member.party.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-5">
+                      <label class="inline-form-label">Status</label>
+                      <select class="form-select" name="attendance_status">
+                        {% for status_value, status_label in attendance_status_choices %}
+                          <option value="{{ status_value }}">{{ status_label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-secondary">Save Attendance</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Bookings</div>
+                  {% if session.bookings.all %}
+                    <ul class="compact-list">
+                      {% for booking in session.bookings.all %}
+                        <li>{{ booking.member.member_code }} - {{ booking.member.party.display_name|default:booking.member.party.name }} ({{ booking.get_status_display }})</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted small mb-0">No bookings yet.</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Attendance</div>
+                  {% if session.attendance_records.all %}
+                    <ul class="compact-list">
+                      {% for attendance in session.attendance_records.all %}
+                        <li>{{ attendance.member.member_code }} - {{ attendance.member.party.display_name|default:attendance.member.party.name }} ({{ attendance.get_status_display }})</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted small mb-0">No attendance recorded yet.</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_waitlist">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-12">
+                      <label class="inline-form-label">Add To Waitlist</label>
+                      <select class="form-select" name="member">
+                        <option value="">Select member</option>
+                        {% for member in active_members %}
+                          <option value="{{ member.pk }}">{{ member.member_code }} - {{ member.party.display_name|default:member.party.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-warning">Add Waitlist</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <form method="post" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancel_session">
+                    <input type="hidden" name="session_id" value="{{ session.pk }}">
+                    <div class="col-5">
+                      <label class="inline-form-label">Cancelled By</label>
+                      <select class="form-select" name="cancelled_by">
+                        {% for status_value, status_label in cancellation_actor_choices %}
+                          <option value="{{ status_value }}">{{ status_label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-7">
+                      <label class="inline-form-label">Cancellation Reason</label>
+                      <input type="text" class="form-control" name="reason" placeholder="Reason for cancellation">
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Cancel With Reason</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Waitlist</div>
+                  {% if session.waitlists.all %}
+                    <ul class="compact-list">
+                      {% for waitlist in session.waitlists.all %}
+                        <li>
+                          {{ waitlist.member.member_code }} - {{ waitlist.member.party.display_name|default:waitlist.member.party.name }} (#{{ waitlist.waitlist_position }})
+                          <form method="post" class="d-inline ms-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="promote_waitlist">
+                            <input type="hidden" name="session_id" value="{{ session.pk }}">
+                            <input type="hidden" name="waitlist_id" value="{{ waitlist.pk }}">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Promote</button>
+                          </form>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted small mb-0">No waitlist entries yet.</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <div class="subsection-title">Cancellation</div>
+                  {% if session.cancellation %}
+                    <p class="mb-1">{{ session.cancellation.get_cancelled_by_display }} on {{ session.cancellation.cancellation_time|date:"M j, Y g:i A" }}</p>
+                    <p class="text-muted small mb-0">{{ session.cancellation.reason|default:"No reason recorded." }}</p>
+                  {% else %}
+                    <p class="text-muted small mb-0">No cancellation recorded.</p>
+                  {% endif %}
+                </div>
+              </div>
+            </details>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-panel">
+          No session history is available yet. Once sessions are run, this schedule page becomes the natural place to review operational history.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

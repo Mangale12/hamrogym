@@ -1,0 +1,72 @@
+{% extends "hamrogym/layouts/app.html" %}
+{% load sidebar_tags %}
+
+{% block title %}{{ page_title }} | CRM{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block sidebar %}
+  {% render_crm_sidebar %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-shell">
+  <section class="hero-panel card">
+    <div class="card-body p-4 p-lg-5">
+      <span class="hero-tag">
+        <i data-feather="briefcase"></i>
+        CRM Module
+      </span>
+      <div class="hero-copy mt-3">
+        <h2 class="mb-2">{{ page_title }}</h2>
+        <p class="mb-0 text-white-50">{{ page_intro }}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4">
+    {% for stat in stats %}
+      <div class="col-md-6 col-xl-3">
+        <article class="stat-card theme-sky card">
+          <div class="card-body">
+            <div class="icon-wrap mb-3">
+              <i data-feather="{{ stat.icon }}"></i>
+            </div>
+            <div class="metric-value">{{ stat.value }}</div>
+            <h6 class="mt-2 mb-1">{{ stat.label }}</h6>
+            <p class="mb-0 text-muted">{{ stat.caption }}</p>
+          </div>
+        </article>
+      </div>
+    {% endfor %}
+  </section>
+
+  <section class="card surface-card">
+    <div class="card-header bg-transparent border-0 pt-4 px-4">
+      <h5 class="mb-1">{{ page_title }} Workspace</h5>
+      <p class="text-muted mb-0">Starter records so the CRM app has a usable surface from day one.</p>
+    </div>
+    <div class="card-body px-4 pb-4">
+      <div class="table-responsive">
+        <table class="table list-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Details</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in records %}
+              <tr>
+                <td class="fw-semibold">{{ record.name }}</td>
+                <td class="text-muted">{{ record.meta }}</td>
+                <td><span class="soft-badge badge-active">{{ record.status }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

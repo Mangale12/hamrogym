@@ -1,0 +1,320 @@
+{% extends "hamrogym/layouts/app.html" %}
+{% load sidebar_tags %}
+
+{% block title %}CRM Dashboard{% endblock %}
+{% block page_title %}CRM Dashboard{% endblock %}
+{% block page_note %}CRM is running from the module layer, with one shared workspace for leads, contacts, and pipeline activity.{% endblock %}
+
+{% block sidebar %}
+  {% render_crm_sidebar %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dashboard-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .crm-hero {
+    border: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    color: #fff;
+    background:
+      radial-gradient(circle at top right, rgba(56, 189, 248, 0.2), transparent 28%),
+      radial-gradient(circle at 12% 18%, rgba(16, 185, 129, 0.18), transparent 24%),
+      linear-gradient(135deg, #0f172a 0%, #12263f 46%, #0f766e 100%);
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.18);
+  }
+
+  .crm-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.82rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .crm-hero-copy {
+    max-width: 38rem;
+  }
+
+  .crm-hero-stat {
+    border-radius: 18px;
+    padding: 1rem 1.1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 100%;
+  }
+
+  .crm-hero-stat-label {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .crm-hero-stat-value {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 1.75rem;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .crm-surface-card {
+    border: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.08);
+  }
+
+  .crm-focus-card {
+    height: 100%;
+    border: 1px solid #dcf1ee;
+    border-radius: 18px;
+    padding: 1.1rem;
+    background: linear-gradient(180deg, #f7fffe 0%, #ffffff 100%);
+  }
+
+  .crm-focus-icon,
+  .crm-quick-link-icon,
+  .crm-stage-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .crm-focus-icon,
+  .crm-quick-link-icon {
+    background: #ecfeff;
+    color: #0f766e;
+  }
+
+  .crm-quick-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1rem;
+    min-height: 100%;
+    border: 1px solid #dbe7f2;
+    border-radius: 18px;
+    text-decoration: none;
+    color: inherit;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .crm-quick-link:hover {
+    transform: translateY(-2px);
+    border-color: #7dd3fc;
+    box-shadow: 0 18px 32px rgba(14, 165, 233, 0.12);
+  }
+
+  .crm-stat-card {
+    border: 0;
+    border-radius: 18px;
+    height: 100%;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+    background: linear-gradient(180deg, #f6fbff 0%, #ffffff 100%);
+  }
+
+  .crm-stat-card .icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 132, 199, 0.14);
+    color: #075985;
+  }
+
+  .crm-metric-value {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .crm-pipeline-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .crm-stage-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid #edf2f7;
+  }
+
+  .crm-stage-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .crm-stage-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+  }
+
+  .crm-stage-icon {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .crm-stage-values {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 767.98px) {
+    .crm-stage-item {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .crm-stage-values {
+      text-align: left;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-shell">
+  <section class="card crm-hero">
+    <div class="card-body p-4 p-lg-5">
+      <div class="d-flex flex-column flex-xl-row justify-content-between gap-4">
+        <div class="crm-hero-copy">
+          <span class="crm-kicker">
+            <i data-feather="briefcase"></i>
+            CRM Module
+          </span>
+          <h2 class="mt-3 mb-3 fw-bold">{{ page_title }}</h2>
+          <p class="mb-0 text-white-50">{{ page_intro }}</p>
+        </div>
+
+        <div class="row g-3 flex-grow-1">
+          {% for stat in stats %}
+            <div class="col-sm-6">
+              <div class="crm-hero-stat h-100">
+                <span class="crm-hero-stat-label">{{ stat.label }}</span>
+                <strong class="crm-hero-stat-value">{{ stat.value }}</strong>
+                <div class="small text-white-50 mt-2">{{ stat.caption }}</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4">
+    {% for card in focus_cards %}
+      <div class="col-md-4">
+        <article class="crm-focus-card">
+          <div class="crm-focus-icon mb-3">
+            <i data-feather="{{ card.icon }}"></i>
+          </div>
+          <h5>{{ card.title }}</h5>
+          <p class="text-muted mb-0">{{ card.description }}</p>
+        </article>
+      </div>
+    {% endfor %}
+  </section>
+
+  <section class="row g-4">
+    {% for stat in stats %}
+      <div class="col-md-6 col-xl-3">
+        <div class="card crm-stat-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <div class="text-muted small text-uppercase fw-semibold">{{ stat.label }}</div>
+                <div class="crm-metric-value mt-2">{{ stat.value }}</div>
+              </div>
+              <div class="icon-wrap">
+                <i data-feather="{{ stat.icon }}"></i>
+              </div>
+            </div>
+            <div class="text-secondary small">{{ stat.caption }}</div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+
+  <section class="row g-4">
+    <div class="col-lg-6">
+      <div class="card crm-surface-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Quick Access</h5>
+          <p class="text-muted small mb-0">Jump straight into the core CRM records your team updates every day.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="row g-3">
+            {% for link in quick_links %}
+              <div class="col-md-6">
+                <a class="crm-quick-link h-100" href="{{ link.url }}">
+                  <span class="crm-quick-link-icon">
+                    <i data-feather="{{ link.icon }}"></i>
+                  </span>
+                  <span>
+                    <strong class="d-block mb-1">{{ link.label }}</strong>
+                    <span class="text-muted small">Open the {{ link.label|lower }} workspace.</span>
+                  </span>
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card crm-surface-card h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="mb-1">Pipeline Snapshot</h5>
+          <p class="text-muted small mb-0">A lightweight view of how opportunities are moving across the funnel.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="crm-pipeline-list">
+            {% for item in pipeline %}
+              <div class="crm-stage-item">
+                <div class="crm-stage-meta">
+                  <span class="crm-stage-icon">
+                    <i data-feather="bar-chart-2"></i>
+                  </span>
+                  <div>
+                    <h6 class="mb-1">{{ item.stage }}</h6>
+                    <p class="text-muted small mb-0">{{ item.count }} opportunities</p>
+                  </div>
+                </div>
+                <div class="crm-stage-values">
+                  <div class="fw-bold">{{ item.amount }}</div>
+                  <div class="text-muted small">pipeline value</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

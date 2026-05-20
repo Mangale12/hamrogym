@@ -558,7 +558,9 @@
 </head>
 <body>
     <div class="hg-app-shell">
+        {% block sidebar %}
         {% render_hamrogym_sidebar %}
+        {% endblock %}
 
         <div class="hg-main">
     <div class="hg-shell">
@@ -671,7 +673,7 @@
         <section class="hg-page-header">
             <div>
                 <h2 class="hg-page-title">{% block page_title %}HamroGym{% endblock %}</h2>
-                <p class="hg-page-note">This layout is reserved for HamroGym so its dashboard never falls back to the shared Nepanest page.</p>
+                <p class="hg-page-note">{% block page_note %}This layout is reserved for HamroGym so its dashboard never falls back to the shared Nepanest page.{% endblock %}</p>
             </div>
             {% block header_actions %}{% endblock %}
         </section>

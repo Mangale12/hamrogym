@@ -1,0 +1,52 @@
+<aside class="hg-sidebar" id="hgSidebar">
+  <div class="hg-sidebar-header">
+    <div class="hg-sidebar-brand">
+      <span class="hg-sidebar-mark">
+        <i data-feather="briefcase"></i>
+      </span>
+      <div>
+        <p class="hg-sidebar-label mb-0">CRM</p>
+        <h3 class="hg-sidebar-title">Workspace</h3>
+      </div>
+    </div>
+    <p class="hg-sidebar-subtitle mb-0">Pipeline, contacts, and growth ops.</p>
+  </div>
+
+  <nav class="hg-sidebar-nav">
+    <ul class="nav flex-column">
+      {% for item in sidebar_items %}
+        {% with has_children=item.children|length %}
+          <li class="nav-item">
+            {% if has_children %}
+              <a class="hg-nav-link {% if item.is_active %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#crm-sidebar-group-{{ forloop.counter }}" aria-expanded="{% if item.is_active %}true{% else %}false{% endif %}" aria-controls="crm-sidebar-group-{{ forloop.counter }}">
+                <span class="hg-nav-icon"><i data-feather="{{ item.icon|default:'circle' }}"></i></span>
+                <span class="hg-nav-copy">{{ item.label }}</span>
+                <span class="hg-nav-caret"><i data-feather="chevron-down"></i></span>
+              </a>
+              <ul class="collapse nav flex-column hg-subnav {% if item.is_active %}show{% endif %}" id="crm-sidebar-group-{{ forloop.counter }}">
+                {% for child in item.children %}
+                  <li class="nav-item">
+                    <a class="hg-subnav-link {% if child.is_active %}active{% endif %} {% if child.disabled %}disabled{% endif %}" href="{{ child.url }}">
+                      <span>{{ child.label }}</span>
+                      {% if child.badge %}
+                        <span class="badge rounded-pill text-bg-light">{{ child.badge }}</span>
+                      {% endif %}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <a class="hg-nav-link {% if item.is_active %}active{% endif %} {% if item.disabled %}disabled{% endif %}" href="{{ item.url }}">
+                <span class="hg-nav-icon"><i data-feather="{{ item.icon|default:'circle' }}"></i></span>
+                <span class="hg-nav-copy">{{ item.label }}</span>
+                {% if item.badge %}
+                  <span class="badge rounded-pill text-bg-light">{{ item.badge }}</span>
+                {% endif %}
+              </a>
+            {% endif %}
+          </li>
+        {% endwith %}
+      {% endfor %}
+    </ul>
+  </nav>
+</aside>
