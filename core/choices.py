@@ -425,3 +425,19 @@ BILLING_TYPE_CHOICES = (
     ("internal", "Internal"),
     ("partner", "Partner"),
 )
+
+
+
+BADGE_COLOR_CHOICES = [
+    ("primary", "Primary"),
+    ("secondary", "Secondary"),
+    ("success", "Success"),
+    ("danger", "Danger"),
+    ("warning", "Warning"),
+    ("info", "Info"),
+    ("light", "Light"),
+    ("dark", "Dark"),
+    ("purple", "Purple"),
+    ("orange", "Orange"),
+    ("teal", "Teal"),
+]

@@ -20,3 +20,6 @@ builtins.ad_to_bs = ad_to_bs
 builtins.bs_to_ad = bs_to_ad
 builtins.encode_date_for_display = encode_date_for_display
 builtins.decode_date_for_save = decode_date_for_save
+
+# Import side effects register debug builtins during Django startup.
+import nepanest.common.helpers.debug_helper

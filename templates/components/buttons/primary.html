@@ -1,10 +1,32 @@
+{% if href %}
+<a
+    href="{{ href }}"
+    class="btn btn-primary {{ class|default:'' }}"
+    {% if id %}id="{{ id }}"{% endif %}
+    {% if attributes %}
+      {% for key, value in attributes.items %}
+        {{ key }}="{{ value }}"
+      {% endfor %}
+    {% endif %}
+>
+{% else %}
 <button
     type="{{ type|default:'button' }}"
     class="btn btn-primary {{ class|default:'' }}"
     {% if id %}id="{{ id }}"{% endif %}
+    {% if attributes %}
+      {% for key, value in attributes.items %}
+        {{ key }}="{{ value }}"
+      {% endfor %}
+    {% endif %}
 >
+{% endif %}
     {% if icon %}
         <i data-feather="{{ icon }}" class="me-1"></i>
     {% endif %}
     {{ label }}
+{% if href %}
+</a>
+{% else %}
 </button>
+{% endif %}

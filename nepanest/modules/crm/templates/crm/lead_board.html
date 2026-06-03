@@ -1,0 +1,680 @@
+{% extends "hamrogym/layouts/app.html" %}
+{% load sidebar_tags %}
+
+{% block title %}Lead Board | CRM{% endblock %}
+{% block page_title %}Lead Board{% endblock %}
+
+{% block sidebar %}
+  {% render_crm_sidebar %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .lead-board-shell {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .lead-board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.92));
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.08);
+  }
+
+  .lead-board-header h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .lead-board-header p {
+    margin: 0.35rem 0 0;
+    color: #64748b;
+  }
+
+  .lead-board-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .lead-board-toolbar .btn {
+    border-radius: 14px;
+    font-weight: 700;
+    min-width: 150px;
+  }
+
+  .lead-board-wrap {
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+  }
+
+  .lead-board {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(295px, 330px);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .lead-column {
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .lead-column-header {
+    padding: 1rem 1rem 0.8rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.95));
+  }
+
+  .lead-column-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .lead-column-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .lead-column-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.14);
+  }
+
+  .lead-column-count {
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 800;
+  }
+
+  .lead-column-value {
+    color: #64748b;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .lead-column-body {
+    min-height: 360px;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .lead-column-body.is-drop-target {
+    background: rgba(37, 99, 235, 0.05);
+  }
+
+  .lead-card {
+    border: 1px solid rgba(226, 232, 240, 0.96);
+    border-radius: 18px;
+    background: #fff;
+    padding: 1rem;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .lead-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1);
+  }
+
+  .lead-card.is-dragging {
+    opacity: 0.58;
+    transform: rotate(1deg);
+  }
+
+  .lead-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 0.75rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .lead-card-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .lead-card-company {
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  .lead-link {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    color: #334155;
+    background: #f8fafc;
+    text-decoration: none;
+  }
+
+  .lead-contact-list {
+    display: grid;
+    gap: 0.45rem;
+    color: #475569;
+    font-size: 0.92rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .lead-contact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .lead-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.95rem;
+  }
+
+  .lead-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.72rem;
+    border-radius: 999px;
+    background: #ecfeff;
+    color: #0f766e;
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  .lead-card-meta {
+    display: grid;
+    gap: 0.45rem;
+    margin-bottom: 0.9rem;
+    color: #475569;
+    font-size: 0.9rem;
+  }
+
+  .lead-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .lead-owner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #334155;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .lead-followup-btn {
+    border: 0;
+    background: transparent;
+    color: #2563eb;
+    font-weight: 800;
+    padding: 0;
+  }
+
+  .lead-empty {
+    border: 1px dashed rgba(148, 163, 184, 0.4);
+    border-radius: 18px;
+    padding: 1.25rem 1rem;
+    color: #94a3b8;
+    text-align: center;
+    background: rgba(248, 250, 252, 0.8);
+  }
+
+  .lead-board-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .lead-summary-card {
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    padding: 1rem 1.1rem;
+  }
+
+  .lead-summary-label {
+    color: #64748b;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+  }
+
+  .lead-summary-value {
+    color: #0f172a;
+    font-size: 1.65rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+
+<div class="lead-board-shell">
+  <section class="lead-board-header">
+    <div>
+      <h2>Lead Board</h2>
+      <p>{{ page_intro }}</p>
+    </div>
+    <div class="lead-board-toolbar">
+      <a class="btn btn-outline-secondary" href="{% url 'crm_dashboard' %}">
+        <i data-feather="layout" class="me-1"></i>CRM Dashboard
+      </a>
+      <a class="btn btn-primary" href="{% url 'crm_lead_list' %}">
+        <i data-feather="columns" class="me-1"></i>Board View
+      </a>
+    </div>
+  </section>
+
+  <section class="lead-board-wrap">
+    <div class="lead-board" id="leadBoard">
+      {% for column in columns %}
+        <section class="lead-column" data-is-closed="{% if column.status.is_closed %}true{% else %}false{% endif %}">
+          <div class="lead-column-header">
+            <div class="lead-column-top">
+              <div class="lead-column-name">
+                <span class="lead-column-dot" style="background: {{ column.status.color }};"></span>
+                <span>{{ column.status.name }}</span>
+              </div>
+              <span class="lead-column-count">{{ column.count }}</span>
+            </div>
+            <div class="lead-column-value">Rs. {{ column.value|floatformat:0 }}</div>
+          </div>
+          <div class="lead-column-body" data-status-id="{{ column.status.pk }}">
+            {% for lead in column.leads %}
+              <article
+                class="lead-card"
+                draggable="true"
+                data-lead-id="{{ lead.id }}"
+                data-lead-name="{{ lead.name }}"
+                data-next-followup="{{ lead.next_followup_value }}"
+                data-status-id="{{ lead.status_id }}"
+                data-budget="{{ lead.budget|default:0 }}">
+                <div class="lead-card-header">
+                  <div>
+                    <h3 class="lead-card-title">{{ lead.name }}</h3>
+                    <div class="lead-card-company">{{ lead.company_name }}</div>
+                  </div>
+                  <a class="lead-link" href="{{ lead.detail_url }}" title="Open lead">
+                    <i data-feather="external-link"></i>
+                  </a>
+                </div>
+                <div class="lead-contact-list">
+                  <span class="lead-contact-item"><i data-feather="phone"></i>{{ lead.phone }}</span>
+                  <span class="lead-contact-item"><i data-feather="mail"></i>{{ lead.email }}</span>
+                </div>
+                <div class="lead-card-tags">
+                  <span class="lead-chip">{{ lead.service_name }}</span>
+                </div>
+                <div class="lead-card-meta">
+                  <span>Budget: Rs. {{ lead.budget|floatformat:0 }}</span>
+                  <span>Next Followup: <strong data-next-followup-text="true">{{ lead.next_followup }}</strong></span>
+                </div>
+                <div class="lead-card-footer">
+                  <span class="lead-owner"><i data-feather="user"></i>{{ lead.assigned_to }}</span>
+                  <button type="button" class="lead-followup-btn open-followup-btn">Add Followup</button>
+                </div>
+              </article>
+            {% empty %}
+              <div class="lead-empty">No leads in this column yet.</div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="lead-board-summary">
+    <article class="lead-summary-card">
+      <div class="lead-summary-label">Total Leads</div>
+      <div class="lead-summary-value" id="boardTotalLeads">{{ board_summary.total_leads }}</div>
+    </article>
+    <article class="lead-summary-card">
+      <div class="lead-summary-label">Total Value</div>
+      <div class="lead-summary-value" id="boardTotalValue">Rs. {{ board_summary.total_value|floatformat:0 }}</div>
+    </article>
+    <article class="lead-summary-card">
+      <div class="lead-summary-label">Conversion Rate</div>
+      <div class="lead-summary-value" id="boardConversionRate">{{ board_summary.conversion_rate }}%</div>
+    </article>
+    <article class="lead-summary-card">
+      <div class="lead-summary-label">Won Value</div>
+      <div class="lead-summary-value" id="boardWonValue">Rs. {{ board_summary.won_value|floatformat:0 }}</div>
+    </article>
+    <article class="lead-summary-card">
+      <div class="lead-summary-label">Avg. Lead Age</div>
+      <div class="lead-summary-value">{{ board_summary.avg_lead_age }} days</div>
+    </article>
+  </section>
+</div>
+
+{% include "components/modals/modal.html" with modal_id="boardFollowupModal" form_id="boardFollowupForm" title="Schedule Followup" fields=followup_modal_fields %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  const board = document.getElementById('leadBoard');
+  const followupModalEl = document.getElementById('boardFollowupModal');
+  const followupForm = document.getElementById('boardFollowupForm');
+  const totalLeadsEl = document.getElementById('boardTotalLeads');
+  const totalValueEl = document.getElementById('boardTotalValue');
+  const conversionRateEl = document.getElementById('boardConversionRate');
+  const wonValueEl = document.getElementById('boardWonValue');
+  let draggingCard = null;
+  let dragMoved = false;
+  let activeLeadId = '';
+  let activeLeadCard = null;
+
+  function formatCurrency(value) {
+    return `Rs. ${Math.round(Number(value) || 0).toLocaleString()}`;
+  }
+
+  function findColumnForCard(card) {
+    return card ? card.closest('.lead-column') : null;
+  }
+
+  function ensureColumnEmptyState(columnBody) {
+    if (!columnBody) return;
+    const cardCount = columnBody.querySelectorAll('.lead-card').length;
+    let emptyState = columnBody.querySelector('.lead-empty');
+    if (cardCount === 0 && !emptyState) {
+      emptyState = document.createElement('div');
+      emptyState.className = 'lead-empty';
+      emptyState.textContent = 'No leads in this column yet.';
+      columnBody.appendChild(emptyState);
+    }
+    if (cardCount > 0 && emptyState) {
+      emptyState.remove();
+    }
+  }
+
+  function recalculateBoardSummary() {
+    if (!board) return;
+    const cards = Array.from(board.querySelectorAll('.lead-card'));
+    const totalLeads = cards.length;
+    let totalValue = 0;
+    let wonValue = 0;
+    let convertedLeads = 0;
+
+    cards.forEach(function(card) {
+      const budget = Number(card.getAttribute('data-budget') || 0);
+      totalValue += budget;
+      const column = findColumnForCard(card);
+      if (column && column.getAttribute('data-is-closed') === 'true') {
+        convertedLeads += 1;
+        wonValue += budget;
+      }
+    });
+
+    if (totalLeadsEl) totalLeadsEl.textContent = String(totalLeads);
+    if (totalValueEl) totalValueEl.textContent = formatCurrency(totalValue);
+    if (wonValueEl) wonValueEl.textContent = formatCurrency(wonValue);
+    if (conversionRateEl) {
+      const rate = totalLeads ? ((convertedLeads / totalLeads) * 100).toFixed(2) : '0.00';
+      conversionRateEl.textContent = `${rate}%`;
+    }
+  }
+
+  function recalculateColumnStats(column) {
+    if (!column) return;
+    const body = column.querySelector('.lead-column-body');
+    const countEl = column.querySelector('.lead-column-count');
+    const valueEl = column.querySelector('.lead-column-value');
+    const cards = body ? Array.from(body.querySelectorAll('.lead-card')) : [];
+    const total = cards.reduce(function(sum, card) {
+      return sum + Number(card.getAttribute('data-budget') || 0);
+    }, 0);
+    if (countEl) countEl.textContent = String(cards.length);
+    if (valueEl) valueEl.textContent = formatCurrency(total);
+    ensureColumnEmptyState(body);
+  }
+
+  function getCsrfToken() {
+    return $('input[name="csrfmiddlewaretoken"]').first().val() || '';
+  }
+
+  function currentDateTimeLocal() {
+    const now = new Date();
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+
+  function splitDateTimeValue(value) {
+    const normalized = String(value || '').trim();
+    if (!normalized) return { datePart: '', timePart: '' };
+    const delimiter = normalized.includes('T') ? 'T' : ' ';
+    const parts = normalized.split(delimiter, 2);
+    return { datePart: parts[0] || '', timePart: (parts[1] || '').slice(0, 8) };
+  }
+
+  function setCalendarFieldValue($form, name, value) {
+    const wrapper = $form.find(`[data-calendar-field="true"][data-field-name="${name}"]`).get(0);
+    if (!wrapper) return false;
+
+    const parts = splitDateTimeValue(value);
+    const adInput = wrapper.querySelector('input[data-ad-input="true"]');
+    const adDateInput = wrapper.querySelector('input[data-ad-date-input="true"]');
+    const adTimeInput = wrapper.querySelector('input[data-ad-time-input="true"]');
+    const bsCombinedInput = wrapper.querySelector('input[data-bs-combined-input="true"]');
+
+    if (adInput) adInput.value = value || '';
+    if (adDateInput) adDateInput.value = parts.datePart;
+    if (adTimeInput) adTimeInput.value = parts.timePart;
+    if (bsCombinedInput) bsCombinedInput.value = '';
+    if (window.syncCalendarFieldValues) window.syncCalendarFieldValues(wrapper, 'ad');
+    if (window.initializeCalendarSwitchFields) window.initializeCalendarSwitchFields($form);
+    return true;
+  }
+
+  function resetFollowupForm() {
+    if (!followupForm) return;
+    followupForm.reset();
+    activeLeadId = '';
+    activeLeadCard = null;
+    $(followupForm).find('[name="id"]').val('');
+    $(followupForm).find('[name="lead_name"]').val('');
+    $(followupForm).find('[name="discussion"]').val('');
+    $(followupForm).find('[name="is_completed"]').prop('checked', false);
+    setCalendarFieldValue($(followupForm), 'followup_date', currentDateTimeLocal());
+    setCalendarFieldValue($(followupForm), 'next_followup_date', '');
+    $('#boardFollowupModal').find('.modal-title').text('Schedule Followup');
+  }
+
+  function openFollowupForLead(card) {
+    if (!card || !followupForm) return;
+    activeLeadId = card.getAttribute('data-lead-id') || '';
+    activeLeadCard = card;
+    resetFollowupForm();
+    activeLeadId = card.getAttribute('data-lead-id') || '';
+    activeLeadCard = card;
+    $(followupForm).find('[name="lead_name"]').val(card.getAttribute('data-lead-name') || '');
+    setCalendarFieldValue($(followupForm), 'next_followup_date', card.getAttribute('data-next-followup') || '');
+    if (window.bootstrap && followupModalEl) {
+      bootstrap.Modal.getOrCreateInstance(followupModalEl).show();
+    }
+  }
+
+  if (followupModalEl) {
+    $(followupModalEl).on('hidden.bs.modal', function() {
+      resetFollowupForm();
+    });
+  }
+
+  if (board) {
+    board.addEventListener('dragstart', function(event) {
+      const card = event.target.closest('.lead-card');
+      if (!card) return;
+      draggingCard = card;
+      dragMoved = true;
+      card.classList.add('is-dragging');
+    });
+
+    board.addEventListener('dragend', function() {
+      if (draggingCard) {
+        draggingCard.classList.remove('is-dragging');
+        draggingCard = null;
+      }
+      board.querySelectorAll('.lead-column-body').forEach((column) => column.classList.remove('is-drop-target'));
+      setTimeout(function() { dragMoved = false; }, 50);
+    });
+
+    board.addEventListener('dragover', function(event) {
+      const column = event.target.closest('.lead-column-body');
+      if (!column) return;
+      event.preventDefault();
+      column.classList.add('is-drop-target');
+    });
+
+    board.addEventListener('dragleave', function(event) {
+      const column = event.target.closest('.lead-column-body');
+      if (column) column.classList.remove('is-drop-target');
+    });
+
+    board.addEventListener('drop', function(event) {
+      const column = event.target.closest('.lead-column-body');
+      if (!column || !draggingCard) return;
+      event.preventDefault();
+      column.classList.remove('is-drop-target');
+      const sourceColumn = findColumnForCard(draggingCard);
+      column.appendChild(draggingCard);
+      draggingCard.setAttribute('data-status-id', column.getAttribute('data-status-id') || '');
+      recalculateColumnStats(sourceColumn);
+      recalculateColumnStats(findColumnForCard(draggingCard));
+      recalculateBoardSummary();
+
+      const statusId = column.getAttribute('data-status-id');
+      const leadId = draggingCard.getAttribute('data-lead-id');
+      fetch('{% url "crm_lead_board_update_status" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        body: new URLSearchParams({ lead_id: leadId, status_id: statusId }).toString()
+      }).then(function(response) {
+        if (!response.ok) throw new Error('Failed');
+        if (window.feather) {
+          feather.replace();
+        }
+      }).catch(function() {
+        if (sourceColumn) {
+          sourceColumn.querySelector('.lead-column-body').appendChild(draggingCard);
+          recalculateColumnStats(sourceColumn);
+          recalculateColumnStats(findColumnForCard(draggingCard));
+          recalculateBoardSummary();
+        }
+        if (window.Swal) {
+          Swal.fire('Failed', 'Unable to update lead status.', 'error');
+        }
+      });
+    });
+  }
+
+  $(document).on('click', '.lead-card', function(event) {
+    if (dragMoved) return;
+    if ($(event.target).closest('a, button').length) return;
+    openFollowupForLead(this);
+  });
+
+  $(document).on('click', '.open-followup-btn', function(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    openFollowupForLead($(this).closest('.lead-card').get(0));
+  });
+
+  $('#boardFollowupForm').on('submit', function(event) {
+    event.preventDefault();
+    if (!activeLeadId) {
+      if (window.Swal) Swal.fire('Missing Lead', 'Select a lead card first.', 'warning');
+      return;
+    }
+
+    const formData = new FormData(this);
+    $.ajax({
+      url: `/core/crm/leads/${activeLeadId}/followups/create/`,
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-CSRFToken': getCsrfToken() }
+    }).done(function() {
+      const nextFollowupValue = formData.get('next_followup_date') || '';
+      const nextFollowupText = nextFollowupValue
+        ? new Date(nextFollowupValue).toLocaleString(undefined, {
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : 'Not scheduled';
+      if (activeLeadCard) {
+        activeLeadCard.setAttribute('data-next-followup', nextFollowupValue);
+        const nextFollowupTextEl = activeLeadCard.querySelector('[data-next-followup-text="true"]');
+        if (nextFollowupTextEl) {
+          nextFollowupTextEl.textContent = nextFollowupText;
+        }
+      }
+      if (window.bootstrap && followupModalEl) {
+        bootstrap.Modal.getOrCreateInstance(followupModalEl).hide();
+      }
+      if (window.Swal) {
+        Swal.fire('Saved', 'Followup added successfully.', 'success');
+      }
+    }).fail(function(xhr) {
+      let message = 'Unable to save followup.';
+      if (xhr.responseJSON && xhr.responseJSON.errors) {
+        message = Object.values(xhr.responseJSON.errors).flat().join(' ');
+      }
+      if (window.Swal) {
+        Swal.fire('Failed', message, 'error');
+      }
+    });
+  });
+
+  resetFollowupForm();
+});
+</script>
+{% endblock %}

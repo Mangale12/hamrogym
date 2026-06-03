@@ -1,33 +1,68 @@
-<aside class="hg-sidebar" id="hgSidebar">
+<aside class="hg-sidebar" id="hgSidebar" aria-label="HamroGym sidebar">
   <div class="hg-sidebar-header">
     <div class="hg-sidebar-brand">
       <span class="hg-sidebar-mark">
         <i data-feather="activity"></i>
       </span>
       <div>
-        <p class="hg-sidebar-label mb-0">HamroGym</p>
-        <h3 class="hg-sidebar-title">Dashboard</h3>
+        <p class="hg-sidebar-label mb-1">HamroGym</p>
+        <h3 class="hg-sidebar-title">Operations Hub</h3>
+        <p class="hg-sidebar-subtitle mb-0">Gym control center for members, staff, and training.</p>
       </div>
     </div>
-    <p class="hg-sidebar-subtitle mb-0">A separate product sidebar for gym operations.</p>
+    <button class="hg-sidebar-close d-lg-none" type="button" aria-label="Close sidebar">
+      <i data-feather="x"></i>
+    </button>
   </div>
 
-  <nav class="hg-sidebar-nav">
+  <div class="hg-sidebar-search">
+    <label class="hg-sidebar-search-shell" for="hgSidebarSearch">
+      <i data-feather="search"></i>
+      <input
+        id="hgSidebarSearch"
+        class="hg-sidebar-search-input"
+        type="search"
+        placeholder="Search sidebar"
+        aria-label="Search sidebar">
+    </label>
+    <div class="hg-sidebar-search-note">Find modules, sections, and links fast.</div>
+  </div>
+
+  <div class="hg-sidebar-empty" data-sidebar-empty-state hidden>
+    No sidebar items match <span data-sidebar-query></span>.
+  </div>
+
+  <nav class="hg-sidebar-nav" aria-label="HamroGym navigation">
     <ul class="nav flex-column">
       {% for item in sidebar_items %}
         {% with has_children=item.children|length %}
-          <li class="nav-item">
+          <li class="nav-item hg-sidebar-item" data-sidebar-item>
             {% if has_children %}
-              <a class="hg-nav-link {% if item.is_active %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#hg-sidebar-group-{{ forloop.counter }}" aria-expanded="{% if item.is_active %}true{% else %}false{% endif %}">
+              <a class="hg-nav-link {% if item.is_active %}active{% endif %}"
+                 href="#"
+                 data-sidebar-parent-link
+                 data-sidebar-label="{{ item.label }}"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#hg-sidebar-group-{{ forloop.counter }}"
+                 aria-expanded="{% if item.is_active %}true{% else %}false{% endif %}"
+                 aria-controls="hg-sidebar-group-{{ forloop.counter }}">
                 <span class="hg-nav-icon"><i data-feather="{{ item.icon|default:'circle' }}"></i></span>
-                <span class="hg-nav-copy">{{ item.label }}</span>
+                <span class="hg-nav-copy">
+                  <span class="hg-nav-label">{{ item.label }}</span>
+                  <span class="hg-nav-hint">{{ item.children|length }} links</span>
+                </span>
                 <span class="hg-nav-caret"><i data-feather="chevron-down"></i></span>
               </a>
-              <ul class="collapse nav flex-column hg-subnav {% if item.is_active %}show{% endif %}" id="hg-sidebar-group-{{ forloop.counter }}">
+              <ul class="collapse nav flex-column hg-subnav {% if item.is_active %}show{% endif %}"
+                  id="hg-sidebar-group-{{ forloop.counter }}"
+                  data-sidebar-children>
                 {% for child in item.children %}
                   <li class="nav-item">
-                    <a class="hg-subnav-link {% if child.is_active %}active{% endif %} {% if child.disabled %}disabled{% endif %}" href="{{ child.url }}">
-                      <span>{{ child.label }}</span>
+                    <a class="hg-subnav-link {% if child.is_active %}active{% endif %} {% if child.disabled %}disabled{% endif %}"
+                       href="{{ child.url }}"
+                       data-sidebar-child-link
+                       data-sidebar-label="{{ child.label }}">
+                      <span class="hg-subnav-copy">{{ child.label }}</span>
                       {% if child.badge %}
                         <span class="badge rounded-pill text-bg-light">{{ child.badge }}</span>
                       {% endif %}
@@ -38,10 +73,12 @@
             {% else %}
               <a class="hg-nav-link {% if item.is_active %}active{% endif %} {% if item.disabled %}disabled{% endif %}" href="{{ item.url }}">
                 <span class="hg-nav-icon"><i data-feather="{{ item.icon|default:'circle' }}"></i></span>
-                <span class="hg-nav-copy">{{ item.label }}</span>
-                {% if item.badge %}
-                  <span class="badge rounded-pill text-bg-light">{{ item.badge }}</span>
-                {% endif %}
+                <span class="hg-nav-copy">
+                  <span class="hg-nav-label">{{ item.label }}</span>
+                  {% if item.badge %}
+                    <span class="hg-nav-hint">{{ item.badge }}</span>
+                  {% endif %}
+                </span>
               </a>
             {% endif %}
           </li>
@@ -49,4 +86,9 @@
       {% endfor %}
     </ul>
   </nav>
+
+  <div class="hg-sidebar-footer">
+    <div class="hg-sidebar-footer-label">HamroGym</div>
+    <div class="hg-sidebar-footer-copy">Focused navigation for the final product handoff.</div>
+  </div>
 </aside>

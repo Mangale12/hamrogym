@@ -5,6 +5,7 @@ from django.test import RequestFactory, SimpleTestCase, override_settings
 from django.urls import resolve, reverse
 
 from nepanest.common.middlewares.host_routing import HostURLConfMiddleware
+from nepanest.products.hamrogym.context_processors import base_layout_template
 from nepanest.products.hamrogym.views import views
 
 
@@ -93,3 +94,22 @@ class HamroGymTemplateTests(SimpleTestCase):
     def test_hamrogym_layout_uses_product_sidebar_tag(self):
         layout_path = Path(__file__).resolve().parent / "templates" / "hamrogym" / "layouts" / "app.html"
         self.assertIn("{% render_hamrogym_sidebar %}", layout_path.read_text())
+
+
+class LayoutResolverTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_platform_path_uses_platform_layout(self):
+        request = self.factory.get("/platform/dashboard/")
+
+        context = base_layout_template(request)
+
+        self.assertEqual(context["base_layout_template"], "platform/layouts/app.html")
+
+    def test_regular_product_path_uses_hamrogym_layout(self):
+        request = self.factory.get("/product/hamrogym/dashboard/")
+
+        context = base_layout_template(request)
+
+        self.assertEqual(context["base_layout_template"], "hamrogym/layouts/app.html")

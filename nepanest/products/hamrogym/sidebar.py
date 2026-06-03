@@ -1,3 +1,9 @@
+from nepanest.modules.accounting.sidebar import SIDEBAR_ITEMS as ACCOUNTING_SIDEBAR_ITEMS
+from nepanest.modules.tasks.sidebar import SIDEBAR_ITEMS as TASKS_SIDEBAR_ITEMS
+from nepanest.modules.assets.sidebar import SIDEBAR_ITEMS as ASSETS_SIDEBAR_ITEMS
+from nepanest.modules.human_resources.sidebar import SIDEBAR_ITEMS as HR_SIDEBAR_ITEMS
+from nepanest.modules.people.sidebar import SIDEBAR_ITEMS as PEOPLE_SIDEBAR_ITEMS
+
 SIDEBAR_ITEMS = [
     {
         "label": "Dashboard Home",
@@ -106,9 +112,9 @@ SIDEBAR_ITEMS = [
             },
         ],
     },
-     {
+    {
         "label": "Workout Management",
-        "icon": "exercise",
+        "icon": "zap",
         "children": [
             {
                 "label": "Muscle Groups",
@@ -132,10 +138,9 @@ SIDEBAR_ITEMS = [
             },
         ],
     },
-     
     {
         "label": "Diet and Nutrition",
-        "icon": "food",
+        "icon": "coffee",
         "children": [
             {
                 "label": "Diet Plans",
@@ -169,7 +174,7 @@ SIDEBAR_ITEMS = [
     },
     {
         "label": "Challenge",
-        "icon": "trophy",
+        "icon": "award",
         "children": [
             {
                 "label": "Challenges",
@@ -211,7 +216,7 @@ SIDEBAR_ITEMS = [
     },
     {
         "label": "Class and Group Management",
-        "icon": "users",
+        "icon": "grid",
         "children": [
             {
                 "label": "Class Types",
@@ -261,7 +266,7 @@ SIDEBAR_ITEMS = [
     },
     {
         "label": "Master Setup",
-        "icon": "briefcase",
+        "icon": "settings",
         "children": [
             {
                 "label": "Access Types",
@@ -291,7 +296,6 @@ SIDEBAR_ITEMS = [
                 "label": "Fitness Goals",
                 "url_name": "fitness_goal_list",
             },
-            
             {
                 "label": "Activity Levels",
                 "url_name": "activity_level_list",
@@ -310,4 +314,9 @@ SIDEBAR_ITEMS = [
             },
         ],
     },
+    *ACCOUNTING_SIDEBAR_ITEMS,
+    *TASKS_SIDEBAR_ITEMS,
+    *ASSETS_SIDEBAR_ITEMS,
+    *HR_SIDEBAR_ITEMS,
+    *PEOPLE_SIDEBAR_ITEMS,
 ]

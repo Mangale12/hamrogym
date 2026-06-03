@@ -1,0 +1,528 @@
+<div class="crm-lead-page">
+  <div class="crm-breadcrumbs">
+    <span>CRM</span>
+    <i data-feather="chevron-right"></i>
+    <span>Leads</span>
+    <i data-feather="chevron-right"></i>
+    <span class="current">{{ lead.name }}</span>
+  </div>
+
+  <section class="crm-card crm-hero">
+    <div class="crm-hero-body">
+      <div class="row g-4 align-items-start">
+        <div class="col-xl-6">
+          <div class="d-flex gap-3 align-items-start">
+            <div class="crm-avatar">{{ lead_initials }}</div>
+            <div class="flex-grow-1">
+              <div class="crm-title">
+                <h1>{{ lead.name }}</h1>
+                <i data-feather="star"></i>
+              </div>
+              <div class="crm-contact-row">
+                <span class="crm-contact-item"><i data-feather="phone"></i>{{ lead.phone|default:"Not provided" }}</span>
+                <span class="crm-contact-item"><i data-feather="mail"></i>{{ lead.email|default:"Not provided" }}</span>
+                <span class="crm-contact-item"><i data-feather="briefcase"></i>{{ lead.company_name|default:"Independent" }}</span>
+              </div>
+              <div class="crm-badges">
+                {% for badge in lead_badges %}
+                  <span class="crm-pill {{ badge.tone }}">{{ badge.label }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="crm-actions">
+            {% include "components/buttons/primary.html" with label="Edit Lead" icon="edit-2" class="btn-success" attributes=lead_edit_attrs %}
+            {% include "components/buttons/secondary.html" with label="Add Inquiry" icon="message-circle" attributes=inquiry_modal_attrs %}
+            {% include "components/buttons/secondary.html" with label="Schedule Followup" icon="calendar" class="btn-outline-secondary" attributes=followup_modal_attrs %}
+            <div class="dropdown">
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i data-feather="more-vertical" class="me-1"></i>More
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'crm_lead_list' %}">Back to Leads</a></li>
+                <li><a class="dropdown-item" href="#lead-files-tab" data-bs-toggle="tab">Open Files</a></li>
+                <li><a class="dropdown-item" href="#lead-activity-tab" data-bs-toggle="tab">Activity Log</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="crm-meta-panel">
+            <div class="crm-meta-grid">
+              {% for item in lead_meta_rows %}
+                <div class="crm-meta-item">
+                  <div>
+                    <span class="crm-meta-label">{{ item.label }}</span>
+                    <span class="crm-meta-value"><i data-feather="{{ item.icon }}"></i>{{ item.value }}</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crm-tabs">
+      <ul class="nav nav-tabs" id="leadTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#lead-overview-tab" type="button" role="tab">Overview</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="inquiries-tab" data-bs-toggle="tab" data-bs-target="#lead-inquiries-tab" type="button" role="tab">Inquiries ({{ tab_counts.inquiries }})</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="followups-tab" data-bs-toggle="tab" data-bs-target="#lead-followups-tab" type="button" role="tab">Followups ({{ tab_counts.followups }})</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#lead-tasks-tab" type="button" role="tab">Tasks ({{ tab_counts.tasks }})</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#lead-notes-tab" type="button" role="tab">Notes ({{ tab_counts.notes }})</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#lead-files-tab" type="button" role="tab">Files ({{ tab_counts.files }})</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#lead-activity-tab" type="button" role="tab">Activity Log</button>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active crm-pane" id="lead-overview-tab" role="tabpanel" aria-labelledby="overview-tab">
+      <div class="row g-4">
+        <div class="col-xl-7">
+          <div class="crm-card crm-section-card mb-4">
+            <div class="crm-section-title">Inquiry Timeline</div>
+            {% if inquiries %}
+              <div class="crm-timeline">
+                {% for inquiry in inquiries|slice:":4" %}
+                  <div class="crm-timeline-row">
+                    <span class="crm-timeline-dot {% if inquiry.priority == 'high' %}green{% elif inquiry.priority == 'medium' %}orange{% elif inquiry.priority == 'low' %}blue{% else %}gray{% endif %}">
+                      <i data-feather="{% if inquiry.priority == 'high' %}message-square{% elif inquiry.priority == 'medium' %}message-circle{% elif inquiry.priority == 'low' %}mail{% else %}globe{% endif %}"></i>
+                    </span>
+                    <div class="crm-timeline-meta">
+                      <div class="crm-timeline-date">{{ inquiry.date|default:inquiry.created_at|date:"M d, Y" }}</div>
+                      <div>{{ inquiry.date|default:inquiry.created_at|date:"h:i A" }}</div>
+                    </div>
+                    <div class="crm-activity-card">
+                      <div class="crm-activity-title">
+                        <span>{{ inquiry.subject }}</span>
+                        <span class="crm-pill {% if inquiry.priority == 'high' %}red{% elif inquiry.priority == 'medium' %}orange{% else %}blue{% endif %}">
+                          {{ inquiry.get_priority_display|default:"Open" }}
+                        </span>
+                      </div>
+                      <div class="crm-activity-copy">{{ inquiry.message }}</div>
+                      <div class="crm-activity-footer">
+                        <span>{{ lead.assigned_to.get_full_name|default:lead.assigned_to.username|default:"CRM Team" }}</span>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-secondary inquiry-edit-btn"
+                          data-id="{{ inquiry.pk }}"
+                          data-detail-url="{% url 'crm_lead_inquiry_detail' pk=lead.pk inquiry_pk=inquiry.pk %}"
+                          data-update-url="{% url 'crm_lead_inquiry_update' pk=lead.pk inquiry_pk=inquiry.pk %}">
+                          <i data-feather="edit-2" class="me-1"></i>Edit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="crm-empty">
+                <i data-feather="message-circle"></i>
+                <div>No inquiries logged yet for this lead.</div>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="crm-card crm-section-card">
+            <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+              <div class="crm-section-title mb-0">Timeline Chart</div>
+              <span class="crm-pill blue">Last {{ activity_chart|length }} activity points</span>
+            </div>
+            {% if activity_chart %}
+              <div class="crm-chart">
+                {% for point in activity_chart %}
+                  <div class="crm-chart-bar">
+                    <div class="crm-chart-count">{{ point.count }}</div>
+                    <div class="crm-chart-column" style="height: {{ point.height }}%;"></div>
+                    <div class="crm-chart-label">{{ point.label }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="crm-empty">
+                <i data-feather="bar-chart-2"></i>
+                <div>Activity bars will appear once inquiries or followups are logged.</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-xl-5">
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Lead Information</div>
+            <dl class="crm-kv mb-0">
+              {% for label, value in lead_information_rows %}
+                <div class="crm-kv-row">
+                  <dt>{{ label }}</dt>
+                  <dd>{{ value }}</dd>
+                </div>
+              {% endfor %}
+            </dl>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Followup Summary</div>
+            <div class="crm-summary-list">
+              <div class="crm-summary-row"><span>Total Followups</span><strong>{{ followup_summary.total }}</strong></div>
+              <div class="crm-summary-row"><span>Upcoming</span><strong class="primary">{{ followup_summary.upcoming }}</strong></div>
+              <div class="crm-summary-row"><span>Completed</span><strong class="success">{{ followup_summary.completed }}</strong></div>
+              <div class="crm-summary-row"><span>Missed</span><strong class="danger">{{ followup_summary.missed }}</strong></div>
+            </div>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Tags</div>
+            <div class="crm-tag-list">
+              {% for tag in lead_tags %}
+                <span class="crm-tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Notes</div>
+            <div class="crm-note-list">
+              {% for note in notes_preview %}
+                <p>{{ note }}</p>
+              {% empty %}
+                <p>No notes yet for this lead.</p>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Quick Actions</div>
+            <div class="crm-quick-actions">
+              <a href="https://wa.me/" class="btn btn-success"><i data-feather="message-circle" class="me-2"></i>Chat on WhatsApp</a>
+              <a href="tel:{{ lead.phone }}" class="btn btn-primary"><i data-feather="phone" class="me-2"></i>Call Now</a>
+              <a href="mailto:{{ lead.email }}" class="btn btn-outline-secondary"><i data-feather="mail" class="me-2"></i>Send Email</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade crm-pane" id="lead-inquiries-tab" role="tabpanel" aria-labelledby="inquiries-tab">
+      <div class="row g-4">
+        <div class="col-xl-9">
+          <div class="crm-card crm-section-card">
+            <div class="crm-toolbar">
+              <div class="crm-section-title mb-0">Inquiries</div>
+              {% include "components/buttons/primary.html" with label="Add Inquiry" icon="plus" attributes=inquiry_modal_attrs %}
+            </div>
+            <div class="crm-filter-shell">
+              <div class="row g-3">
+                {% include "components/forms/fields_grid.html" with fields=inquiry_filter_fields %}
+              </div>
+            </div>
+
+            {% if inquiries %}
+              <div class="crm-timeline">
+                {% for inquiry in inquiries %}
+                  <div class="crm-timeline-row">
+                    <span class="crm-timeline-dot {% if inquiry.priority == 'high' %}blue{% elif inquiry.priority == 'medium' %}orange{% elif inquiry.priority == 'low' %}violet{% else %}green{% endif %}">
+                      <i data-feather="{% if inquiry.priority == 'high' %}message-circle{% elif inquiry.priority == 'medium' %}phone{% elif inquiry.priority == 'low' %}mail{% else %}globe{% endif %}"></i>
+                    </span>
+                    <div class="crm-timeline-meta">
+                      <div class="crm-timeline-date">{{ inquiry.date|default:inquiry.created_at|date:"M d, Y" }}</div>
+                      <div>{{ inquiry.date|default:inquiry.created_at|date:"h:i A" }}</div>
+                      <div class="crm-timeline-author">By {{ lead.assigned_to.get_full_name|default:lead.assigned_to.username|default:"CRM Team" }}</div>
+                    </div>
+                    <div class="crm-activity-card">
+                      <div class="crm-activity-top">
+                        <div>
+                          <div class="crm-activity-title">
+                            <span>{{ inquiry.subject }}</span>
+                            <span class="crm-pill {% if inquiry.priority == 'high' %}red{% elif inquiry.priority == 'medium' %}orange{% else %}blue{% endif %}">
+                              {{ inquiry.get_priority_display|default:"Open" }}
+                            </span>
+                          </div>
+                          <div class="crm-activity-copy">{{ inquiry.message }}</div>
+                        </div>
+                        <span class="crm-pill green">Open</span>
+                      </div>
+                      <div class="crm-activity-footer">
+                        <span>Source: {{ lead.lead_source.name|default:"Website" }}</span>
+                        <span>Type: {% if inquiry.priority == 'medium' %}Call{% elif inquiry.priority == 'low' %}Email{% else %}Web Form{% endif %}</span>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-secondary inquiry-edit-btn"
+                          data-id="{{ inquiry.pk }}"
+                          data-detail-url="{% url 'crm_lead_inquiry_detail' pk=lead.pk inquiry_pk=inquiry.pk %}"
+                          data-update-url="{% url 'crm_lead_inquiry_update' pk=lead.pk inquiry_pk=inquiry.pk %}">
+                          <i data-feather="edit-2" class="me-1"></i>Edit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="crm-empty">
+                <i data-feather="message-square"></i>
+                <div>No inquiries available yet.</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-xl-3">
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Inquiry Summary</div>
+            <div class="crm-summary-list">
+              <div class="crm-summary-row"><span>Total Inquiries</span><strong>{{ inquiry_summary.total }}</strong></div>
+              <div class="crm-summary-row"><span>High Priority</span><strong class="danger">{{ inquiry_summary.high }}</strong></div>
+              <div class="crm-summary-row"><span>Medium Priority</span><strong class="warning">{{ inquiry_summary.medium }}</strong></div>
+              <div class="crm-summary-row"><span>Low Priority</span><strong class="primary">{{ inquiry_summary.low }}</strong></div>
+              <div class="crm-summary-row"><span>Open</span><strong class="success">{{ inquiry_summary.open }}</strong></div>
+              <div class="crm-summary-row"><span>Closed</span><strong class="danger">{{ inquiry_summary.closed }}</strong></div>
+            </div>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Popular Topics</div>
+            <div class="crm-tag-list">
+              {% for tag in lead_tags %}
+                <span class="crm-tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Quick Actions</div>
+            <div class="crm-action-list">
+              <a class="crm-action-link" href="#" data-bs-toggle="modal" data-bs-target="#inquiryModal"><i data-feather="message-circle"></i>Add New Inquiry</a>
+              <a class="crm-action-link" href="mailto:{{ lead.email }}"><i data-feather="mail"></i>Send Email</a>
+              <a class="crm-action-link" href="tel:{{ lead.phone }}"><i data-feather="phone"></i>Make a Call</a>
+              <a class="crm-action-link" href="#" data-bs-toggle="modal" data-bs-target="#followupModal"><i data-feather="calendar"></i>Schedule Followup</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade crm-pane" id="lead-followups-tab" role="tabpanel" aria-labelledby="followups-tab">
+      <div class="row g-4">
+        <div class="col-xl-9">
+          <div class="crm-card crm-section-card">
+            <div class="crm-toolbar">
+              <div class="crm-section-title mb-0">Followups</div>
+              {% include "components/buttons/primary.html" with label="Schedule Followup" icon="plus" attributes=followup_modal_attrs %}
+            </div>
+            <div class="crm-filter-shell">
+              <div class="row g-3">
+                {% include "components/forms/fields_grid.html" with fields=followup_filter_fields %}
+              </div>
+            </div>
+
+            {% if followups %}
+              <div class="crm-timeline">
+                {% for followup in followups %}
+                  <div class="crm-timeline-row">
+                    {% if followup.is_completed %}
+                      <span class="crm-timeline-dot green"><i data-feather="calendar-check"></i></span>
+                    {% elif followup.followup_date and followup.followup_date < now %}
+                      <span class="crm-timeline-dot red"><i data-feather="alert-circle"></i></span>
+                    {% else %}
+                      <span class="crm-timeline-dot blue"><i data-feather="calendar"></i></span>
+                    {% endif %}
+                    <div class="crm-timeline-meta">
+                      <div class="crm-timeline-date">{{ followup.followup_date|default:followup.created_at|date:"M d, Y" }}</div>
+                      <div>{{ followup.followup_date|default:followup.created_at|date:"h:i A" }}</div>
+                      {% if followup.followup_date and not followup.is_completed %}
+                        <div class="crm-timeline-author">
+                          {% if followup.followup_date > now %}In {{ followup.followup_date|timeuntil:now }}{% else %}Missed{% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
+                    <div class="crm-activity-card">
+                      <div class="crm-activity-top">
+                        <div>
+                          <div class="crm-activity-title">
+                            <span>{% if followup.is_completed %}Completed Followup{% else %}Scheduled Followup{% endif %}</span>
+                            {% if followup.is_completed %}
+                              <span class="crm-pill green">Completed</span>
+                            {% elif followup.followup_date and followup.followup_date < now %}
+                              <span class="crm-pill red">Missed</span>
+                            {% else %}
+                              <span class="crm-pill blue">Upcoming</span>
+                            {% endif %}
+                          </div>
+                          <div class="crm-activity-copy">{{ followup.discussion }}</div>
+                        </div>
+                      </div>
+                      <div class="crm-activity-footer">
+                        <span>Assigned to {{ lead.assigned_to.get_full_name|default:lead.assigned_to.username|default:"CRM Team" }}</span>
+                        <span>Next: {{ followup.next_followup_date|date:"M d, Y h:i A"|default:"Not scheduled" }}</span>
+                        {% if not followup.is_completed %}
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary followup-edit-btn"
+                            data-id="{{ followup.pk }}"
+                            data-detail-url="{% url 'crm_lead_followup_detail' pk=lead.pk followup_pk=followup.pk %}">
+                            <i data-feather="edit-2" class="me-1"></i>Edit
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger followup-delete-btn"
+                            data-delete-url="{% url 'crm_lead_followup_delete' pk=lead.pk followup_pk=followup.pk %}">
+                            <i data-feather="trash-2" class="me-1"></i>Delete
+                          </button>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="crm-empty">
+                <i data-feather="calendar"></i>
+                <div>No followups are scheduled yet.</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-xl-3">
+          <div class="crm-card crm-side-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="crm-section-title mb-0">Calendar View</div>
+              <span class="crm-pill blue">{{ calendar_month_label }}</span>
+            </div>
+            <div class="crm-calendar">
+              <div class="crm-calendar-header">
+                {% for weekday in calendar_weeks.weekdays %}
+                  <span>{{ weekday }}</span>
+                {% endfor %}
+              </div>
+              <div class="crm-calendar-grid">
+                {% for week in calendar_weeks.weeks %}
+                  <div class="crm-calendar-week">
+                    {% for cell in week %}
+                      <div class="crm-calendar-day {% if not cell.in_month %}muted{% endif %} {% if cell.is_today %}today{% endif %} {{ cell.status }}">
+                        <span>{{ cell.day }}</span>
+                        {% if cell.count %}
+                          <span class="crm-calendar-count"></span>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Followup Summary</div>
+            <div class="crm-summary-list">
+              <div class="crm-summary-row"><span>Upcoming</span><strong class="primary">{{ followup_summary.upcoming }}</strong></div>
+              <div class="crm-summary-row"><span>Completed</span><strong class="success">{{ followup_summary.completed }}</strong></div>
+              <div class="crm-summary-row"><span>Missed</span><strong class="danger">{{ followup_summary.missed }}</strong></div>
+              <div class="crm-summary-row"><span>Total</span><strong>{{ followup_summary.total }}</strong></div>
+            </div>
+          </div>
+
+          <div class="crm-card crm-side-card">
+            <div class="crm-section-title">Quick Actions</div>
+            <div class="crm-action-list">
+              <a class="crm-action-link" href="#" data-bs-toggle="modal" data-bs-target="#followupModal"><i data-feather="calendar"></i>Schedule New Followup</a>
+              <a class="crm-action-link" href="#lead-overview-tab" data-bs-toggle="tab"><i data-feather="edit-3"></i>Log Followup</a>
+              <a class="crm-action-link" href="tel:{{ lead.phone }}"><i data-feather="phone"></i>Call Now</a>
+              <a class="crm-action-link" href="https://wa.me/"><i data-feather="message-circle"></i>Send WhatsApp Message</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade crm-pane" id="lead-tasks-tab" role="tabpanel" aria-labelledby="tasks-tab">
+      <div class="crm-card crm-section-card">
+        <div class="crm-empty">
+          <i data-feather="check-square"></i>
+          <div>Task integration can plug in here without changing the page structure.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade crm-pane" id="lead-notes-tab" role="tabpanel" aria-labelledby="notes-tab">
+      <div class="crm-card crm-section-card">
+        <div class="crm-section-title">Internal Notes</div>
+        <div class="crm-note-list">
+          {% for note in notes_preview %}
+            <p>{{ note }}</p>
+          {% empty %}
+            <p>No notes added yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade crm-pane" id="lead-files-tab" role="tabpanel" aria-labelledby="files-tab">
+      <div class="crm-card crm-section-card">
+        <div class="crm-empty">
+          <i data-feather="paperclip"></i>
+          <div>Shared file uploads can live here using your existing form components.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade crm-pane" id="lead-activity-tab" role="tabpanel" aria-labelledby="activity-tab">
+      <div class="crm-card crm-section-card">
+        <div class="crm-section-title">Activity Log</div>
+        {% if timeline_items %}
+          <div class="crm-timeline">
+            {% for item in timeline_items %}
+              <div class="crm-timeline-row">
+                <span class="crm-timeline-dot {% if item.accent == 'high' %}red{% elif item.accent == 'medium' %}orange{% elif item.accent == 'completed' %}green{% elif item.accent == 'missed' %}red{% elif item.accent == 'upcoming' %}blue{% else %}gray{% endif %}">
+                  <i data-feather="{{ item.icon }}"></i>
+                </span>
+                <div class="crm-timeline-meta">
+                  <div class="crm-timeline-date">{{ item.date_label }}</div>
+                  <div class="crm-timeline-author">{{ item.author }}</div>
+                </div>
+                <div class="crm-activity-card">
+                  <div class="crm-activity-title">
+                    <span>{{ item.title }}</span>
+                    <span class="crm-pill {% if item.accent == 'high' or item.accent == 'missed' %}red{% elif item.accent == 'medium' %}orange{% elif item.accent == 'completed' %}green{% elif item.accent == 'upcoming' %}blue{% else %}gray{% endif %}">
+                      {{ item.status_label }}
+                    </span>
+                  </div>
+                  <div class="crm-activity-copy">{{ item.copy }}</div>
+                  <div class="crm-activity-footer">
+                    {% if item.kind == 'inquiry' %}
+                      <span>Source: {{ item.source }}</span>
+                      <span>Type: {{ item.channel }}</span>
+                    {% else %}
+                      <span>Mode: {{ item.mode }}</span>
+                      <span>Next: {{ item.next_label }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="crm-empty">
+            <i data-feather="activity"></i>
+            <div>No activity has been recorded yet.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

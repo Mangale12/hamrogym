@@ -6,14 +6,20 @@ SIDEBAR_ITEMS = [
             {
                 "label": "Dashboard",
                 "icon": "home",
-                "url_name": "crm_dashboard",
-                "match": "/crm/dashboard",
+                "url": "/core/crm/dashboard/",
+                "match": "/core/crm/dashboard",
             },
             {
                 "label": "Leads",
                 "icon": "user-plus",
                 "url_name": "crm_lead_list",
-                "match": "/crm/leads",
+                "match": "/core/crm/leads",
+            },
+            {
+                "label": "Lead Board",
+                "icon": "columns",
+                "url_name": "crm_lead_list",
+                "match": "/core/crm/leads",
             },
             {
                 "label": "Contacts",
@@ -43,8 +49,26 @@ SIDEBAR_ITEMS = [
                 "label": "Lead Sources",
                 "icon": "calendar",
                 "url_name": "lead_source_list",
-                "match": "/crm/lead-sources",
+                "match": "/core/lead-sources",
             },
+            {
+                "label": "Lead Statuses",
+                "icon": "tag",
+                "url_name": "lead_status_list",
+                "match": "/core/lead-statuses",
+            },
+            {
+                "label" : "Service Types",
+                "icon": "tag",
+                "url_name": "service_type_list",
+                "match": "/core/service-types",
+            },
+             {
+                "label" : "Services",
+                "icon": "tag",
+                "url_name": "service_list",
+                "match": "/core/services",
+            }
         ],
     }
 ]

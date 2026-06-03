@@ -1,0 +1,9 @@
+{% extends "core/entity_index.html" %}
+{% load sidebar_tags %}
+
+{% block title %}{{ entity_label }} | CRM{% endblock %}
+{% block page_title %}{{ entity_label }}{% endblock %}
+
+{% block sidebar %}
+  {% render_crm_sidebar %}
+{% endblock %}

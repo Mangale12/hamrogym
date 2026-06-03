@@ -1,0 +1,955 @@
+{% extends "hamrogym/layouts/app.html" %}
+{% load sidebar_tags %}
+
+{% block title %}{{ lead.name }} | CRM Leads{% endblock %}
+{% block page_title %}{{ lead.name }}{% endblock %}
+
+{% block sidebar %}
+  {% render_crm_sidebar %}
+{% endblock %}
+
+{% block header_actions %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .crm-lead-page {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .crm-breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.95rem;
+  }
+
+  .crm-breadcrumbs .current {
+    color: #334155;
+    font-weight: 600;
+  }
+
+  .crm-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 24px;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.08);
+  }
+
+  .crm-hero {
+    overflow: hidden;
+  }
+
+  .crm-hero-body {
+    padding: 1.5rem;
+  }
+
+  .crm-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    font-size: 2.2rem;
+    font-weight: 800;
+    box-shadow: 0 16px 30px rgba(37, 99, 235, 0.28);
+  }
+
+  .crm-title {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .crm-title h1 {
+    margin: 0;
+    font-size: clamp(2rem, 3vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+  }
+
+  .crm-contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    color: #475569;
+    margin-bottom: 1rem;
+  }
+
+  .crm-contact-item,
+  .crm-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .crm-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .crm-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.38rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.87rem;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid transparent;
+  }
+
+  .crm-pill.blue { background: #dbeafe; color: #2563eb; }
+  .crm-pill.violet { background: #efe7ff; color: #7c3aed; }
+  .crm-pill.green { background: #dcfce7; color: #15803d; }
+  .crm-pill.red { background: #fee2e2; color: #dc2626; }
+  .crm-pill.orange { background: #ffedd5; color: #ea580c; }
+  .crm-pill.gray { background: #e2e8f0; color: #475569; }
+
+  .crm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .crm-actions .btn {
+    min-width: 145px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .crm-actions .btn-secondary {
+    background: #fff;
+    border-color: #dbe3ef;
+    color: #334155;
+  }
+
+  .crm-meta-panel {
+    border: 1px solid #dde7f2;
+    border-radius: 18px;
+    padding: 1rem 1.1rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.96));
+  }
+
+  .crm-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.2rem;
+  }
+
+  .crm-meta-label {
+    display: block;
+    color: #64748b;
+    font-size: 0.86rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .crm-meta-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .crm-tabs {
+    padding: 0 1.25rem;
+    border-top: 1px solid #edf2f7;
+  }
+
+  .crm-tabs .nav-link {
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    padding: 1rem 0.7rem 0.9rem;
+    margin-right: 1rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .crm-tabs .nav-link.active {
+    color: #2563eb;
+    background: transparent;
+    border-bottom-color: #2563eb;
+  }
+
+  .crm-pane {
+    padding-top: 0.15rem;
+  }
+
+  .crm-section-card {
+    padding: 1.25rem;
+    height: 100%;
+  }
+
+  .crm-section-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1rem;
+  }
+
+  .crm-side-card {
+    padding: 1.15rem;
+    margin-bottom: 1rem;
+  }
+
+  .crm-side-card:last-child {
+    margin-bottom: 0;
+  }
+
+  .crm-kv {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .crm-kv-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    color: #334155;
+  }
+
+  .crm-kv-row dt {
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .crm-kv-row dd {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .crm-summary-list {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .crm-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #334155;
+  }
+
+  .crm-summary-row strong {
+    font-size: 1.02rem;
+  }
+
+  .crm-summary-row .success { color: #16a34a; }
+  .crm-summary-row .warning { color: #ea580c; }
+  .crm-summary-row .danger { color: #dc2626; }
+  .crm-summary-row .primary { color: #2563eb; }
+
+  .crm-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .crm-tag {
+    padding: 0.32rem 0.75rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 0.84rem;
+  }
+
+  .crm-note-list {
+    display: grid;
+    gap: 0.7rem;
+    color: #475569;
+  }
+
+  .crm-note-list p {
+    margin: 0;
+  }
+
+  .crm-quick-actions {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .crm-quick-actions .btn {
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .crm-quick-actions .btn-outline-secondary {
+    border-color: #d7e2ef;
+    color: #334155;
+  }
+
+  .crm-timeline {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .crm-timeline::before {
+    content: "";
+    position: absolute;
+    left: 25px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: linear-gradient(180deg, #dbeafe, #e2e8f0);
+  }
+
+  .crm-timeline-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .crm-timeline-meta {
+    padding-left: 4.1rem;
+    color: #475569;
+  }
+
+  .crm-timeline-date {
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.2rem;
+  }
+
+  .crm-timeline-author {
+    margin-top: 0.25rem;
+  }
+
+  .crm-timeline-dot {
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 50px;
+    height: 50px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 8px solid rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+    z-index: 1;
+  }
+
+  .crm-timeline-dot.blue { background: #dbeafe; color: #2563eb; }
+  .crm-timeline-dot.orange { background: #ffedd5; color: #ea580c; }
+  .crm-timeline-dot.green { background: #dcfce7; color: #16a34a; }
+  .crm-timeline-dot.red { background: #fee2e2; color: #dc2626; }
+  .crm-timeline-dot.violet { background: #ede9fe; color: #7c3aed; }
+  .crm-timeline-dot.gray { background: #e2e8f0; color: #475569; }
+
+  .crm-activity-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1rem 1.05rem;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  }
+
+  .crm-activity-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .crm-activity-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.35rem;
+  }
+
+  .crm-activity-copy {
+    color: #475569;
+    margin-bottom: 0.75rem;
+  }
+
+  .crm-activity-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    color: #64748b;
+    font-size: 0.92rem;
+  }
+
+  .crm-chart {
+    display: flex;
+    align-items: end;
+    gap: 1rem;
+    height: 210px;
+    padding-top: 0.5rem;
+  }
+
+  .crm-chart-bar {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    gap: 0.55rem;
+    text-align: center;
+  }
+
+  .crm-chart-column {
+    width: 100%;
+    border-radius: 18px 18px 8px 8px;
+    background: linear-gradient(180deg, #60a5fa, #2563eb);
+    box-shadow: 0 16px 24px rgba(37, 99, 235, 0.18);
+    transition: transform 0.2s ease;
+  }
+
+  .crm-chart-bar:hover .crm-chart-column {
+    transform: translateY(-4px);
+  }
+
+  .crm-chart-count {
+    font-weight: 800;
+    color: #1e40af;
+  }
+
+  .crm-chart-label {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .crm-filter-shell {
+    padding: 0.95rem 1rem 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff, #f8fafc);
+    margin-bottom: 1rem;
+  }
+
+  .crm-filter-shell .mb-3 {
+    margin-bottom: 1rem !important;
+  }
+
+  .crm-filter-shell .form-label {
+    font-size: 0.84rem;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .crm-filter-shell .form-control,
+  .crm-filter-shell .form-select {
+    border-radius: 12px;
+    min-height: 44px;
+    border-color: #dbe4ef;
+  }
+
+  .crm-calendar {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .crm-calendar-header,
+  .crm-calendar-grid,
+  .crm-calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .crm-calendar-header span {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .crm-calendar-day {
+    min-height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.15rem;
+    color: #1e293b;
+    background: #fff;
+    border: 1px solid #edf2f7;
+    font-weight: 600;
+  }
+
+  .crm-calendar-day.muted {
+    color: #cbd5e1;
+    background: #f8fafc;
+  }
+
+  .crm-calendar-day.today {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+    box-shadow: 0 12px 22px rgba(37, 99, 235, 0.28);
+  }
+
+  .crm-calendar-day.upcoming .crm-calendar-count,
+  .crm-calendar-day.completed .crm-calendar-count,
+  .crm-calendar-day.missed .crm-calendar-count {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    display: block;
+  }
+
+  .crm-calendar-day.upcoming .crm-calendar-count { background: #2563eb; }
+  .crm-calendar-day.completed .crm-calendar-count { background: #16a34a; }
+  .crm-calendar-day.missed .crm-calendar-count { background: #dc2626; }
+  .crm-calendar-day.today .crm-calendar-count { background: rgba(255, 255, 255, 0.88); }
+
+  .crm-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+  }
+
+  .crm-empty i {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 0.8rem;
+    color: #94a3b8;
+  }
+
+  .crm-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .crm-toolbar .btn {
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .crm-action-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .crm-action-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #334155;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  @media (max-width: 1199px) {
+    .crm-hero-body {
+      padding: 1.25rem;
+    }
+
+    .crm-meta-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 991px) {
+    .crm-actions {
+      justify-content: flex-start;
+    }
+
+    .crm-timeline-row {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      padding-left: 4rem;
+    }
+
+    .crm-timeline::before {
+      left: 24px;
+    }
+
+    .crm-timeline-meta {
+      padding-left: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .crm-title h1 {
+      font-size: 2rem;
+    }
+
+    .crm-kv-row {
+      grid-template-columns: 1fr;
+      gap: 0.2rem;
+    }
+
+    .crm-tabs {
+      padding: 0 1rem;
+      overflow-x: auto;
+    }
+
+    .crm-tabs .nav {
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; margin-top: 70px;"></div>
+<div id="crmLeadDetailContent" data-refresh-url="{% url 'crm_lead_view' pk=lead.pk %}?fragment=detail">
+  {% include "crm/lead/partials/detail_content.html" %}
+</div>
+{% include "components/modals/modal.html" with modal_id="leadEditModal" form_id="leadEditForm" title="Edit Lead" fields=lead_modal_fields %}
+{% include "components/modals/modal.html" with modal_id="inquiryModal" form_id="inquiryForm" title="Add Inquiry" fields=inquiry_modal_fields %}
+{% include "components/modals/modal.html" with modal_id="followupModal" form_id="followupForm" title="Schedule Followup" fields=followup_modal_fields %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  function splitDateTimeValue(value) {
+    const normalized = String(value || '').trim();
+    if (!normalized) {
+      return { datePart: '', timePart: '' };
+    }
+    if (normalized.includes('T')) {
+      const parts = normalized.split('T', 2);
+      return { datePart: parts[0] || '', timePart: (parts[1] || '').slice(0, 8) };
+    }
+    if (normalized.includes(' ')) {
+      const parts = normalized.split(' ', 2);
+      return { datePart: parts[0] || '', timePart: (parts[1] || '').slice(0, 8) };
+    }
+    return { datePart: normalized, timePart: '' };
+  }
+
+  function setCalendarFieldValue($form, name, value) {
+    const wrapper = $form.find(`[data-calendar-field="true"][data-field-name="${name}"]`).get(0);
+    if (!wrapper) {
+      return false;
+    }
+
+    const parts = splitDateTimeValue(value);
+    const adInput = wrapper.querySelector('input[data-ad-input="true"]');
+    const adDateInput = wrapper.querySelector('input[data-ad-date-input="true"]');
+    const adTimeInput = wrapper.querySelector('input[data-ad-time-input="true"]');
+    const bsCombinedInput = wrapper.querySelector('input[data-bs-combined-input="true"]');
+
+    if (adInput) {
+      adInput.value = value || '';
+    }
+    if (adDateInput) {
+      adDateInput.value = parts.datePart;
+    }
+    if (adTimeInput) {
+      adTimeInput.value = parts.timePart;
+    }
+    if (bsCombinedInput) {
+      bsCombinedInput.value = '';
+    }
+
+    if (window.syncCalendarFieldValues) {
+      window.syncCalendarFieldValues(wrapper, 'ad');
+    }
+    if (window.initializeCalendarSwitchFields) {
+      window.initializeCalendarSwitchFields($form);
+    }
+    return true;
+  }
+
+  function fillSimpleForm($form, data) {
+    Object.entries(data || {}).forEach(function(entry) {
+      const name = entry[0];
+      const value = entry[1];
+      if (setCalendarFieldValue($form, name, value)) {
+        return;
+      }
+      const $field = $form.find(`[name="${name}"]`);
+      if (!$field.length) {
+        return;
+      }
+
+      if ($field.is(':checkbox')) {
+        $field.prop('checked', !!value);
+      } else {
+        $field.val(value == null ? '' : value).trigger('change');
+      }
+    });
+  }
+
+  function showModalById(modalId) {
+    const modalEl = document.getElementById(modalId);
+    if (!modalEl || !window.bootstrap) {
+      return;
+    }
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
+
+  function getCsrfToken() {
+    return $('input[name="csrfmiddlewaretoken"]').first().val() || '';
+  }
+
+  function activateLeadTab(tabId) {
+    if (!tabId) {
+      return;
+    }
+
+    const tabButton = document.getElementById(tabId);
+    if (!tabButton) {
+      return;
+    }
+
+    if (window.bootstrap) {
+      bootstrap.Tab.getOrCreateInstance(tabButton).show();
+    } else {
+      $(tabButton).trigger('click');
+    }
+  }
+
+  function refreshLeadDetailContent(activeTabId) {
+    const $container = $('#crmLeadDetailContent');
+    const refreshUrl = $container.data('refresh-url');
+    if (!refreshUrl) {
+      return $.Deferred().resolve().promise();
+    }
+
+    return $.get(refreshUrl).done(function(responseHtml) {
+      $container.html(responseHtml);
+      if (window.feather) {
+        feather.replace();
+      }
+      syncLeadNameDefaults();
+      activateLeadTab(activeTabId);
+    });
+  }
+
+  const leadPageAdapter = {
+    ajax: {
+      reload: function() {
+        const activeTabId = $('#leadTabs .nav-link.active').attr('id') || 'overview-tab';
+        return refreshLeadDetailContent(activeTabId);
+      }
+    }
+  };
+
+  function setLeadEditDefaults() {
+    $('#leadEditForm').find('[name="id"]').val('{{ lead.pk }}');
+  }
+
+  function setInquiryCreateDefaults() {
+    const $form = $('#inquiryForm');
+    $form.find('[name="id"]').val('');
+    $form.find('[name="date"]').val(currentDateTimeLocal());
+    $form.closest('.modal').find('.modal-title').text('Add Inquiry');
+  }
+
+  function setFollowupCreateDefaults() {
+    const $form = $('#followupForm');
+    $form.find('[name="id"]').val('');
+    $form.find('[name="followup_date"]').val(currentDateTimeLocal());
+    $form.find('[name="is_completed"]').prop('checked', false);
+    $form.closest('.modal').find('.modal-title').text('Schedule Followup');
+    $.get('{% url "crm_lead_modal_detail" pk=lead.pk %}').done(function(response) {
+      if (response && response.data) {
+        $form.find('[name="next_followup_date"]').val(response.data.next_followup || '');
+      }
+    });
+  }
+
+  function currentDateTimeLocal() {
+    const now = new Date();
+    const pad = function(value) {
+      return String(value).padStart(2, '0');
+    };
+
+    return [
+      now.getFullYear(),
+      pad(now.getMonth() + 1),
+      pad(now.getDate())
+    ].join('-') + 'T' + [
+      pad(now.getHours()),
+      pad(now.getMinutes()),
+      pad(now.getSeconds())
+    ].join(':');
+  }
+
+  function syncLeadNameDefaults() {
+    const leadName = ($('#crmLeadDetailContent h1').first().text() || '').trim();
+    $('#inquiryForm').find('[name="lead_name"]').val(leadName);
+    $('#followupForm').find('[name="lead_name"]').val(leadName);
+  }
+
+  function initLeadModals() {
+    initCrudModal({
+      modalId: 'leadEditModal',
+      formId: 'leadEditForm',
+      table: leadPageAdapter,
+      createUrl: '{% url "crm_lead_modal_update" pk=lead.pk %}',
+      updateUrlTemplate: '{% url "crm_lead_modal_update" pk=lead.pk %}',
+      detailUrlTemplate: '{% url "crm_lead_modal_detail" pk=lead.pk %}',
+      entityName: 'Lead',
+      clearSearchOnCreate: false,
+      afterReset: setLeadEditDefaults
+    });
+
+    initCrudModal({
+      modalId: 'inquiryModal',
+      formId: 'inquiryForm',
+      table: leadPageAdapter,
+      createUrl: '{% url "crm_lead_inquiry_create" pk=lead.pk %}',
+      detailUrlTemplate: '/core/crm/leads/{{ lead.pk }}/inquiries/{id}/detail/',
+      updateUrlTemplate: '/core/crm/leads/{{ lead.pk }}/inquiries/{id}/update/',
+      entityName: 'Inquiry',
+      clearSearchOnCreate: false,
+      afterReset: setInquiryCreateDefaults
+    });
+
+    initCrudModal({
+      modalId: 'followupModal',
+      formId: 'followupForm',
+      table: leadPageAdapter,
+      createUrl: '{% url "crm_lead_followup_create" pk=lead.pk %}',
+      detailUrlTemplate: '/core/crm/leads/{{ lead.pk }}/followups/{id}/detail/',
+      updateUrlTemplate: '/core/crm/leads/{{ lead.pk }}/followups/{id}/update/',
+      entityName: 'Followup',
+      clearSearchOnCreate: false,
+      afterReset: setFollowupCreateDefaults
+    });
+
+    setLeadEditDefaults();
+    setInquiryCreateDefaults();
+    setFollowupCreateDefaults();
+    syncLeadNameDefaults();
+    $(document).on('show.bs.modal', '#leadEditModal', setLeadEditDefaults);
+    $(document).on('show.bs.modal', '#leadEditModal', function() {
+      $.get('{% url "crm_lead_modal_detail" pk=lead.pk %}').done(function(response) {
+        if (response && response.data) {
+          fillSimpleForm($('#leadEditForm'), response.data);
+          setLeadEditDefaults();
+        }
+      });
+    });
+    $(document).on('show.bs.modal', '#inquiryModal', function() {
+      syncLeadNameDefaults();
+      if (!$('#inquiryForm').find('[name="id"]').val()) {
+        setInquiryCreateDefaults();
+      }
+    });
+    $(document).on('show.bs.modal', '#followupModal', function() {
+      syncLeadNameDefaults();
+      if (!$('#followupForm').find('[name="id"]').val()) {
+        setFollowupCreateDefaults();
+      }
+    });
+    $(document).on('click', '.inquiry-edit-btn', function() {
+      const $button = $(this);
+      const inquiryId = $button.data('id');
+      const detailUrl = $button.data('detail-url');
+      if (!inquiryId || !detailUrl) {
+        return;
+      }
+
+      const $form = $('#inquiryForm');
+      $form[0].reset();
+      $form.find('[name="id"]').val(inquiryId);
+      syncLeadNameDefaults();
+      $('#inquiryModal').find('.modal-title').text('Edit Inquiry');
+
+      $.get(detailUrl).done(function(response) {
+        if (response && response.data) {
+          fillSimpleForm($form, response.data);
+          $form.find('[name="id"]').val(inquiryId);
+          showModalById('inquiryModal');
+        }
+      });
+    });
+    $(document).on('click', '.followup-edit-btn', function() {
+      const $button = $(this);
+      const followupId = $button.data('id');
+      const detailUrl = $button.data('detail-url');
+      if (!followupId || !detailUrl) {
+        return;
+      }
+
+      const $form = $('#followupForm');
+      $form[0].reset();
+      $form.find('[name="id"]').val(followupId);
+      syncLeadNameDefaults();
+      $('#followupModal').find('.modal-title').text('Edit Followup');
+
+      $.get(detailUrl).done(function(response) {
+        if (response && response.data) {
+          fillSimpleForm($form, response.data);
+          $form.find('[name="id"]').val(followupId);
+          showModalById('followupModal');
+        }
+      });
+    });
+    $(document).on('click', '.followup-delete-btn', function() {
+      const deleteUrl = $(this).data('delete-url');
+      if (!deleteUrl) {
+        return;
+      }
+
+      const runDelete = function() {
+        $.ajax({
+          url: deleteUrl,
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCsrfToken() }
+        }).done(function(response) {
+          leadPageAdapter.ajax.reload();
+          const message = (response && response.message) || 'Followup deleted successfully.';
+          if (window.Swal) {
+            Swal.fire('Deleted', message, 'success');
+          } else {
+            alert(message);
+          }
+        }).fail(function() {
+          if (window.Swal) {
+            Swal.fire('Failed', 'Unable to delete followup.', 'error');
+          } else {
+            alert('Unable to delete followup.');
+          }
+        });
+      };
+
+      if (window.Swal) {
+        Swal.fire({
+          title: 'Delete Followup?',
+          text: 'This followup will be removed.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete',
+          cancelButtonText: 'Cancel'
+        }).then(function(result) {
+          if (result.isConfirmed) {
+            runDelete();
+          }
+        });
+      } else if (confirm('Delete this followup?')) {
+        runDelete();
+      }
+    });
+  }
+
+  initLeadModals();
+});
+</script>
+{% endblock %}
