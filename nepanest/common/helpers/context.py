@@ -1,3 +1,5 @@
+from django.urls import NoReverseMatch, reverse
+
 from nepanest.foundation.fiscal import FiscalYear
 from nepanest.foundation.organization import Branch
 from nepanest.common.helpers.helper import get_calendar_type, get_organization_settings
@@ -61,3 +63,32 @@ def organization_context(request):
         "is_bs_calendar": calendar_type == "BS",
         "is_ad_calendar": calendar_type == "AD",
     }
+
+
+def logout_url(request):
+    path = getattr(request, "path_info", "") or getattr(request, "path", "") or ""
+    if path.startswith("/platform/app-registry/"):
+        try:
+            return {"logout_url": reverse("app_registry:logout")}
+        except NoReverseMatch:
+            pass
+
+    if path.startswith("/registry/"):
+        try:
+            return {"logout_url": reverse("registry:logout")}
+        except NoReverseMatch:
+            pass
+
+    if path.startswith("/register/"):
+        try:
+            return {"logout_url": reverse("register:logout")}
+        except NoReverseMatch:
+            pass
+
+    try:
+        return {"logout_url": reverse("accounts:logout")}
+    except NoReverseMatch:
+        try:
+            return {"logout_url": reverse("logout")}
+        except NoReverseMatch:
+            return {"logout_url": "/accounts/logout/"}

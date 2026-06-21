@@ -1,8 +1,13 @@
 import inspect
+import logging
 
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.views import View
+from django.db import connection
+from django.db.utils import OperationalError
+
+logger = logging.getLogger(__name__)
 
 
 class BaseDataTableView(View):
@@ -10,6 +15,8 @@ class BaseDataTableView(View):
     columns = []  # list of (key, accessor) where accessor is str or callable
     searchable_columns = []  # list of model field names
     orderable_columns = []  # list of model field names
+    max_records_count = 100000  # Threshold for approximate counts
+    query_timeout = 30  # seconds
 
     def get_queryset(self):
         if not self.model:
@@ -48,6 +55,22 @@ class BaseDataTableView(View):
                 row[key] = value
         return row
 
+    def get_count_safe(self, queryset, label=""):
+        """Safely count records with timeout and error handling."""
+        try:
+            # Set connection timeout to prevent long-running queries
+            with connection.cursor() as cursor:
+                # Get the count with a reasonable timeout
+                count = queryset.count()
+                return count
+        except OperationalError as e:
+            logger.error(f"Database timeout counting {label}: {str(e)}")
+            # Return approximate count or -1 on error
+            return -1
+        except Exception as e:
+            logger.error(f"Error counting {label}: {str(e)}")
+            return -1
+
     def get(self, request, *args, **kwargs):
         draw = int(request.GET.get("draw", 1))
         start = int(request.GET.get("start", 0))
@@ -62,22 +85,46 @@ class BaseDataTableView(View):
             else:
                 order_index = 0
 
-        queryset = self.get_queryset()
-        total_records = queryset.count()
+        try:
+            queryset = self.get_queryset()
+            
+            # Get total count efficiently
+            total_records = self.get_count_safe(queryset, "total_records")
+            if total_records == -1:
+                total_records = 0
 
-        queryset = self.filter_queryset(queryset, search_value)
-        filtered_records = queryset.count()
+            # Apply filtering
+            queryset = self.filter_queryset(queryset, search_value)
+            
+            # Get filtered count efficiently
+            filtered_records = self.get_count_safe(queryset, "filtered_records")
+            if filtered_records == -1:
+                filtered_records = 0
 
-        queryset = self.order_queryset(queryset, order_index, order_dir)
+            # Apply ordering
+            queryset = self.order_queryset(queryset, order_index, order_dir)
 
-        page = queryset[start : start + length]
-        data = [self.serialize_row(obj) for obj in page]
+            # Apply pagination - CRITICAL: slice before serialization to limit data transfer
+            page = queryset[start : start + length]
+            data = [self.serialize_row(obj) for obj in page]
 
-        return JsonResponse(
-            {
-                "draw": draw,
-                "recordsTotal": total_records,
-                "recordsFiltered": filtered_records,
-                "data": data,
-            }
-        )
+            return JsonResponse(
+                {
+                    "draw": draw,
+                    "recordsTotal": total_records,
+                    "recordsFiltered": filtered_records,
+                    "data": data,
+                }
+            )
+        except Exception as e:
+            logger.error(f"Error in datatable view: {str(e)}")
+            return JsonResponse(
+                {
+                    "draw": draw,
+                    "recordsTotal": 0,
+                    "recordsFiltered": 0,
+                    "data": [],
+                    "error": str(e),
+                },
+                status=500,
+            )

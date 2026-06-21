@@ -72,6 +72,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "nepanest.platform.tenancy.apps.TenancyConfig",
+    "nepanest.platform.app_registry.apps.AppRegistryConfig",
     "nepanest.products.hamrogym.apps.HamroGymConfig",
     "nepanest.products.nepanest.apps.NepanestProductConfig",
     "nepanest.modules.crm.apps.CRMModuleConfig",
@@ -92,13 +94,15 @@ MIDDLEWARE = [
     "nepanest.common.middlewares.dump_and_die.DumpAndDieMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "nepanest.platform.tenancy.middleware.TenantResolutionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "nepanest.common.middlewares.host_routing.HostURLConfMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",   # ← auth loads here
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "nepanest.common.middlewares.bs_date_converter.BSDateConverterMiddleware",
+    "nepanest.common.middlewares.tenant_middleware.TenantDatabaseMiddleware",  # ← DB after auth ✅
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -114,6 +118,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "nepanest.common.helpers.context.organization_context",
+                "nepanest.common.helpers.context.logout_url",
                 "nepanest.products.hamrogym.context_processors.base_layout_template",
             ],
         },
@@ -127,13 +132,25 @@ ASGI_APPLICATION = "config.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.mysql"),
-        "NAME": os.environ.get("DB_NAME", "db_erp_hamrogym"),
+        "NAME": os.environ.get("DB_NAME", "db_erp_registry"),
         "USER": os.environ.get("DB_USER", "root"),
         "PASSWORD": os.environ.get("DB_PASSWORD", "M@ngal12"),
         "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
         "PORT": os.environ.get("DB_PORT", "3306"),
+        "ATOMIC_REQUESTS": os.environ.get("DB_ATOMIC_REQUESTS", "false").lower() == "true",
     }
 }
+
+TENANT_DEFAULT_DATABASE_ALIAS = os.environ.get("TENANT_DEFAULT_DATABASE_ALIAS", "default")
+
+DATABASE_ROUTERS = [
+    "nepanest.platform.tenancy.router.TenantDatabaseRouter",
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    "nepanest.platform.tenancy.backends.TenantModelBackend",
+]
 
 MIGRATION_MODULES = {
     "account": "nepanest.modules.accounting.migrations",
@@ -182,8 +199,8 @@ if project_static_dir.exists():
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-LOGIN_REDIRECT_URL = "/"
+LOGIN_URL           = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

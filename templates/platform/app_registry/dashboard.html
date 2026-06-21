@@ -1,0 +1,389 @@
+{% extends "platform/layouts/app.html" %}
+
+{% block title %}Registry | Admin Panel{% endblock %}
+{% block page_title %}Registry dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .registry-dashboard {
+    display: grid;
+    gap: 1.35rem;
+  }
+
+  .hero-panel {
+    border: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    color: #fff;
+    background:
+      radial-gradient(circle at top right, rgba(56, 189, 248, 0.22), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.18), transparent 24%),
+      linear-gradient(135deg, #0f172a 0%, #132238 50%, #1d3a57 100%);
+    box-shadow: 0 24px 62px rgba(15, 23, 42, 0.18);
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .hero-copy {
+    max-width: 42rem;
+  }
+
+  .hero-copy h2 {
+    margin: 0.9rem 0 0.7rem;
+    font-size: clamp(2rem, 3vw, 3.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+
+  .hero-copy p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.75;
+  }
+
+  .hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 0.82rem;
+  }
+
+  .registry-stat {
+    border-radius: 20px;
+    padding: 1rem 1.1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    height: 100%;
+  }
+
+  .registry-stat-label {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .registry-stat-value {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .registry-stat-note {
+    display: block;
+    margin-top: 0.35rem;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.86rem;
+  }
+
+  .surface-card {
+    border: 0;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .surface-card-body {
+    padding: 1.2rem;
+  }
+
+  .insight-card {
+    border: 1px solid #e3e8f1;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff 0%, #fcfdff 100%);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+    height: 100%;
+    padding: 1rem;
+  }
+
+  .insight-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.85rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .link-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+
+  .quick-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    border-radius: 18px;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+  }
+
+  .quick-link:hover {
+    transform: translateY(-2px);
+    border-color: #f59e0b;
+    box-shadow: 0 16px 30px rgba(245, 158, 11, 0.12);
+  }
+
+  .quick-link-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff7ed;
+    color: #c2410c;
+    flex-shrink: 0;
+  }
+
+  .nav-tabs.registry-tabs {
+    border-bottom-color: #d7deea;
+    padding: 0 1rem;
+    gap: 0.5rem;
+  }
+
+  .nav-tabs.registry-tabs .nav-link {
+    border-radius: 999px;
+    border: 1px solid transparent;
+    color: #334155;
+    font-weight: 600;
+    padding: 0.7rem 1rem;
+    margin: 0;
+  }
+
+  .nav-tabs.registry-tabs .nav-link:hover {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: transparent;
+  }
+
+  .nav-tabs.registry-tabs .nav-link.active {
+    color: #0f172a;
+    background: #fff;
+    border-color: #e2e8f0 #e2e8f0 #fff;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  }
+
+  .datatable-pane {
+    padding: 1rem 1rem 1.2rem;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-head h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .section-head p {
+    margin: 0;
+    color: #64748b;
+    max-width: 54rem;
+  }
+
+  .section-head .btn {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1200px) {
+    .link-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .surface-card-body {
+      padding: 1rem;
+    }
+
+    .link-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .section-head {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="registry-dashboard">
+  <div class="hero-panel p-4 p-lg-5">
+    <div class="row g-4 align-items-end">
+      <div class="col-lg-7">
+        <span class="hero-tag">
+          <i data-feather="shield"></i>
+          Registry control center
+        </span>
+        <div class="hero-copy">
+          <h2>{{ dashboard_intro.title }}</h2>
+          <p>{{ dashboard_intro.subtitle }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <a class="btn btn-light fw-semibold" href="{% url 'client_list' %}">
+            <i data-feather="users"></i>
+            Open clients
+          </a>
+          <a class="btn btn-outline-light fw-semibold" href="{% url 'license_list' %}">
+            <i data-feather="shield"></i>
+            Review licenses
+          </a>
+          <span class="hero-chip">
+            <i data-feather="clock"></i>
+            Updated {{ reference_counts.updated_at|date:"M d, Y H:i" }}
+          </span>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="row g-3">
+          {% for metric in metrics %}
+            <div class="col-sm-6">
+              <div class="registry-stat">
+                <span class="registry-stat-label">
+                  <i data-feather="{{ metric.icon }}" class="me-1"></i>
+                  {{ metric.label }}
+                </span>
+                <span class="registry-stat-value">{{ metric.value }}</span>
+                <span class="registry-stat-note">{{ metric.note }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6 col-xl-3">
+      <div class="insight-card">
+        <div class="insight-icon"><i data-feather="database"></i></div>
+        <h5 class="mb-2">Tenant databases</h5>
+        <p class="text-muted mb-0">Monitor database registrations and health before tenants hit an issue.</p>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="insight-card">
+        <div class="insight-icon"><i data-feather="credit-card"></i></div>
+        <h5 class="mb-2">Subscription cadence</h5>
+        <p class="text-muted mb-0">Keep billing intervals and subscription status aligned with client growth.</p>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="insight-card">
+        <div class="insight-icon"><i data-feather="activity"></i></div>
+        <h5 class="mb-2">Login audit</h5>
+        <p class="text-muted mb-0">Scan recent successes and failures in the registry access trail.</p>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="insight-card">
+        <div class="insight-icon"><i data-feather="layout"></i></div>
+        <h5 class="mb-2">Component driven</h5>
+        <p class="text-muted mb-0">The dashboard reuses the same datatable component everywhere.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="surface-card">
+    <div class="surface-card-body pb-2">
+      <div class="section-head">
+        <div>
+          <h3>Quick access</h3>
+          <p>Jump to the main registry resources or open the full entity screens when you need to edit records.</p>
+        </div>
+      </div>
+      <div class="link-grid">
+        {% for link in quick_links %}
+          <a class="quick-link" href="{{ link.url }}">
+            <span class="quick-link-icon"><i data-feather="{{ link.icon }}"></i></span>
+            <span>
+              <strong class="d-block">{{ link.label }}</strong>
+              <small class="text-muted">Open the full management screen</small>
+            </span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% comment %} <div class="surface-card">
+    <ul class="nav nav-tabs registry-tabs pt-3" id="registryTabs" role="tablist">
+      {% for table in datatables %}
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link {% if forloop.first %}active{% endif %}"
+            id="{{ table.key }}-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#{{ table.key }}"
+            type="button"
+            role="tab"
+            aria-controls="{{ table.key }}"
+            aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+            {{ table.title }}
+          </button>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="tab-content">
+      {% for table in datatables %}
+        <div
+          class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+          id="{{ table.key }}"
+          role="tabpanel"
+          aria-labelledby="{{ table.key }}-tab">
+          <div class="datatable-pane">
+            <div class="section-head">
+              <div>
+                <h3>{{ table.title }}</h3>
+                <p>{{ table.description }}</p>
+              </div>
+              <a class="btn btn-outline-secondary" href="{{ table.cta_url }}">
+                Open full page
+              </a>
+            </div>
+            {% include "components/tables/datatable.html" with table_id=table.table_id ajax_url=table.ajax_url columns=table.columns table_var=table.table_id datatable_options=table.datatable_options show_sno=True %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div> {% endcomment %}
+</div>
+{% endblock %}

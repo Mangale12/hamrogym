@@ -9,8 +9,9 @@ from django.views.generic import RedirectView
 def build_product_urlpatterns(product_urls_module):
     urlpatterns = [
         path("admin/", admin.site.urls),
-        path("accounts/", include("config.auth_urls")),
+        path("accounts/", include("nepanest.products.hamrogym.accounts.urls", namespace="accounts")),
         path("platform/", include("nepanest.products.nepanest.urls")),
+        path("platform/app-registry/", include("nepanest.platform.app_registry.urls")),
         path("", include(product_urls_module)),
         path("product/crm/dashboard/", RedirectView.as_view(pattern_name="crm_dashboard", permanent=False)),
         path("crm/", include("nepanest.modules.crm.urls")),
@@ -20,6 +21,8 @@ def build_product_urlpatterns(product_urls_module):
         path("core/", include("nepanest.modules.accounting.urls")),
         path("core/", include("nepanest.modules.finance.urls")),
         path("core/", include("core.urls")),
+        path("registry/", include(("nepanest.platform.app_registry.urls", "app_registry"), namespace="registry")),
+        path("register/", include(("nepanest.platform.app_registry.urls", "app_registry"), namespace="register")),
     ]
 
     if "debug_toolbar" in settings.INSTALLED_APPS:

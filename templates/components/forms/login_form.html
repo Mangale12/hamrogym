@@ -1,0 +1,37 @@
+{% if not no_wrapper %}
+<section class="login-form-shell {{ wrapper_class|default:'' }}">
+{% endif %}
+  <form method="post" action="{{ action|default:'' }}" class="{{ form_class|default:'' }}" novalidate>
+    {% csrf_token %}
+    {% if next_url %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+    {% endif %}
+
+    {% if form and form.non_field_errors %}
+      <div class="alert alert-danger border-0 shadow-sm mb-4" role="alert">
+        {{ form.non_field_errors|join:" " }}
+      </div>
+    {% endif %}
+
+    {% if intro %}
+      <div class="mb-4">
+        <p class="text-uppercase text-muted small fw-bold mb-2">{{ intro.kicker|default:"Registry Access" }}</p>
+        <h1 class="h3 mb-2">{{ intro.title|default:"Sign in" }}</h1>
+        <p class="text-muted mb-0">{{ intro.subtitle|default:"Use your registry credentials to continue." }}</p>
+      </div>
+    {% endif %}
+
+    {% include "components/forms/fields_grid.html" with fields=fields modal_id=modal_id %}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4">
+      {% if helper_text %}
+        <div class="text-muted small">{{ helper_text }}</div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary px-4 py-2 {{ submit_class|default:'' }}">
+        {{ submit_label|default:"Sign in" }}
+      </button>
+    </div>
+  </form>
+{% if not no_wrapper %}
+</section>
+{% endif %}

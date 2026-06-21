@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
+from core.utils.urls import reverse_with_request
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
@@ -232,7 +233,7 @@ class JournalLedgerAccountSelectView(LoginRequiredMixin, View):
         )
 
 
-def _build_account_tree(queryset, *, entity_name):
+def _build_account_tree(queryset, *, entity_name, request=None):
     children_map = defaultdict(list)
     root_nodes = []
 
@@ -248,8 +249,8 @@ def _build_account_tree(queryset, *, entity_name):
             account.ledger_info = account.ledger_profile
         except Exception:
             account.ledger_info = None
-        account.detail_url = reverse(f"{entity_name}_detail", args=[account.pk])
-        account.delete_url = reverse(f"{entity_name}_delete", args=[account.pk])
+        account.detail_url = reverse_with_request(f"{entity_name}_detail", request=request, args=[account.pk])
+        account.delete_url = reverse_with_request(f"{entity_name}_delete", request=request, args=[account.pk])
         if account.parent_id is None:
             root_nodes.append(account)
 
@@ -272,7 +273,7 @@ class ChartOfAccountTreeView(LoginRequiredMixin, TemplateView):
             "fiscal_year",
         ).order_by("code", "sort_order", "id")
 
-        root_nodes = _build_account_tree(queryset, entity_name=entity.name)
+        root_nodes = _build_account_tree(queryset, entity_name=entity.name, request=self.request)
 
         context.update(
             {
@@ -282,10 +283,10 @@ class ChartOfAccountTreeView(LoginRequiredMixin, TemplateView):
                 "form_id": f"{entity.name}Form",
                 "fields": fields,
                 "tree_roots": root_nodes,
-                "create_url": reverse(f"{entity.name}_create"),
-                "update_url_template": reverse(f"{entity.name}_update", args=[0]).replace("/0/", "/{id}/"),
-                "detail_url_template": reverse(f"{entity.name}_detail", args=[0]).replace("/0/", "/{id}/"),
-                "delete_url_template": reverse(f"{entity.name}_delete", args=[0]).replace("/0/", "/{id}/"),
+                "create_url": reverse_with_request(f"{entity.name}_create", request=self.request),
+                "update_url_template": reverse_with_request(f"{entity.name}_update", request=self.request, args=[0]).replace("/0/", "/{id}/"),
+                "detail_url_template": reverse_with_request(f"{entity.name}_detail", request=self.request, args=[0]).replace("/0/", "/{id}/"),
+                "delete_url_template": reverse_with_request(f"{entity.name}_delete", request=self.request, args=[0]).replace("/0/", "/{id}/"),
                 "modal_title_add": f"Add {entity.verbose_name}",
                 "modal_title_edit": f"Edit {entity.verbose_name}",
                 "reset_defaults": {**form_defaults, **(entity.reset_defaults or {})},

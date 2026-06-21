@@ -112,4 +112,4 @@ class LayoutResolverTests(SimpleTestCase):
 
         context = base_layout_template(request)
 
-        self.assertEqual(context["base_layout_template"], "hamrogym/layouts/app.html")
+        self.assertEqual(context["base_layout_template"], "layouts/shared_app.html")

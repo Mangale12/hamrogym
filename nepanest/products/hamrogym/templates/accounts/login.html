@@ -1,0 +1,679 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HamroGym Login</title>
+  <meta name="theme-color" content="#08131f">
+  <style>
+    :root {
+      --bg: #08111b;
+      --bg-2: #0e1a29;
+      --panel: rgba(12, 20, 31, 0.88);
+      --panel-strong: #111c2b;
+      --line: rgba(255, 255, 255, 0.09);
+      --text: #f5f7fb;
+      --muted: #a5b4c7;
+      --accent: #f9b234;
+      --accent-2: #ff6b4a;
+      --success: #4ade80;
+      --danger: #ff6b6b;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --ring: 0 0 0 4px rgba(249, 178, 52, 0.14);
+      --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 107, 74, 0.16), transparent 34%),
+        radial-gradient(circle at 80% 15%, rgba(249, 178, 52, 0.18), transparent 24%),
+        linear-gradient(135deg, #060b12 0%, #0a1320 52%, #121f32 100%);
+      overflow-x: hidden;
+    }
+
+    .login-shell {
+      position: relative;
+      min-height: 100vh;
+      padding: 32px;
+      display: grid;
+      place-items: center;
+    }
+
+    .login-shell::before,
+    .login-shell::after {
+      content: "";
+      position: absolute;
+      inset: auto;
+      border-radius: 999px;
+      filter: blur(30px);
+      pointer-events: none;
+      opacity: 0.75;
+    }
+
+    .login-shell::before {
+      width: 220px;
+      height: 220px;
+      top: 8%;
+      left: 7%;
+      background: rgba(249, 178, 52, 0.13);
+    }
+
+    .login-shell::after {
+      width: 280px;
+      height: 280px;
+      right: 5%;
+      bottom: 6%;
+      background: rgba(255, 107, 74, 0.14);
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, 100%);
+      min-height: 720px;
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-xl);
+      background: rgba(8, 13, 21, 0.72);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      position: relative;
+      padding: 40px;
+      background:
+        linear-gradient(180deg, rgba(7, 12, 19, 0.18), rgba(7, 12, 19, 0.72)),
+        url("{% static 'hamrogym/assets/login-hero.svg' %}") center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      isolation: isolate;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(8, 17, 27, 0.42), rgba(8, 17, 27, 0.1)),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.15), transparent 30%, transparent 75%, rgba(0, 0, 0, 0.28));
+      z-index: -1;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      width: fit-content;
+      border-radius: 999px;
+      background: rgba(8, 15, 25, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.3), transparent 34%),
+        linear-gradient(145deg, #f9b234, #ff6b4a);
+      box-shadow: 0 12px 30px rgba(255, 107, 74, 0.34);
+    }
+
+    .brand-mark svg {
+      width: 25px;
+      height: 25px;
+      fill: none;
+      stroke: #0a1018;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .brand-copy span {
+      display: block;
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .hero-copy {
+      max-width: 560px;
+      margin-top: auto;
+      padding-top: 48px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      margin-bottom: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .hero-copy h1 {
+      margin: 0 0 16px;
+      font-size: clamp(2.6rem, 4vw, 4.7rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      max-width: 12ch;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      max-width: 44ch;
+      color: rgba(242, 246, 252, 0.82);
+      font-size: 1.02rem;
+      line-height: 1.75;
+    }
+
+    .hero-metrics {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      max-width: 520px;
+    }
+
+    .metric {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(8, 15, 25, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+      color: #fff;
+    }
+
+    .metric span {
+      display: block;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .login-panel {
+      padding: 26px;
+      background:
+        linear-gradient(180deg, rgba(18, 28, 43, 0.98), rgba(12, 19, 31, 0.98));
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+    }
+
+    .panel-inner {
+      width: 100%;
+      padding: 12px;
+    }
+
+    .panel-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .panel-top .mini-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-top .mini-brand .wordmark {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-top .mini-brand .wordmark strong {
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .panel-top .mini-brand .wordmark span {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .status-chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.22);
+      color: #c9f7d7;
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    .form-card {
+      padding: 30px;
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+        var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .form-card h2 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+      letter-spacing: -0.04em;
+    }
+
+    .form-card p.subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .alert {
+      padding: 14px 16px;
+      margin: 0 0 16px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+
+    .alert-success {
+      background: rgba(74, 222, 128, 0.12);
+      border-color: rgba(74, 222, 128, 0.24);
+      color: #d3ffe1;
+    }
+
+    .alert-error {
+      background: rgba(255, 107, 107, 0.12);
+      border-color: rgba(255, 107, 107, 0.24);
+      color: #ffd7d7;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin: 0 0 8px;
+      color: #d6dfeb;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 15px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(6, 11, 18, 0.75);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      font-size: 0.98rem;
+    }
+
+    .field input::placeholder {
+      color: rgba(165, 180, 199, 0.6);
+    }
+
+    .field input:focus {
+      border-color: rgba(249, 178, 52, 0.68);
+      box-shadow: var(--ring);
+      transform: translateY(-1px);
+    }
+
+    .field-hint {
+      margin-top: 7px;
+      color: rgba(165, 180, 199, 0.75);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 16px;
+      margin-bottom: 20px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .remember {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .remember input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .link {
+      color: #f7c76e;
+      text-decoration: none;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .submit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f9b234, #ff6b4a);
+      color: #111722;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+      box-shadow: 0 18px 40px rgba(255, 107, 74, 0.24);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.02);
+      box-shadow: 0 22px 50px rgba(255, 107, 74, 0.3);
+    }
+
+    .submit-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(255, 107, 74, 0.22), 0 18px 40px rgba(255, 107, 74, 0.24);
+    }
+
+    .panel-footer {
+      margin-top: 18px;
+      padding: 0 4px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
+    .panel-footer strong {
+      color: #fff;
+    }
+
+    .footnote {
+      margin-top: 18px;
+      color: rgba(165, 180, 199, 0.72);
+      font-size: 0.82rem;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    @media (max-width: 1080px) {
+      .login-card {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .hero {
+        min-height: 460px;
+      }
+
+      .login-panel {
+        border-left: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .login-shell {
+        padding: 14px;
+      }
+
+      .hero {
+        padding: 24px;
+      }
+
+      .hero-copy h1 {
+        font-size: clamp(2.2rem, 11vw, 3.4rem);
+      }
+
+      .hero-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .form-card {
+        padding: 22px;
+      }
+
+      .panel-top {
+        align-items: flex-start;
+      }
+
+      .status-chip {
+        white-space: normal;
+        text-align: right;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-shell">
+    <section class="login-card" aria-label="HamroGym sign in">
+      <div class="hero">
+        <div class="brand" aria-label="HamroGym">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false" aria-hidden="true">
+              <path d="M6 8v8" />
+              <path d="M4 10v4" />
+              <path d="M18 8v8" />
+              <path d="M20 10v4" />
+              <path d="M8 12h8" />
+              <path d="M9 9.5v5" />
+              <path d="M15 9.5v5" />
+            </svg>
+          </div>
+          <div class="brand-copy">
+            <strong>HamroGym</strong>
+            <span>Strength for modern gyms</span>
+          </div>
+        </div>
+
+        <div class="hero-copy">
+          <div class="eyebrow">Performance-grade gym platform</div>
+          <h1>Train better. Manage smarter.</h1>
+          <p>
+            A premium login experience for gym owners, trainers, and staff.
+            Track memberships, class flow, workouts, and member journeys from one polished workspace.
+          </p>
+
+          <div class="hero-metrics" aria-label="Platform highlights">
+            <div class="metric">
+              <strong>24/7</strong>
+              <span>Access for staff and managers across branches.</span>
+            </div>
+            <div class="metric">
+              <strong>All-in-one</strong>
+              <span>Members, classes, workouts, billing, and check-ins.</span>
+            </div>
+            <div class="metric">
+              <strong>Fast</strong>
+              <span>Clean workflows designed for daily front-desk use.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-panel">
+        <div class="panel-inner">
+          <div class="panel-top">
+            <div class="mini-brand">
+              <div class="brand-mark" aria-hidden="true" style="width:40px;height:40px;border-radius:13px;">
+                <svg viewBox="0 0 24 24" role="img" focusable="false" aria-hidden="true">
+                  <path d="M6 8v8" />
+                  <path d="M4 10v4" />
+                  <path d="M18 8v8" />
+                  <path d="M20 10v4" />
+                  <path d="M8 12h8" />
+                  <path d="M9 9.5v5" />
+                  <path d="M15 9.5v5" />
+                </svg>
+              </div>
+              <div class="wordmark">
+                <strong>Welcome back</strong>
+                <span>Sign in to your gym workspace</span>
+              </div>
+            </div>
+            <div class="status-chip">Secure tenant login</div>
+          </div>
+
+          <div class="form-card">
+            <h2>Login to HamroGym</h2>
+            <p class="subtitle">Enter your gym code and credentials to continue.</p>
+
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+
+            {% if error %}
+              <div class="alert alert-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="post" action="{% url 'accounts:login' %}" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="id_gym_code">Gym Code</label>
+                  <input
+                    id="id_gym_code"
+                    type="text"
+                    name="gym_code"
+                    value="{{ gym_code|default:'' }}"
+                    placeholder="e.g. hamro_gym"
+                    autocomplete="organization"
+                    autocapitalize="none"
+                    spellcheck="false"
+                    required
+                    autofocus
+                  >
+                  <div class="field-hint">Use the tenant code assigned to your gym branch.</div>
+                </div>
+
+                <div class="field">
+                  <label for="id_username">Username</label>
+                  <input
+                    id="id_username"
+                    type="text"
+                    name="username"
+                    value="{{ username|default:'' }}"
+                    placeholder="Your username"
+                    autocomplete="username"
+                    required
+                  >
+                </div>
+
+                <div class="field">
+                  <label for="id_password">Password</label>
+                  <input
+                    id="id_password"
+                    type="password"
+                    name="password"
+                    placeholder="Your password"
+                    autocomplete="current-password"
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="remember">
+                  <input type="checkbox" name="remember_me" value="1">
+                  <span>Keep me signed in</span>
+                </label>
+                {% comment %} <a class="link" href="{% url 'password_reset' %}">Forgot password?</a> {% endcomment %}
+              </div>
+
+              <button class="submit-btn" type="submit">
+                <span>Sign In</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </form>
+
+            <div class="panel-footer">
+              <div>
+                <strong>Need access?</strong><br>
+                Ask your administrator to create a staff account.
+              </div>
+              <div>
+                <strong>Support</strong><br>
+                Contact your HamroGym system owner for help.
+              </div>
+            </div>
+
+            <div class="footnote">
+              Built for gyms, fitness studios, and coaching teams that want a cleaner front desk workflow.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

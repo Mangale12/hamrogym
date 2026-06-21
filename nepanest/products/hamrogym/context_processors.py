@@ -11,21 +11,11 @@ def _first_path_segment(request):
 
 
 def base_layout_template(request):
-    host = ""
-    if request:
-        host = (request.get_host() or "").split(":", 1)[0].lower()
-
     first_segment = _first_path_segment(request)
-    urlconf = getattr(request, "urlconf", "") or ""
-    is_platform_route = first_segment == "platform"
-    is_nepanest = host == "nepanest.local" or urlconf == "config.urlconfs.nepanest"
-
-    if is_platform_route:
+    if first_segment == "platform":
         base_layout = "platform/layouts/app.html"
-    elif is_nepanest:
-        base_layout = "layouts/shared_app.html"
     else:
-        base_layout = "hamrogym/layouts/app.html"
+        base_layout = "layouts/shared_app.html"
 
     return {
         "base_layout_template": base_layout,

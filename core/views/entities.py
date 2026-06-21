@@ -13,13 +13,14 @@ from django.db.models.deletion import ProtectedError, RestrictedError
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 from django.views import View
 from django.views.generic import TemplateView
 
 from core.config import EntityConfig
 from nepanest.common.helpers.context import get_current_branch_id, get_current_fiscal_year_id
 from nepanest.common.helpers.helper import encode_date_for_display
+from core.utils.urls import reverse_with_request
 
 
 def _serialize_value(value, request=None):
@@ -94,16 +95,17 @@ def _build_entity_form(entity: EntityConfig, *args, request=None, **kwargs):
         return entity.form_class(*args, **kwargs)
 
 
-def _actions_render(entity: EntityConfig) -> str:
-    detail_url = reverse(f"{entity.name}_detail", args=[0]).replace("/0/", "/{id}/")
-    update_url = reverse(f"{entity.name}_update", args=[0]).replace("/0/", "/{id}/")
-    delete_url = reverse(f"{entity.name}_delete", args=[0]).replace("/0/", "/{id}/")
+def _actions_render(entity: EntityConfig, request=None) -> str:
+    # Build action URLs using the current request namespace when available.
+    detail_url = reverse_with_request(f"{entity.name}_detail", request=request, args=[0]).replace("/0/", "/{id}/")
+    update_url = reverse_with_request(f"{entity.name}_update", request=request, args=[0]).replace("/0/", "/{id}/")
+    delete_url = reverse_with_request(f"{entity.name}_delete", request=request, args=[0]).replace("/0/", "/{id}/")
     resolved_actions = []
     for raw_action in entity.action_buttons or []:
         action = dict(raw_action)
         action_name = action.get("action_name")
         if action_name and action_name in (entity.row_actions or {}):
-            action["action_url"] = reverse(f"{entity.name}_{action_name}", args=[0]).replace(
+            action["action_url"] = reverse_with_request(f"{entity.name}_{action_name}", request=request, args=[0]).replace(
                 "/0/", "/{id}/"
             )
         resolved_actions.append(action)
@@ -152,7 +154,8 @@ def _resolve_field_urls(fields: List[Dict[str, object]], request=None) -> List[D
         field = dict(raw)
         url_name = field.get("url_name")
         if url_name and not field.get("url"):
-            field["url"] = reverse(url_name)
+            # Resolve using current request namespace if available
+            field["url"] = reverse_with_request(url_name, request=request)
         options = field.get("options")
         if callable(options):
             try:
@@ -228,21 +231,21 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     "tabs": tabs,
                     "dynamic_sections": dynamic_sections,
                     "dynamic_section_entries": list(dynamic_sections.items()),
-                    "datatable_url": reverse(f"{entity.name}_datatable"),
+                    "datatable_url": reverse_with_request(f"{entity.name}_datatable", request=self.request),
                     "datatable_options": entity.datatable_options or {},
                     "datatable_wrapper_class": (entity.datatable_options or {}).get("wrapper_class", ""),
                     "datatable_table_class": (entity.datatable_options or {}).get(
                         "table_class",
                         "table table-striped table-bordered datatable",
                     ),
-                    "create_url": reverse(f"{entity.name}_create"),
-                    "update_url_template": reverse(f"{entity.name}_update", args=[0]).replace(
+                    "create_url": reverse_with_request(f"{entity.name}_create", request=self.request),
+                    "update_url_template": reverse_with_request(f"{entity.name}_update", request=self.request, args=[0]).replace(
                         "/0/", "/{id}/"
                     ),
-                    "detail_url_template": reverse(f"{entity.name}_detail", args=[0]).replace(
+                    "detail_url_template": reverse_with_request(f"{entity.name}_detail", request=self.request, args=[0]).replace(
                         "/0/", "/{id}/"
                     ),
-                    "delete_url_template": reverse(f"{entity.name}_delete", args=[0]).replace(
+                    "delete_url_template": reverse_with_request(f"{entity.name}_delete", request=self.request, args=[0]).replace(
                         "/0/", "/{id}/"
                     ),
                     "modal_title_add": f"Add {entity.verbose_name}",
@@ -273,11 +276,11 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                     {
                         "singleton_object": singleton_object,
                         "singleton_form_data": singleton_form_data or {},
-                        "singleton_save_url": (
-                            reverse(f"{entity.name}_update", args=[singleton_object.pk])
-                            if singleton_object
-                            else reverse(f"{entity.name}_create")
-                        ),
+                            "singleton_save_url": (
+                                reverse_with_request(f"{entity.name}_update", request=self.request, args=[singleton_object.pk])
+                                if singleton_object
+                                else reverse_with_request(f"{entity.name}_create", request=self.request)
+                            ),
                     }
                 )
 
@@ -289,7 +292,7 @@ def build_entity_views(entity: EntityConfig) -> Dict[str, Type[View]]:
                         "title": "Actions",
                         "orderable": False,
                         "searchable": False,
-                        "render": _actions_render(entity),
+                        "render": _actions_render(entity, request=self.request),
                     }
                 )
             return context

@@ -797,7 +797,7 @@
                 <li><span class="dropdown-item-text text-muted small">{% firstof request.user.email request.user.username %}</span></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                    <form method="post" action="{% url 'logout' %}" class="m-0">
+                    <form method="post" action="{{ logout_url }}" class="m-0">
                         {% csrf_token %}
                         <button type="submit" class="dropdown-item">
                             <i data-feather="log-out"></i> Logout

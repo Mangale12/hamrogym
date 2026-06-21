@@ -1,5 +1,6 @@
 from django.utils.html import format_html
 from django.urls import reverse
+from core.utils.urls import reverse_with_request
 
 
 class DataTableActionButtons:
@@ -37,7 +38,8 @@ class DataTableActionButtons:
 
             # 🔗 URL handling (supports reverse name or raw url)
             if btn.get("reverse"):
-                url = reverse(btn["reverse"], args=[obj.id])
+                # prefer request namespace when available
+                url = reverse_with_request(btn["reverse"], request=self.request, args=[obj.id])
             else:
                 url = btn.get("url", "#").format(id=obj.id)
 

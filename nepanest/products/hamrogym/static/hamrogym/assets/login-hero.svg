@@ -1,0 +1,70 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="160" y1="80" x2="1320" y2="1120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C1726"/>
+      <stop offset="0.52" stop-color="#182A43"/>
+      <stop offset="1" stop-color="#08111A"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="1160" y1="180" x2="1160" y2="1020" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9B234" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#FF6B4A" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="420" y1="340" x2="1180" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB54A"/>
+      <stop offset="1" stop-color="#FF6B4A"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="330" y1="640" x2="1270" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DCE6F2"/>
+      <stop offset="0.5" stop-color="#8CA0B8"/>
+      <stop offset="1" stop-color="#EDF3FA"/>
+    </linearGradient>
+    <filter id="blur40" x="0" y="0" width="1600" height="1200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1200" fill="url(#sky)"/>
+  <ellipse cx="1180" cy="250" rx="250" ry="250" fill="url(#glow)" filter="url(#blur40)"/>
+  <ellipse cx="370" cy="940" rx="320" ry="320" fill="#F9B234" fill-opacity="0.08" filter="url(#blur40)"/>
+  <path d="M0 930C180 860 310 820 480 820C685 820 780 930 980 930C1140 930 1310 860 1600 740V1200H0V930Z" fill="#09101A"/>
+  <path d="M0 965C180 900 325 870 475 870C705 870 804 985 1000 985C1180 985 1350 930 1600 815V1200H0V965Z" fill="#0D1724"/>
+
+  <!-- floating lights -->
+  <circle cx="250" cy="220" r="12" fill="#FFFFFF" fill-opacity="0.28"/>
+  <circle cx="310" cy="260" r="7" fill="#FFFFFF" fill-opacity="0.18"/>
+  <circle cx="1270" cy="180" r="10" fill="#FFFFFF" fill-opacity="0.22"/>
+  <circle cx="1330" cy="250" r="6" fill="#FFFFFF" fill-opacity="0.15"/>
+
+  <!-- gym racks / equipment -->
+  <rect x="180" y="330" width="1220" height="26" rx="13" fill="#1D2A3E"/>
+  <rect x="220" y="410" width="1160" height="18" rx="9" fill="#182536"/>
+  <rect x="240" y="436" width="1120" height="8" rx="4" fill="#24324A" opacity="0.7"/>
+
+  <rect x="350" y="500" width="900" height="60" rx="30" fill="url(#metal)"/>
+  <rect x="300" y="470" width="42" height="120" rx="21" fill="#D7E1EC"/>
+  <rect x="1258" y="470" width="42" height="120" rx="21" fill="#D7E1EC"/>
+  <rect x="248" y="488" width="70" height="84" rx="18" fill="#0E1520" stroke="#D7E1EC" stroke-width="8"/>
+  <rect x="1282" y="488" width="70" height="84" rx="18" fill="#0E1520" stroke="#D7E1EC" stroke-width="8"/>
+  <circle cx="264" cy="530" r="24" fill="#F9B234"/>
+  <circle cx="1316" cy="530" r="24" fill="#F9B234"/>
+
+  <!-- trainer silhouette -->
+  <path d="M790 318C830 318 862 350 862 390C862 430 830 462 790 462C750 462 718 430 718 390C718 350 750 318 790 318Z" fill="#F2D3B2"/>
+  <path d="M730 502C742 460 759 430 790 430C821 430 840 462 850 502L886 638C894 667 876 696 846 704C816 712 788 695 780 666L759 582L731 666C723 695 695 712 665 704C635 696 617 667 625 638L661 502H730Z" fill="url(#accent)"/>
+  <path d="M706 482C718 454 742 434 770 434H808C836 434 860 454 872 482L902 548C913 573 904 602 880 615C856 628 825 619 812 595L792 556L769 595C756 619 725 628 701 615C677 602 668 573 679 548L706 482Z" fill="#132033"/>
+  <path d="M770 462L738 588H705L734 462H770Z" fill="#DCE6F2" fill-opacity="0.5"/>
+  <path d="M829 462L860 588H893L864 462H829Z" fill="#DCE6F2" fill-opacity="0.5"/>
+  <path d="M750 698L712 846C704 875 723 904 753 912C783 920 812 902 820 872L845 774L870 872C878 902 907 920 937 912C967 904 986 875 978 846L940 698H750Z" fill="#0F1722"/>
+
+  <!-- barbell -->
+  <rect x="430" y="560" width="740" height="20" rx="10" fill="#C2CEDB"/>
+  <rect x="390" y="522" width="30" height="96" rx="12" fill="#E9EEF5"/>
+  <rect x="1180" y="522" width="30" height="96" rx="12" fill="#E9EEF5"/>
+  <rect x="336" y="500" width="56" height="140" rx="18" fill="#0E1520" stroke="#E9EEF5" stroke-width="10"/>
+  <rect x="1218" y="500" width="56" height="140" rx="18" fill="#0E1520" stroke="#E9EEF5" stroke-width="10"/>
+  <circle cx="364" cy="570" r="28" fill="#F9B234"/>
+  <circle cx="1246" cy="570" r="28" fill="#F9B234"/>
+
+  <!-- subtle floor line -->
+  <path d="M180 906C382 846 551 822 800 822C1042 822 1236 854 1420 906" stroke="#2A394D" stroke-opacity="0.7" stroke-width="2"/>
+</svg>
