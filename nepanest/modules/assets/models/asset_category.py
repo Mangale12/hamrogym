@@ -3,8 +3,10 @@ from django.db import models
 
 class AssetCategory(models.Model):
     DEPRECIATION_METHOD_STRAIGHT_LINE = "straight_line"
+    DEPRECIATION_METHOD_DECLINING_BALANCE = "declining_balance"
     DEPRECIATION_METHOD_CHOICES = [
         (DEPRECIATION_METHOD_STRAIGHT_LINE, "Straight Line"),
+        (DEPRECIATION_METHOD_DECLINING_BALANCE, "Declining Balance"),
     ]
 
     name = models.CharField(max_length=100, unique=True)

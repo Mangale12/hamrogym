@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db import connections
 
 from core.forms import RememberMeAuthenticationForm
 
@@ -24,6 +25,7 @@ class TenantAwareAuthenticationForm(RememberMeAuthenticationForm):
             {
                 "placeholder": "Enter workspace code",
                 "autocomplete": "off",
+                "autofocus": True,
             }
         )
 
@@ -39,8 +41,18 @@ class TenantAwareAuthenticationForm(RememberMeAuthenticationForm):
 
         set_current_tenant(tenant)
         if self.request is not None:
+            database_alias = get_current_database_alias()
+            db_settings = connections[database_alias].settings_dict
+            print(
+                "[tenant-login] resolved tenant "
+                f"code={tenant.code} alias={database_alias} "
+                f"db_name={db_settings.get('NAME')} db_user={db_settings.get('USER')} "
+                f"db_host={db_settings.get('HOST')} db_port={db_settings.get('PORT')}"
+            )
             self.request.tenant = tenant
             self.request.tenant_code = tenant.code
-            self.request.tenant_database_alias = get_current_database_alias()
+            self.request.gym_code = tenant.code
+            self.request.db_alias = database_alias
+            self.request.tenant_database_alias = database_alias
 
         return super().clean()

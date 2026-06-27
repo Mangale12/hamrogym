@@ -371,6 +371,13 @@
       line-height: 1.4;
     }
 
+    .field-error {
+      margin-top: 7px;
+      color: #ff9b9b;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
     .form-row {
       display: flex;
       align-items: center;
@@ -593,6 +600,11 @@
             {% if error %}
               <div class="alert alert-error">{{ error }}</div>
             {% endif %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-error">
+                {{ form.non_field_errors.0 }}
+              </div>
+            {% endif %}
 
             <form method="post" action="{% url 'accounts:login' %}" novalidate>
               {% csrf_token %}
@@ -600,53 +612,39 @@
 
               <div class="field-grid">
                 <div class="field">
-                  <label for="id_gym_code">Gym Code</label>
-                  <input
-                    id="id_gym_code"
-                    type="text"
-                    name="gym_code"
-                    value="{{ gym_code|default:'' }}"
-                    placeholder="e.g. hamro_gym"
-                    autocomplete="organization"
-                    autocapitalize="none"
-                    spellcheck="false"
-                    required
-                    autofocus
-                  >
+                  <label for="{{ form.tenant_code.id_for_label }}">Gym Code</label>
+                  {{ form.tenant_code }}
+                  {% if form.tenant_code.errors %}
+                    <div class="field-error">{{ form.tenant_code.errors.0 }}</div>
+                  {% endif %}
                   <div class="field-hint">Use the tenant code assigned to your gym branch.</div>
                 </div>
 
                 <div class="field">
-                  <label for="id_username">Username</label>
-                  <input
-                    id="id_username"
-                    type="text"
-                    name="username"
-                    value="{{ username|default:'' }}"
-                    placeholder="Your username"
-                    autocomplete="username"
-                    required
-                  >
+                  <label for="{{ form.username.id_for_label }}">Username</label>
+                  {{ form.username }}
+                  {% if form.username.errors %}
+                    <div class="field-error">{{ form.username.errors.0 }}</div>
+                  {% endif %}
                 </div>
 
                 <div class="field">
-                  <label for="id_password">Password</label>
-                  <input
-                    id="id_password"
-                    type="password"
-                    name="password"
-                    placeholder="Your password"
-                    autocomplete="current-password"
-                    required
-                  >
+                  <label for="{{ form.password.id_for_label }}">Password</label>
+                  {{ form.password }}
+                  {% if form.password.errors %}
+                    <div class="field-error">{{ form.password.errors.0 }}</div>
+                  {% endif %}
                 </div>
               </div>
 
               <div class="form-row">
                 <label class="remember">
-                  <input type="checkbox" name="remember_me" value="1">
+                  {{ form.remember_me }}
                   <span>Keep me signed in</span>
                 </label>
+                {% if form.remember_me.errors %}
+                  <div class="field-error">{{ form.remember_me.errors.0 }}</div>
+                {% endif %}
                 {% comment %} <a class="link" href="{% url 'password_reset' %}">Forgot password?</a> {% endcomment %}
               </div>
 

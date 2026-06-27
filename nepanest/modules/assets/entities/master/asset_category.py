@@ -15,9 +15,9 @@ register_entity(
         datatable_view=AssetCategoryDataTableView,
         fields=[
             {"name": "name", "label": "Name", "type": "text", "required": True, "col": 6},
-            {"name": "is_active", "label": "Is Active", "type": "boolean", "col": 6},
-            {"name": "parent", "label": "Parent Category", "type": "select", "col": 6, "url_path": "asset_category_select"},
-            {"name": "depreciation_applicable", "label": "Depreciation Applicable", "type": "boolean", "col": 6},
+            {"name": "is_active", "label": "Is Active", "type": "checkbox", "col": 6},
+            {"name": "parent", "label": "Parent Category", "type": "select", "col": 6, "url_name": "asset_category_select"},
+            {"name": "depreciation_applicable", "label": "Depreciation Applicable", "type": "checkbox", "col": 6},
             {
                 "name": "depreciation_method",
                 "label": "Depreciation Method",

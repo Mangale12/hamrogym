@@ -57,6 +57,8 @@ class TenantResolutionMiddlewareTests(SimpleTestCase):
 
         def get_response(incoming_request):
             seen["tenant_code"] = getattr(incoming_request, "tenant_code", None)
+            seen["gym_code"] = getattr(incoming_request, "gym_code", None)
+            seen["db_alias"] = getattr(incoming_request, "db_alias", None)
             seen["database_alias"] = getattr(incoming_request, "tenant_database_alias", None)
             return SimpleNamespace(status_code=200)
 
@@ -68,6 +70,8 @@ class TenantResolutionMiddlewareTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(seen["tenant_code"], "alpha")
+        self.assertEqual(seen["gym_code"], "alpha")
+        self.assertEqual(seen["db_alias"], "tenant_alpha")
         self.assertEqual(seen["database_alias"], "tenant_alpha")
 
     @patch("nepanest.platform.tenancy.middleware.resolve_tenant_by_code", side_effect=TenantLookupError("workspace lookup failed"))
@@ -79,6 +83,8 @@ class TenantResolutionMiddlewareTests(SimpleTestCase):
 
         def get_response(incoming_request):
             seen["tenant_code"] = getattr(incoming_request, "tenant_code", "set")
+            seen["gym_code"] = getattr(incoming_request, "gym_code", "set")
+            seen["db_alias"] = getattr(incoming_request, "db_alias", "set")
             seen["database_alias"] = getattr(incoming_request, "tenant_database_alias", "set")
             return SimpleNamespace(status_code=200)
 
@@ -87,6 +93,8 @@ class TenantResolutionMiddlewareTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(seen["tenant_code"])
+        self.assertIsNone(seen["gym_code"])
+        self.assertIsNone(seen["db_alias"])
         self.assertIsNone(seen["database_alias"])
 
     @patch("nepanest.platform.tenancy.middleware.resolve_tenant_by_code")
@@ -98,6 +106,8 @@ class TenantResolutionMiddlewareTests(SimpleTestCase):
 
         def get_response(incoming_request):
             seen["tenant_code"] = getattr(incoming_request, "tenant_code", None)
+            seen["gym_code"] = getattr(incoming_request, "gym_code", None)
+            seen["db_alias"] = getattr(incoming_request, "db_alias", None)
             seen["database_alias"] = getattr(incoming_request, "tenant_database_alias", None)
             return SimpleNamespace(status_code=200)
 
@@ -106,6 +116,8 @@ class TenantResolutionMiddlewareTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(seen["tenant_code"])
+        self.assertIsNone(seen["gym_code"])
+        self.assertIsNone(seen["db_alias"])
         self.assertIsNone(seen["database_alias"])
         mocked_resolve.assert_not_called()
 

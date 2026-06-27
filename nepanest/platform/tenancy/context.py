@@ -3,9 +3,7 @@ from __future__ import annotations
 from contextvars import ContextVar
 
 from django.conf import settings
-from django.db import DatabaseError, connection, connections
-
-from nepanest.platform.tenancy.models import Tenant
+from django.db import DatabaseError, connections
 
 from ..app_registry.models import TenantDB
 
@@ -30,6 +28,10 @@ def resolve_database_alias(database_alias: str | None) -> str:
     if normalized_alias and normalized_alias in settings.DATABASES:
         return normalized_alias
     return TENANT_DEFAULT_DATABASE_ALIAS
+
+
+def set_current_database_alias(database_alias: str | None) -> None:
+    _current_database_alias.set(resolve_database_alias(database_alias))
 
 
 def _build_tenant_database_alias(tenant: object) -> str:
@@ -63,7 +65,7 @@ def _register_tenant_database_alias(tenant: object) -> str:
 
 def clear_current_tenant() -> None:
     _current_tenant_code.set(None)
-    _current_database_alias.set(TENANT_DEFAULT_DATABASE_ALIAS)
+    set_current_database_alias(TENANT_DEFAULT_DATABASE_ALIAS)
 
 
 def set_current_tenant(tenant: TenantDB | None) -> None:
@@ -73,7 +75,7 @@ def set_current_tenant(tenant: TenantDB | None) -> None:
 
     _current_tenant_code.set(tenant.code)
     tenant_database_alias = _register_tenant_database_alias(tenant)
-    _current_database_alias.set(resolve_database_alias(tenant_database_alias))
+    set_current_database_alias(tenant_database_alias)
 
 
 def get_current_tenant_code() -> str | None:

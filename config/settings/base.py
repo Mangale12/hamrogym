@@ -102,7 +102,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "nepanest.common.middlewares.bs_date_converter.BSDateConverterMiddleware",
-    "nepanest.common.middlewares.tenant_middleware.TenantDatabaseMiddleware",  # ← DB after auth ✅
 ]
 
 ROOT_URLCONF = "config.urls"
